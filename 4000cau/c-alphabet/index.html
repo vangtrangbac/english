@@ -128,7 +128,7 @@
         </div>
             <!-- Nút Ôn tập (ẩn/hiện tiếng Anh) -->
         <div id="area-toggle">
-            <button id="toggleButton">Học bài</button>
+            <button id="toggleButton">Học từ</button>
             <div id="inputForm">
                 <label for="startIndex">Số t/t của từ: </label>
                 <input type="number" id="startIndex" value="1" min="1"><br/>
@@ -194,11 +194,27 @@
                                     
                     vocabularyList.appendChild(li);
                 });
-            }else{
+            }else if(toggleBtn.textContent === 'Học từ'){
                 vocabularies.forEach((vocab) => {
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            } else {
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.example.sentence}</a> <br>${vocab.example.pronunciation} 
                                     <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
@@ -413,10 +429,13 @@
         document.getElementById('toggleButton').addEventListener('click', function() {
             // Kiểm tra xem đoạn văn bản có đang bị ẩn không
             if (this.textContent === 'Ôn tập') {
-                this.textContent = 'Học bài';  // Hiện lại đoạn văn bản
+                this.textContent = 'Học từ';  // Hiện lại đoạn văn bản
+            } else if (this.textContent === 'Học từ'){
+                this.textContent = 'Học câu';  // Ẩn đoạn văn bản
             } else {
-                this.textContent = 'Ôn tập';  // Ẩn đoạn văn bản
+                this.textContent = 'Ôn tập';
             }
+
             loadVocabulary(currentPage);
         });
     </script>
