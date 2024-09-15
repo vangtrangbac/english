@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách từ vựng với âm thanh</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .vocabulary {
+            color: green;
+            cursor: pointer;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .index-number {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            margin-right: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .index-circle-detail {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .play-all-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .play-all-button:hover {
+            background-color: #45a049;
+        }
+        #playButton, #pauseButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #playButton:hover, #pauseButton:hover {
+            background-color: #0056b3;
+        }
+        #trackInfo {
+            font-size: 18px;
+        }
+
+        #toggleButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #e7a414;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Danh sách từ vựng</h1>
+    <div style="display: flex; justify-content: space-between; max-width: 600px;">
+        <div class="play-audio">
+            <button class="play-all-button" id="play-all-button">Phát tất cả âm thanh</button>
+            <div id="trackInfo"><b>Now playing:</b></div>
+    
+            <!-- Các nút điều khiển -->
+            <div id="controls">
+                <button id="playButton">Play</button>
+                <button id="pauseButton">Pause</button>
+            </div>
+    
+            <audio id="audioPlayer" src=""></audio>
+        </div>
+            <!-- Nút Ôn tập (ẩn/hiện tiếng Anh) -->
+        <div id="area-toggle">
+            <button id="toggleButton">Học bài</button>
+            <div id="inputForm">
+                <label for="startIndex">Số t/t của từ: </label>
+                <input type="number" id="startIndex" value="1" min="1"><br/>
+                
+                <label for="numItems">Số lượng từ: </label>
+                <input type="number" id="numItems" value="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <ul id="vocabulary-list"></ul>
+    <!-- Các nút điều hướng trang -->
+    <div class="controls">
+        <button id="prevButton">Trang trước</button>
+        <button id="nextButton">Trang sau</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="vocabulary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0; // Trang hiện tại
+        const itemsPerPage = 20; // Mỗi trang hiển thị 1 từ vựng
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        function loadVocabulary(page) {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            // --- Phân trang
+            const start = page * itemsPerPage;
+            const end = start + itemsPerPage;
+            const vocabularies = data.vocabularies.slice(start, end);
+
+            const vocabularyList = document.getElementById('vocabulary-list');
+            const modal = document.getElementById('vocabulary-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModal = document.querySelector('.close');
+            const playAllButton = document.getElementById('play-all-button');
+            vocabularyList.innerHTML="";
+
+            const toggleBtn = document.getElementById('toggleButton');
+
+            if(toggleBtn.textContent === 'Ôn tập'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.meaning}</a> ${vocab.pronunciation} (${vocab.partOfSpeech})
+                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }else{
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }
+
+            document.querySelectorAll('.vocabulary').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const index = e.target.getAttribute('data-index');
+                    const vocab = vocabularies[index];
+
+                    modalBody.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="index-circle-detail">${vocab.index}</div>
+                            <div>
+                                <h3>${vocab.word}</h3>
+                                <p>${vocab.pronunciation}</p>
+                                <img src="${vocab.image}" alt="${vocab.word}">
+                                <p><b>(${vocab.partOfSpeech})</b> ${vocab.meaning}</p>
+                                <p><b>Example</b>: <br/> <span id="textToCopy">${vocab.example.sentence}</span>
+                                    <br/> <span style="color: blue"><i>(${vocab.example?.pronunciation})</i></span>
+                                    <br/> <span style="color: gray"><i>(${vocab.example.translation})</i></span>
+                                </p>
+                                <button id="copyButton">Sao chép</button>
+                                <p></p>
+                                <audio controls>
+                                    <source src="${vocab.audio}" type="audio/mpeg">
+                                    Trình duyệt của bạn không hỗ trợ phần tử âm thanh.
+                                </audio>
+                            </div>
+                        </div>
+                    `;
+                    modal.style.display = 'block';
+
+                    /// ------ Coppy to clipboard
+                    document.getElementById('copyButton').addEventListener('click', function() {
+                        // Tạo một phần tử tạm thời để chứa văn bản
+                        var tempInput = document.createElement('input');
+                        tempInput.value = document.getElementById('textToCopy').innerText;
+
+                        // Thêm phần tử vào trang để sao chép
+                        document.body.appendChild(tempInput);
+
+                        // Chọn văn bản trong phần tử tạm thời
+                        tempInput.select();
+                        tempInput.setSelectionRange(0, 99999); // Đối với thiết bị di động
+
+                        // Sao chép văn bản
+                        document.execCommand('copy');
+
+                        // Xóa phần tử tạm thời khỏi trang
+                        document.body.removeChild(tempInput);
+
+                        // Thông báo sao chép thành công
+                        alert('Đã sao chép văn bản!');
+                    });
+                });
+            });
+
+            closeModal.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+
+            playAllButton.addEventListener('click', () => {
+                let currentTrack = 0;
+                const audioPlayer = document.getElementById('audioPlayer');
+                const playButton = document.getElementById('playButton');
+                const pauseButton = document.getElementById('pauseButton');
+                const trackInfo = document.getElementById('trackInfo');
+                const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                // const vocabularies = data.vocabularies;
+                // --- Phân trang
+                const startIndex = document.getElementById('startIndex');
+                const numItems = document.getElementById('numItems');
+
+                const start = startIndex.value - 1;
+                const end = start + numItems.value -1;
+                const vocabularies = data.vocabularies.slice(start, end);
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                // Hàm cập nhật bài hát và thông tin hiển thị
+                async function loadTrack(index) {
+                    const voca = vocabularies[index];
+                    audioPlayer.src = voca.audio;
+                    trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
+                    audioPlayer.play();
+                    audioPlayer.onended = async () => {
+                        await delayFc(1500)
+                        audioPlayer.src = voca.audioEx;
+                        trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
+                        audioPlayer.play();
+                        audioPlayer.onended = () => {
+                            setTimeout(() => {
+                                currentTrack++;
+                                if (currentTrack < vocabularies.length) {
+                                    loadTrack(currentTrack);
+                                } else {
+                                    currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                                    loadTrack(currentTrack);
+                                }
+                            }, 3000);
+                        };
+                    };
+                }
+
+                // Bắt đầu phát bài hát đầu tiên
+                loadTrack(currentTrack);
+
+                // Nút Play
+                playButton.addEventListener('click', function() {
+                    audioPlayer.play();
+                });
+
+                // Nút Pause
+                pauseButton.addEventListener('click', function() {
+                    audioPlayer.pause();
+                });
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+            });
+        }
+
+        // Sự kiện cho nút Trang trước
+        prevButton.addEventListener('click', function() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        // Sự kiện cho nút Trang sau
+        nextButton.addEventListener('click', function() {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            if (currentPage < Math.ceil(data.vocabularies.length / itemsPerPage) - 1) {
+                currentPage++;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        window.onload = () => {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            const vocabularies = data.vocabularies;
+            const startIndex = document.getElementById('startIndex');
+            const numItems = document.getElementById('numItems');
+            startIndex.value = 1;
+            numItems.value = vocabularies.length;
+
+            loadVocabulary(currentPage);
+        }
+        // Chức năng ẩn/hiện phần tiếng Anh
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            // Kiểm tra xem đoạn văn bản có đang bị ẩn không
+            if (this.textContent === 'Ôn tập') {
+                this.textContent = 'Học bài';  // Hiện lại đoạn văn bản
+            } else {
+                this.textContent = 'Ôn tập';  // Ẩn đoạn văn bản
+            }
+            loadVocabulary(currentPage);
+        });
+    </script>
+    <script id="vocabulary-data" type="application/json">
+        {
+            "vocabularies": [
+                {
+                    "index": 1,
+                    "word": "commonly",
+                    "pronunciation": "/ˈkɑː.mən.li/",
+                    "meaning": "Thường xuyên, thông thường, bình thường",
+                    "partOfSpeech": "adv",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commo/commonly.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commo/commonly.mp3",
+                    "image": "https://i.ytimg.com/vi/Owy_4MIpG1Y/maxresdefault.jpg",
+                    "example": {
+                        "sentence": "The most commonly used modern form of a wedge is the plug and feathers.",
+                        "translation": "Hình dạng nêm hiện đại được sử dụng phổ biến nhất là dạng nút và lông vũ."
+                    }
+                },
+                {
+                    "index": 2,
+                    "word": "commotion",
+                    "pronunciation": "/kəˈmoʊ.ʃən/",
+                    "meaning": "Sự xáo trộn, sự rung chuyển, sự rối loạn",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commo/commotion.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commo/commotion.mp3",
+                    "image": "https://i0.wp.com/dictionaryblog.cambridge.org/wp-content/uploads/2015/05/commotion.jpg",
+                    "example": {
+                        "sentence": "There was a commotion outside the embassy",
+                        "translation": "Có một sự náo động bên ngoài đại sứ quán"
+                    }
+                },
+                {
+                    "index": 3,
+                    "word": "communicate",
+                    "pronunciation": "/kəˈmjuː.nə.keɪt/",
+                    "meaning": "Truyền đạt, giao thiệp, liên lạc",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communicate.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communicate.mp3",
+                    "image": "https://theyellowspot.com/wp-content/uploads/2019/02/How-to-communicate-effectively.png",
+                    "example": {
+                        "sentence": "We can now communicate instantly with people on the other side of the world.",
+                        "translation": "Bây giờ chúng ta có thể giao tiếp ngay lập tức với mọi người ở bên kia bán cầu."
+                    }
+                },
+                {
+                    "index": 4,
+                    "word": "communication",
+                    "pronunciation": "/kəˌmjuː.nəˈkeɪ.ʃən/",
+                    "meaning": "Sự giao tiếp, sự liên lạc",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communication.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communication.mp3",
+                    "image": "https://neuroleadership.com/wp-content/uploads/2023/03/Three-Steps-for-Communicating-Better-According-to-Neuroscience-.png",
+                    "example": {
+                        "sentence": "We are in direct communication with the leaders of the rebellion.",
+                        "translation": "Chúng tôi đang liên lạc trực tiếp với những người lãnh đạo cuộc nổi loạn."
+                    }
+                },
+                {
+                    "index": 5,
+                    "word": "community",
+                    "pronunciation": "/kəˈmjuː.nə.t̬i/",
+                    "meaning": "Dân chúng, nhân dân",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70908.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70908.mp3",
+                    "image": "https://m.media-amazon.com/images/S/pv-target-images/d6e25ce8c6cdf788ec947effcec7854aee7090812cb73e536adf6b75b9eb7ca6.jpg",
+                    "example": {
+                        "sentence": "He's well known in the local community.",
+                        "translation": "Ông ấy rất nổi tiếng trong cộng đồng địa phương."
+                    }
+                },
+                {
+                    "index": 6,
+                    "word": "company",
+                    "pronunciation": "/ˈkʌm.pə.ni/",
+                    "meaning": "Công ty",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/company.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/company.mp3",
+                    "image": "https://i0.wp.com/www.iedunote.com/img/23559/what-is-a-company-1.jpg",
+                    "example": {
+                        "sentence": "He works for a software company/a company that makes software.",
+                        "translation": "Anh ấy làm việc cho một công ty phần mềm/một công ty sản xuất phần mềm."
+                    }
+                },
+                {
+                    "index": 7,
+                    "word": "comparable",
+                    "pronunciation": "/ˈkɑːm.pɚ.ə.bəl/",
+                    "meaning": "Có thể so sánh được",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparable.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparable.mp3",
+                    "image": "https://i.ytimg.com/vi/mU9xct8NsYk/sddefault.jpg",
+                    "example": {
+                        "sentence": "The girls are of comparable ages.",
+                        "translation": "Các cô gái có độ tuổi tương đương nhau."
+                    }
+                },
+                {
+                    "index": 8,
+                    "word": "comparative",
+                    "pronunciation": "/kəmˈpær.ə.tɪv/",
+                    "meaning": "So sánh, tương đối",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/uk_pron/u/ukc/ukcom/ukcommu028.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/uk_pron/u/ukc/ukcom/ukcommu028.mp3",
+                    "image": "https://i.ytimg.com/vi/wXiD0FdON7k/maxresdefault.jpg",
+                    "example": {
+                        "sentence": "More difficult is the comparative of difficult.",
+                        "translation": "More difficult là dạng so sánh hơn của difficult."
+                    }
+                },
+                {
+                    "index": 9,
+                    "word": "compare",
+                    "pronunciation": "/kəmˈper/",
+                    "meaning": "So sánh",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/compare.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/compare.mp3",
+                    "image": "https://in2english.net/wp-content/uploads/2022/12/compare-and-contrast.jpg",
+                    "example": {
+                        "sentence": "If you compare house prices in the two areas, it's quite amazing how different they are.",
+                        "translation": "Nếu bạn so sánh giá nhà ở hai khu vực này, bạn sẽ thấy sự khác biệt đáng kinh ngạc."
+                    }
+                },
+                {
+                    "index": 10,
+                    "word": "comparison",
+                    "pronunciation": "/kəmˈper.ɪ.sən/",
+                    "meaning": "Sự so sánh",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparison.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparison.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR3TbnUmS7VMCFtnRZBgwpi5UQnTp1lFPjaA&s",
+                    "example": {
+                        "sentence": "They made a comparison of different countries' eating habits.",
+                        "translation": "Họ đã so sánh thói quen ăn uống của các quốc gia khác nhau."
+                    }
+                },
+                {
+                    "index": 11,
+                    "word": "compete",
+                    "pronunciation": "/kəmˈpiːt/",
+                    "meaning": "Tranh đua, cạnh tranh",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/compete.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/compete.mp3",
+                    "image": "https://hbr.org/resources/images/article_assets/2022/01/R2202L_AZAB.png",
+                    "example": {
+                        "sentence": "It's difficult for a small shop to compete against the big supermarkets.",
+                        "translation": "Một cửa hàng nhỏ khó có thể cạnh tranh được với các siêu thị lớn."
+                    }
+                },
+                {
+                    "index": 12,
+                    "word": "competition",
+                    "pronunciation": "/ˌkɑːm.pəˈtɪʃ.ən/",
+                    "meaning": "Sự cạnh tranh, cuộc thi",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/competition.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/competition.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSO19Q4J8olzmIQZcqhT6djyGyBMhxe36_HDA&s",
+                    "example": {
+                        "sentence": "There's a lot of competition between computer companies.",
+                        "translation": "Có rất nhiều sự cạnh tranh giữa các công ty máy tính."
+                    }
+                },
+                {
+                    "index": 13,
+                    "word": "competitive",
+                    "pronunciation": "/kəmˈpet̬.ə.t̬ɪv/",
+                    "meaning": "Cạnh tranh, tranh đua",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70916.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70916.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaKwv67J4uIKnBFj5tzOhkxIt_RTFM_WM-Hg&s",
+                    "example": {
+                        "sentence": "You're very competitive - it's meant to be a friendly match!",
+                        "translation": "Bạn rất có tính cạnh tranh - đây chỉ là một trận đấu giao hữu mà!"
+                    }
+                },
+                {
+                    "index": 14,
+                    "word": "competitor",
+                    "pronunciation": "/kəmˈpet̬.ə.t̬ɚ/",
+                    "meaning": "Đối thủ, người cạnh tranh",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70917.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70917.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTN1j7omzyR_bWzmwlwZG0KDmbBe8lPA49oXQ&s",
+                    "example": {
+                        "sentence": "Their prices are better than any of their competitors.",
+                        "translation": "Giá của họ tốt hơn bất kỳ đối thủ cạnh tranh nào."
+                    }
+                },
+                {
+                    "index": 15,
+                    "word": "complain",
+                    "pronunciation": "/kəmˈpleɪn/",
+                    "meaning": "Phàn nàn, kêu ca",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complain.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complain.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQL43dNgV2pUTT8SqqwNtdAOgBbAmxD1YkuNQ&s",
+                    "example": {
+                        "sentence": "Lots of people have complained about the noise.",
+                        "translation": "Rất nhiều người phàn nàn về tiếng ồn.",
+                        "pronunciation": "/lɑts əv ˈpipəl hæv kəmˈpleɪnd əˈbaʊt ðə nɔɪz/"
+                    }
+                },
+                {
+                    "index": 16,
+                    "word": "complaint",
+                    "pronunciation": "/kəmˈpleɪnt/",
+                    "meaning": "Lời hàn nàn, lời kêu ca",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complaint.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complaint.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhFXqCpwCHjMhZ58wA-rfsJfdYxSDXrG1tLQ&s",
+                    "example": {
+                        "sentence": "We've received a complaint from one of our listeners about offensive language.",
+                        "translation": "Chúng tôi đã nhận được khiếu nại từ một trong những thính giả về ngôn ngữ khiếm nhã.",
+                        "pronunciation": "/wiːv rɪˈsiːvd ə kəmˈpleɪnt frəm wʌn əv aʊər ˈlɪsənəz əˈbaʊt əˈfɛnsɪv ˈlæŋɡwɪdʒ/"
+                    }
+                },
+                {
+                    "index": 17,
+                    "word": "complement",
+                    "pronunciation": "/ˈkɑːm.plə.mənt/",
+                    "meaning": "Bù cho đầy đủ, bổ sung",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
+                    "image": "https://lettutor.edu.vn/_next/image?url=https%3A%2F%2Fadmin.lettutor.edu.vn%2Fuploads%2FPhan_biet_compliment_va_complement_7b32acc8e7.jpg&w=3840&q=75",
+                    "example": {
+                        "sentence": "Strawberries and cream complement each other perfectly.",
+                        "translation": "Dâu tây và kem bổ sung cho nhau một cách hoàn hảo.",
+                        "pronunciation": "/ˈstrɔːˌbɛriz ənd kriːm ˈkɒmplɪˌmɛnt iːʧ ˈʌðər ˈpɜːrfɪkli/"
+                    }
+                },
+                {
+                    "index": 18,
+                    "word": "complete",
+                    "pronunciation": "/ˈkɑːm.plə.mənt/",
+                    "meaning": "Hoàn thành, xong",
+                    "partOfSpeech": "v, adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complete.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complete.mp3",
+                    "image": "https://www.shutterstock.com/image-vector/stamp-word-complete-inside-vector-260nw-190530461.jpg",
+                    "example": {
+                        "sentence": "He only needs two more cards to complete the set.",
+                        "translation": "Anh ta chỉ cần thêm hai lá bài nữa để hoàn thành bộ bài.",
+                        "pronunciation": "/hiː ˈoʊnli niːdz tuː mɔːr kɑːrdz tuː kəmˈpliːt ðə sɛt/"
+                    }
+                },
+                {
+                    "index": 19,
+                    "word": "completely",
+                    "pronunciation": "/kəmˈpliːt.li/",
+                    "meaning": "Hoàn thành, đẩy đủ, trọn vẹn",
+                    "partOfSpeech": "adv",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/com/compl/completely.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/com/compl/completely.mp3",
+                    "image": "https://media.dolenglish.vn/PUBLIC/MEDIA/e4e90d19-3a49-4a2b-bf86-02094aa00ed3.jpg",
+                    "example": {
+                        "sentence": "I agree with you completely.",
+                        "translation": "Tôi hoàn toàn đồng ý với bạn.",
+                        "pronunciation": "/aɪ əˈɡriː wɪð juː kəmˈpliːtli/"
+                    }
+                },
+                {
+                    "index": 20,
+                    "word": "complex",
+                    "pronunciation": "/kɑːmˈpleks/",
+                    "meaning": "Phức tạp, rắc rối",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70919.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70919.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqL36wAcX3LTDyjNh6S4VwpADwUxmKHJ_XjA&s",
+                    "example": {
+                        "sentence": "It's a very complex issue to which there is no straightforward answer.",
+                        "translation": "Đây là một vấn đề rất phức tạp mà không có câu trả lời trực tiếp.",
+                        "pronunciation": "/ɪts ə ˈvɛri ˈkɒmplɛks ˈɪʃuː tuː wɪʧ ðɛr ɪz noʊ ˈstreɪtˌfɔːrwəd ˈænser/"
+                    }
+                },
+                {
+                    "index": 21,
+                    "word": "complicated",
+                    "pronunciation": "/ˈkɑːm.plə.keɪ.t̬ɪd/",
+                    "meaning": "Phức tạp, rắc rối",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complicated.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complicated.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWAmLDR_DtWDoPSbF_2s8HmZ8FACADEv1tqA&s",
+                    "example": {
+                        "sentence": "The rules are rather complicated to follow.",
+                        "translation": "Các quy tắc khá phức tạp để tuân theo.",
+                        "pronunciation": "/ðə ruːlz ɑː ˈræðər ˈkɒmplɪˌkeɪtɪd tuː ˈfɒloʊ/"
+                    }
+                },
+                {
+                    "index": 22,
+                    "word": "complication",
+                    "pronunciation": "/ˌkɑːm.pləˈkeɪ.ʃən/",
+                    "meaning": "Sự phức tạp, rắc rối",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complication.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complication.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZxwmwLJJyUvHk1quFmyrA-KeEfse6gt5YMQ&s",
+                    "example": {
+                        "sentence": "Dave couldn't find his passport at the airport and then there were further complications when Fiona lost her baggage.",
+                        "translation": "Dave không thể tìm thấy hộ chiếu của mình tại sân bay và sau đó mọi chuyện càng phức tạp hơn khi Fiona làm mất hành lý.",
+                        "pronunciation": "/deɪv ˈkʊdnt faɪnd hɪz ˈpɑːspɔːrt æt ði ˈɛrˌpɔːrt ənd ðɛn ðɛr wɜːr ˈfɜːrðər ˌkɒmplɪˈkeɪʃənz wɛn fiˈoʊnə lɔːst hɜːr ˈbæɡɪdʒ/"
+                    }
+                },
+                {
+                    "index": 23,
+                    "word": "compliment",
+                    "pronunciation": "/ˈkɑːm.plə.mənt/",
+                    "meaning": "Lời khen, lời ca tụng",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
+                    "image": "https://cdn.prod.website-files.com/5c0133bb37903429d4410485/6540aaa78590fa302fd69a65_pluvo_blog_complimenten.jpg",
+                    "example": {
+                        "sentence": "He complained that his wife never paid him any compliments anymore.",
+                        "translation": "Ông phàn nàn rằng vợ ông không bao giờ khen ông nữa.",
+                        "pronunciation": "/hi kəmˈpleɪnd ðæt hɪz waɪf ˈnɛvər peɪd hɪm ˈɛni ˈkɒmplɪmənts ˌeniˈmɔːr/"
+                    }
+                }
+            ]
+        }
+        </script>
+</body>
+</html>
