@@ -163,8 +163,10 @@
         function loadVocabulary(page) {
             const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
             // --- Phân trang
+            console.log("page - itemsPerPage", page, itemsPerPage)
             const start = page * itemsPerPage;
             const end = start + itemsPerPage;
+            console.log("start - end", start, end)
             const vocabularies = data.vocabularies.slice(start, end);
 
             const vocabularyList = document.getElementById('vocabulary-list');
@@ -214,6 +216,8 @@
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const index = e.target.getAttribute('data-index');
+                    const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                    const vocabularies = data.vocabularies;
                     const vocab = vocabularies[index];
 
                     modalBody.innerHTML = `
