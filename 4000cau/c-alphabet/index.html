@@ -318,6 +318,8 @@
                     const voca = vocabularies[index];
                     //Play main voca audio
                     await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+                    await playAudioAsync(voca.audio);
                     trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
                     await delayFc(1000);
 
