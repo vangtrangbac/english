@@ -298,29 +298,62 @@
                     return new Promise(resolve => setTimeout(resolve, ms));
                 }
 
+                function playAudioAsync(url) {
+                    return new Promise((resolve, reject) => {
+                        const audio = new Audio(url);
+
+                        // Resolve the promise when the audio finishes playing
+                        audio.addEventListener('ended', resolve);
+
+                        // Optional: reject the promise if there's an error during playback
+                        audio.addEventListener('error', (e) => reject(e));
+
+                        // Start playing the audio
+                        audio.play();
+                    });
+                }
+
                 // Hàm cập nhật bài hát và thông tin hiển thị
                 async function loadTrack(index) {
                     const voca = vocabularies[index];
-                    audioPlayer.src = voca.audio;
+                    //Play main voca audio
+                    await playAudioAsync(voca.audio);
                     trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
-                    audioPlayer.play();
-                    audioPlayer.onended = async () => {
-                        await delayFc(1500)
-                        audioPlayer.src = voca.audioEx;
-                        trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
-                        audioPlayer.play();
-                        audioPlayer.onended = () => {
-                            setTimeout(() => {
-                                currentTrack++;
-                                if (currentTrack < vocabularies.length) {
-                                    loadTrack(currentTrack);
-                                } else {
-                                    currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
-                                    loadTrack(currentTrack);
-                                }
-                            }, 3000);
-                        };
-                    };
+                    await delayFc(1000);
+
+                    //Play part of speech audio
+                    if(voca.partOfSpeech && voca.partOfSpeech !== '') {
+                        switch (voca.partOfSpeech) {
+                            case 'v':
+                                await playAudioAsync('./../verb.mp3');
+                                break;
+                            case 'n':
+                                await playAudioAsync('./../noun.mp3');
+                                break;
+                            case 'adj':
+                                await playAudioAsync('./../adjective.mp3');
+                                break;
+                            case 'adv':
+                                await playAudioAsync('./../adverb.mp3');
+                                break;
+                        
+                            default:
+                                break;
+                        }
+                        await delayFc(2000);
+                    }
+                    //Play example audio
+                    await playAudioAsync(voca.audioEx);
+                    trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
+                    await delayFc(3000);
+                    //Next track
+                    currentTrack++;
+                    if (currentTrack < vocabularies.length) {
+                        loadTrack(currentTrack);
+                    } else {
+                        currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                        loadTrack(currentTrack);
+                    }
                 }
 
                 // Bắt đầu phát bài hát đầu tiên
@@ -788,6 +821,21 @@
                         "translation": "Một số ứng dụng có thể nén các tập tin, giúp tiết kiệm bộ nhớ.",
                         "pronunciation": "/faɪlz ɑː kəmˈprɛsɪbl ɪn sʌm ˌæplɪˈkeɪʃənz, wɪtʃ seɪvz ˈmɛməri/"
                     }
+                },
+                {
+                    "index": 29,
+                    "word": "compression",
+                    "pronunciation": " /kəmˈpreʃ.ən/",
+                    "meaning": "Sự ép, sự nén, sự cô lại, sự cô đọng",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo03/cdo0318uscomp1040.mp3",
+                    "audioEx": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo03/cdo0318uscomp1040.mp3",
+                    "image": "https://www.shutterstock.com/shutterstock/photos/2064339086/display_1500/stock-vector-elasticity-compression-force-press-vector-2064339086.jpg",
+                    "example": {
+                        "sentence": "Tectonic forces caused compression in the earth’s crust.",
+                        "translation": "Lực kiến ​​tạo gây ra sự nén ép ở lớp vỏ trái đất.",
+                        "pronunciation": "/tɛkˈtɒnɪk ˈfɔːsɪz kɔːzd kəmˈprɛʃən ɪn ði ɜːθs krʌst/"
+                    }  
                 }
             ]
         }
