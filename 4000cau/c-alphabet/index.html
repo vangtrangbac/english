@@ -316,11 +316,11 @@
                 // Hàm cập nhật bài hát và thông tin hiển thị
                 async function loadTrack(index) {
                     const voca = vocabularies[index];
+                    trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
                     //Play main voca audio
                     await playAudioAsync(voca.audio);
                     await delayFc(1000);
                     await playAudioAsync(voca.audio);
-                    trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
                     await delayFc(1000);
 
                     //Play part of speech audio
@@ -444,7 +444,7 @@
                     "meaning": "Sự xáo trộn, sự rung chuyển, sự rối loạn",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commo/commotion.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commo/commotion.mp3",
+                    "audioEx": "./commotion.mp3",
                     "image": "https://i0.wp.com/dictionaryblog.cambridge.org/wp-content/uploads/2015/05/commotion.jpg",
                     "example": {
                         "sentence": "There was a commotion outside the embassy",
@@ -458,7 +458,7 @@
                     "meaning": "Truyền đạt, giao thiệp, liên lạc",
                     "partOfSpeech": "v",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communicate.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communicate.mp3",
+                    "audioEx": "./communicate.mp3",
                     "image": "https://theyellowspot.com/wp-content/uploads/2019/02/How-to-communicate-effectively.png",
                     "example": {
                         "sentence": "We can now communicate instantly with people on the other side of the world.",
@@ -472,7 +472,7 @@
                     "meaning": "Sự giao tiếp, sự liên lạc",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communication.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/commu/communication.mp3",
+                    "audioEx": "./communication.mp3",
                     "image": "https://neuroleadership.com/wp-content/uploads/2023/03/Three-Steps-for-Communicating-Better-According-to-Neuroscience-.png",
                     "example": {
                         "sentence": "We are in direct communication with the leaders of the rebellion.",
@@ -486,7 +486,7 @@
                     "meaning": "Dân chúng, nhân dân",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70908.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70908.mp3",
+                    "audioEx": "./community.mp3",
                     "image": "https://m.media-amazon.com/images/S/pv-target-images/d6e25ce8c6cdf788ec947effcec7854aee7090812cb73e536adf6b75b9eb7ca6.jpg",
                     "example": {
                         "sentence": "He's well known in the local community.",
@@ -500,7 +500,7 @@
                     "meaning": "Công ty",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/company.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/company.mp3",
+                    "audioEx": "./company.mp3",
                     "image": "https://i0.wp.com/www.iedunote.com/img/23559/what-is-a-company-1.jpg",
                     "example": {
                         "sentence": "He works for a software company/a company that makes software.",
@@ -514,7 +514,7 @@
                     "meaning": "Có thể so sánh được",
                     "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparable.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparable.mp3",
+                    "audioEx": "./comparable.mp3",
                     "image": "https://i.ytimg.com/vi/mU9xct8NsYk/sddefault.jpg",
                     "example": {
                         "sentence": "The girls are of comparable ages.",
@@ -528,7 +528,7 @@
                     "meaning": "So sánh, tương đối",
                     "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/media/english/uk_pron/u/ukc/ukcom/ukcommu028.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/uk_pron/u/ukc/ukcom/ukcommu028.mp3",
+                    "audioEx": "./comparative.mp3",
                     "image": "https://i.ytimg.com/vi/wXiD0FdON7k/maxresdefault.jpg",
                     "example": {
                         "sentence": "More difficult is the comparative of difficult.",
@@ -542,7 +542,7 @@
                     "meaning": "So sánh",
                     "partOfSpeech": "v",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/compare.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/compare.mp3",
+                    "audioEx": "./compare.mp3",
                     "image": "https://in2english.net/wp-content/uploads/2022/12/compare-and-contrast.jpg",
                     "example": {
                         "sentence": "If you compare house prices in the two areas, it's quite amazing how different they are.",
@@ -556,7 +556,7 @@
                     "meaning": "Sự so sánh",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparison.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compa/comparison.mp3",
+                    "audioEx": "./comparison.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR3TbnUmS7VMCFtnRZBgwpi5UQnTp1lFPjaA&s",
                     "example": {
                         "sentence": "They made a comparison of different countries' eating habits.",
@@ -570,7 +570,7 @@
                     "meaning": "Tranh đua, cạnh tranh",
                     "partOfSpeech": "v",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/compete.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/compete.mp3",
+                    "audioEx": "./compete.mp3",
                     "image": "https://hbr.org/resources/images/article_assets/2022/01/R2202L_AZAB.png",
                     "example": {
                         "sentence": "It's difficult for a small shop to compete against the big supermarkets.",
@@ -584,7 +584,7 @@
                     "meaning": "Sự cạnh tranh, cuộc thi",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/competition.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compe/competition.mp3",
+                    "audioEx": "./competition.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSO19Q4J8olzmIQZcqhT6djyGyBMhxe36_HDA&s",
                     "example": {
                         "sentence": "There's a lot of competition between computer companies.",
@@ -598,7 +598,7 @@
                     "meaning": "Cạnh tranh, tranh đua",
                     "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70916.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70916.mp3",
+                    "audioEx": "./competitive.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaKwv67J4uIKnBFj5tzOhkxIt_RTFM_WM-Hg&s",
                     "example": {
                         "sentence": "You're very competitive - it's meant to be a friendly match!",
@@ -612,7 +612,7 @@
                     "meaning": "Đối thủ, người cạnh tranh",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70917.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70917.mp3",
+                    "audioEx": "./competitor.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTN1j7omzyR_bWzmwlwZG0KDmbBe8lPA49oXQ&s",
                     "example": {
                         "sentence": "Their prices are better than any of their competitors.",
@@ -626,7 +626,7 @@
                     "meaning": "Phàn nàn, kêu ca",
                     "partOfSpeech": "v",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complain.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complain.mp3",
+                    "audioEx": "./complain.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQL43dNgV2pUTT8SqqwNtdAOgBbAmxD1YkuNQ&s",
                     "example": {
                         "sentence": "Lots of people have complained about the noise.",
@@ -641,7 +641,7 @@
                     "meaning": "Lời hàn nàn, lời kêu ca",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complaint.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complaint.mp3",
+                    "audioEx": "./complaint.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhFXqCpwCHjMhZ58wA-rfsJfdYxSDXrG1tLQ&s",
                     "example": {
                         "sentence": "We've received a complaint from one of our listeners about offensive language.",
@@ -656,7 +656,7 @@
                     "meaning": "Bù cho đầy đủ, bổ sung",
                     "partOfSpeech": "v",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
+                    "audioEx": "./compliment.mp3",
                     "image": "https://lettutor.edu.vn/_next/image?url=https%3A%2F%2Fadmin.lettutor.edu.vn%2Fuploads%2FPhan_biet_compliment_va_complement_7b32acc8e7.jpg&w=3840&q=75",
                     "example": {
                         "sentence": "Strawberries and cream complement each other perfectly.",
@@ -669,9 +669,9 @@
                     "word": "complete",
                     "pronunciation": "/ˈkɑːm.plə.mənt/",
                     "meaning": "Hoàn thành, xong",
-                    "partOfSpeech": "v, adj",
+                    "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complete.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complete.mp3",
+                    "audioEx": "./complete.mp3",
                     "image": "https://www.shutterstock.com/image-vector/stamp-word-complete-inside-vector-260nw-190530461.jpg",
                     "example": {
                         "sentence": "He only needs two more cards to complete the set.",
@@ -686,7 +686,7 @@
                     "meaning": "Hoàn thành, đẩy đủ, trọn vẹn",
                     "partOfSpeech": "adv",
                     "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/com/compl/completely.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/com/compl/completely.mp3",
+                    "audioEx": "./completely.mp3",
                     "image": "https://media.dolenglish.vn/PUBLIC/MEDIA/e4e90d19-3a49-4a2b-bf86-02094aa00ed3.jpg",
                     "example": {
                         "sentence": "I agree with you completely.",
@@ -701,7 +701,7 @@
                     "meaning": "Phức tạp, rắc rối",
                     "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70919.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70919.mp3",
+                    "audioEx": "./complex.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqL36wAcX3LTDyjNh6S4VwpADwUxmKHJ_XjA&s",
                     "example": {
                         "sentence": "It's a very complex issue to which there is no straightforward answer.",
@@ -716,7 +716,7 @@
                     "meaning": "Phức tạp, rắc rối",
                     "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complicated.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complicated.mp3",
+                    "audioEx": "./complicated.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWAmLDR_DtWDoPSbF_2s8HmZ8FACADEv1tqA&s",
                     "example": {
                         "sentence": "The rules are rather complicated to follow.",
@@ -731,7 +731,7 @@
                     "meaning": "Sự phức tạp, rắc rối",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complication.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/complication.mp3",
+                    "audioEx": "./complication.mp3",
                     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZxwmwLJJyUvHk1quFmyrA-KeEfse6gt5YMQ&s",
                     "example": {
                         "sentence": "Dave couldn't find his passport at the airport and then there were further complications when Fiona lost her baggage.",
@@ -746,7 +746,7 @@
                     "meaning": "Lời khen, lời ca tụng",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/media/english/us_pron/c/com/compl/compliment.mp3",
+                    "audioEx": "./compliment.mp3",
                     "image": "https://cdn.prod.website-files.com/5c0133bb37903429d4410485/6540aaa78590fa302fd69a65_pluvo_blog_complimenten.jpg",
                     "example": {
                         "sentence": "He complained that his wife never paid him any compliments anymore.",
@@ -761,7 +761,7 @@
                     "meaning": "Có thể lĩnh hội, có thể hiểu",
                     "partOfSpeech": "adj",
                     "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus70/eus70928.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus70/eus70928.mp3",
+                    "audioEx": "./comprehensible.mp3",
                     "image": "https://fluentkey.com/blog/wp-content/uploads/2019/02/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7-2019-02-18-%E4%B8%8B%E5%8D%8812.33.03.png",
                     "example": {
                         "sentence": "It's written in clear, comprehensible English.",
@@ -776,7 +776,7 @@
                     "meaning": "sự hiểu,sự lĩnh hội, sự nhận thức",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/com/compr/comprehension.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/com/compr/comprehension.mp3",
+                    "audioEx": "./comprehension.mp3",
                     "image": "https://keystoliteracy.com/wp-content/uploads/2023/05/Comprehension--e1682954502362.jpg",
                     "example": {
                         "sentence": "He has no comprehension of the size of the problem.",
@@ -836,7 +836,7 @@
                     "meaning": "Sự ép, sự nén, sự cô lại, sự cô đọng",
                     "partOfSpeech": "n",
                     "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo03/cdo0318uscomp1040.mp3",
-                    "audioEx": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo03/cdo0318uscomp1040.mp3",
+                    "audioEx": "./compression.mp3",
                     "image": "https://www.shutterstock.com/shutterstock/photos/2064339086/display_1500/stock-vector-elasticity-compression-force-press-vector-2064339086.jpg",
                     "example": {
                         "sentence": "Tectonic forces caused compression in the earth’s crust.",
