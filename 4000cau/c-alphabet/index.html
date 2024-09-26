@@ -349,17 +349,18 @@
 
                     audioPlayer.src = voca.audioEx;
                     audioPlayer.play();
-                    audioPlayer.ended = async () => {
-                        await delayFc(3000);
-                        //Next track
-                        currentTrack++;
-                        if (currentTrack < vocabularies.length) {
-                            loadTrack(currentTrack);
-                        } else {
-                            currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
-                            loadTrack(currentTrack);
-                        }
+                    audioPlayer.onended = async () => {
+                        setTimeout(() => {
+                            currentTrack++;
+                            if (currentTrack < vocabularies.length) {
+                                loadTrack(currentTrack);
+                            } else {
+                                currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                                loadTrack(currentTrack);
+                            }
+                        }, 3000);
                     };
+                    
                 }
 
                 // Bắt đầu phát bài hát đầu tiên
