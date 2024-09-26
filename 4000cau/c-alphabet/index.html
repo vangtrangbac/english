@@ -345,17 +345,21 @@
                         await delayFc(2000);
                     }
                     //Play example audio
-                    await playAudioAsync(voca.audioEx);
                     trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
-                    await delayFc(3000);
-                    //Next track
-                    currentTrack++;
-                    if (currentTrack < vocabularies.length) {
-                        loadTrack(currentTrack);
-                    } else {
-                        currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
-                        loadTrack(currentTrack);
-                    }
+
+                    audioPlayer.src = voca.audioEx;
+                    audioPlayer.play();
+                    audioPlayer.ended = async () => {
+                        await delayFc(3000);
+                        //Next track
+                        currentTrack++;
+                        if (currentTrack < vocabularies.length) {
+                            loadTrack(currentTrack);
+                        } else {
+                            currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                            loadTrack(currentTrack);
+                        }
+                    };
                 }
 
                 // Bắt đầu phát bài hát đầu tiên
