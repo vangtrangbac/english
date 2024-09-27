@@ -179,7 +179,7 @@
             if(toggleBtn.textContent === 'Ôn tập'){
                 vocabularies.forEach((vocab) => {
                     const li = document.createElement('li');
-                    li.innerHTML = `${vocab.index}. <span id="textToCopy">${vocab.meaning}</span>
+                    li.innerHTML = `${vocab.stt} - ${vocab.index}. <span id="textToCopy">${vocab.meaning}</span>
                                     <a href="#" onclick="document.getElementById('${vocab.index}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
@@ -190,7 +190,7 @@
             }else{
                 vocabularies.forEach((vocab) => {
                     const li = document.createElement('li');
-                    li.innerHTML = `${vocab.index}. <span id="textToCopy">${vocab.word}</span>
+                    li.innerHTML = `${vocab.stt} - ${vocab.index}. <span id="textToCopy">${vocab.word}</span>
                                     <br/> <span style="color: blue"><i>(${vocab.pronunciation})</i></span>
                                     <br/> <span style="color: gray"><i>(${vocab.meaning})</i></span>
                                     <a href="#" onclick="document.getElementById('${vocab.index}-audio').play()">
@@ -318,6 +318,7 @@
             "vocabularies": [
                 {
                     "index": 480,
+                    "stt": 1,
                     "word": "what does the boyfriend look like?",
                     "pronunciation": "/wʌt dʌz ðə ˈbɔɪˌfrɛnd lʊk laɪk/",
                     "meaning": "Bạn trai trông như thế nào",
@@ -325,6 +326,7 @@
                 },
                 {
                     "index": 481,
+                    "stt": 2,
                     "word": "what does your mother look like?",
                     "pronunciation": "/wʌt dʌz jɔːr ˈmʌðər lʊk laɪk/",
                     "meaning": "mẹ bạn trông như thế nào",
@@ -332,6 +334,7 @@
                 },
                 {
                     "index": 482,
+                    "stt": 3,
                     "word": "what does your cousin look like?",
                     "pronunciation": "/wʌt dʌz jɔːr ˈkʌzən lʊk laɪk/",
                     "meaning": "anh/chị/em họ của bạn trông như thế nào",
@@ -339,6 +342,7 @@
                 },
                 {
                     "index": 483,
+                    "stt": 4,
                     "word": "what does the wallet look like?",
                     "pronunciation": "/wʌt dʌz ðə ˈwɑːlɪt lʊk laɪk/",
                     "meaning": "cái ví trông như thế nào",
@@ -346,6 +350,7 @@
                 },
                 {
                     "index": 484,
+                    "stt": 5,
                     "word": "he is tall and muscular",
                     "pronunciation": "/hi ɪz tɔːl ənd ˈmʌskjələr/",
                     "meaning": "anh ấy cao và cơ bắp",
@@ -353,6 +358,7 @@
                 },
                 {
                     "index": 485,
+                    "stt": 6,
                     "word": "he's short and slim",
                     "pronunciation": "/hiz ʃɔːrt ənd slɪm/",
                     "meaning": "anh ấy thấp và gầy",
@@ -360,6 +366,7 @@
                 },
                 {
                     "index": 486,
+                    "stt": 7,
                     "word": "he has curly hair",
                     "pronunciation": "/hi hæz ˈkɝːli hɛr/",
                     "meaning": "anh ấy có mái tóc xoăn",
@@ -367,6 +374,7 @@
                 },
                 {
                     "index": 487,
+                    "stt": 8,
                     "word": "she is very pretty",
                     "pronunciation": "/ʃi ɪz ˈvɛri ˈprɪti/",
                     "meaning": "cô ấy rất xinh đẹp",
@@ -374,6 +382,7 @@
                 },
                 {
                     "index": 488,
+                    "stt": 9,
                     "word": "she has long hair",
                     "pronunciation": "/ʃi hæz lɔːŋ hɛr/",
                     "meaning": "cô ấy có mái tóc dài",
@@ -381,6 +390,7 @@
                 },
                 {
                     "index": 489,
+                    "stt": 10,
                     "word": "everybody likes her",
                     "pronunciation": "/ˈɛvriˌbɔdi laɪks hɜr/",
                     "meaning": "mọi người đều thích cô ấy",
@@ -388,6 +398,7 @@
                 },
                 {
                     "index": 490,
+                    "stt": 11,
                     "word": "she is an actress",
                     "pronunciation": "/ʃi ɪz æn ˈæktrɪs/",
                     "meaning": "cô ấy là một diễn viên",
@@ -395,6 +406,7 @@
                 },
                 {
                     "index": 491,
+                    "stt": 12,
                     "word": "I'd like to meet her",
                     "pronunciation": "/aɪd laɪk tə mit hɜr/",
                     "meaning": "Tôi muốn gặp cô ấy",
@@ -402,6 +414,7 @@
                 },
                 {
                     "index": 492,
+                    "stt": 13,
                     "word": "it's my little boy",
                     "pronunciation": "/ɪts maɪ ˈlɪtəl bɔɪ/",
                     "meaning": "đó là cậu con trai bé nhỏ của tôi",
@@ -409,6 +422,7 @@
                 },
                 {
                     "index": 493,
+                    "stt": 14,
                     "word": "we were looking for some pants for my husband",
                     "pronunciation": "/wi wɜr ˈlʊkɪŋ fɔr səm pænts fɔr maɪ ˈhʌzbənd/",
                     "meaning": "chúng tôi đang tìm một vài chiếc quần cho chồng tôi",
@@ -416,6 +430,7 @@
                 },
                 {
                     "index": 494,
+                    "stt": 15,
                     "word": "now I can't find him",
                     "pronunciation": "/naʊ aɪ kænt faɪnd hɪm/",
                     "meaning": "bây giờ tôi không thể tìm thấy anh ấy",
@@ -423,6 +438,7 @@
                 },
                 {
                     "index": 495,
+                    "stt": 16,
                     "word": "I'm going to work",
                     "pronunciation": "/aɪm ˈɡoʊɪŋ tə wɜrk/",
                     "meaning": "tôi đang đi làm",
@@ -430,6 +446,7 @@
                 },
                 {
                     "index": 496,
+                    "stt": 17,
                     "word": "why do you go to work early?",
                     "pronunciation": "/waɪ du jʊ ɡoʊ tə wɜrk ˈɜrli/",
                     "meaning": "tại sao bạn đi làm sớm vậy",
@@ -437,6 +454,7 @@
                 },
                 {
                     "index": 497,
+                    "stt": 18,
                     "word": "I have to take a bus",
                     "pronunciation": "/aɪ hæv tə teɪk ə bʌs/",
                     "meaning": "Tôi phải đi xe buýt",
@@ -444,6 +462,7 @@
                 },
                 {
                     "index": 498,
+                    "stt": 19,
                     "word": "when is your birthday?",
                     "pronunciation": "/wɛn ɪz jɔr ˈbɜrθdeɪ/",
                     "meaning": "sinh nhật của bạn là khi nào",
@@ -451,6 +470,7 @@
                 },
                 {
                     "index": 499,
+                    "stt": 20,
                     "word": "my birthday is on May 10th",
                     "pronunciation": "/maɪ ˈbɜrθdeɪ ɪz ɑn meɪ tɛnθ/",
                     "meaning": "sinh nhật của tôi là ngày 10 tháng 5",
@@ -458,6 +478,7 @@
                 },
                 {
                     "index": 500,
+                    "stt": 21,
                     "word": "would you like to join us?",
                     "pronunciation": "/wʊd jʊ laɪk tə dʒɔɪn ʌs/",
                     "meaning": "bạn có muốn tham gia cùng chúng tôi không",
@@ -465,6 +486,7 @@
                 },
                 {
                     "index": 501,
+                    "stt": 22,
                     "word": "what party is it?",
                     "pronunciation": "/wʌt ˈpɑrti ɪz ɪt/",
                     "meaning": "what party is it",
@@ -472,6 +494,7 @@
                 },
                 {
                     "index": 502,
+                    "stt": 23,
                     "word": "it's my birthday party",
                     "pronunciation": "/ɪts maɪ ˈbɜrθdeɪ ˈpɑrti/",
                     "meaning": "đó là bữa tiệc sinh nhật của tôi",
@@ -479,6 +502,7 @@
                 },
                 {
                     "index": 503,
+                    "stt": 24,
                     "word": "okay I will come",
                     "pronunciation": "/oʊˈkeɪ aɪ wɪl kʌm/",
                     "meaning": "Được rồi tôi sẽ đến",
@@ -486,6 +510,7 @@
                 },
                 {
                     "index": 504,
+                    "stt": 25,
                     "word": "when is his birthday?",
                     "pronunciation": "/wɛn ɪz hɪz ˈbɜrθdeɪ/",
                     "meaning": "sinh nhật của anh ấy là khi nào",
@@ -493,6 +518,7 @@
                 },
                 {
                     "index": 505,
+                    "stt": 26,
                     "word": "do you know your parent's birthday?",
                     "pronunciation": "/du jʊ noʊ jʊr ˈpɛrənts ˈbɜrθdeɪ/",
                     "meaning": "bạn có biết sinh nhật của bố mẹ bạn không",
@@ -500,6 +526,7 @@
                 },
                 {
                     "index": 506,
+                    "stt": 27,
                     "word": "do you like birthday parties?",
                     "pronunciation": "/du jʊ laɪk ˈbɜrthdeɪ ˈpɑrtiz/",
                     "meaning": "bạn có thích tiệc sinh nhật không",
@@ -507,6 +534,7 @@
                 },
                 {
                     "index": 507,
+                    "stt": 28,
                     "word": "what do you usually do on your birthday?",
                     "pronunciation": "/wʌt du jʊ ˈjuːʒuəli du ɑn jʊr ˈbɜrθdeɪ/",
                     "meaning": "bạn thường làm gì vào ngày sinh nhật của bạn",
@@ -514,6 +542,7 @@
                 },
                 {
                     "index": 508,
+                    "stt": 29,
                     "word": "do you live alone or with your family?",
                     "pronunciation": "/du jʊ lɪv əˈloʊn ɔr wɪð jʊr ˈfæmɪli/",
                     "meaning": "bạn sống một mình hay với gia đình",
@@ -521,6 +550,7 @@
                 },
                 {
                     "index": 509,
+                    "stt": 30,
                     "word": "I live alone",
                     "pronunciation": "/aɪ lɪv əˈloʊn/",
                     "meaning": "Tôi sống một mình",
@@ -528,6 +558,7 @@
                 },
                 {
                     "index": 510,
+                    "stt": 31,
                     "word": "I live with my family",
                     "pronunciation": "/aɪ lɪv wɪð maɪ ˈfæmɪli/",
                     "meaning": "Tôi sống với gia đình tôi",
