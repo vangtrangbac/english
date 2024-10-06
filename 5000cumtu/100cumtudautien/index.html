@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách từ vựng với âm thanh</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .vocabulary {
+            color: green;
+            cursor: pointer;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .index-number {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            margin-right: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .index-circle-detail {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .play-all-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .play-all-button:hover {
+            background-color: #45a049;
+        }
+        #playButton, #pauseButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #playButton:hover, #pauseButton:hover {
+            background-color: #0056b3;
+        }
+        #trackInfo {
+            font-size: 18px;
+        }
+
+        #toggleButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #e7a414;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Danh sách từ vựng</h1>
+    <div style="display: flex; justify-content: space-between; max-width: 600px;">
+        <div class="play-audio">
+            <button class="play-all-button" id="play-all-button">Phát tất cả âm thanh</button>
+            <div id="trackInfo"><b>Now playing:</b></div>
+    
+            <!-- Các nút điều khiển -->
+            <div id="controls">
+                <button id="playButton">Play</button>
+                <button id="pauseButton">Pause</button>
+            </div>
+    
+            <audio id="audioPlayer" src=""></audio>
+        </div>
+            <!-- Nút Ôn tập (ẩn/hiện tiếng Anh) -->
+        <div id="area-toggle">
+            <button id="toggleButton">Học bài</button>
+            <div id="inputForm">
+                <label for="startIndex">Số t/t của từ: </label>
+                <input type="number" id="startIndex" value="1" min="1"><br/>
+                
+                <label for="numItems">Số lượng từ: </label>
+                <input type="number" id="numItems" value="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <ul id="vocabulary-list"></ul>
+    <!-- Các nút điều hướng trang -->
+    <div class="controls">
+        <button id="prevButton">Trang trước</button>
+        <button id="nextButton">Trang sau</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="vocabulary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0; // Trang hiện tại
+        const itemsPerPage = 20; // Mỗi trang hiển thị 1 từ vựng
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        function loadVocabulary(page) {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            // --- Phân trang
+            const start = page * itemsPerPage;
+            const end = start + itemsPerPage;
+            const vocabularies = data.vocabularies.slice(start, end);
+
+            const vocabularyList = document.getElementById('vocabulary-list');
+            const modal = document.getElementById('vocabulary-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModal = document.querySelector('.close');
+            const playAllButton = document.getElementById('play-all-button');
+            vocabularyList.innerHTML="";
+
+            const toggleBtn = document.getElementById('toggleButton');
+
+            if(toggleBtn.textContent === 'Ôn tập'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `${vocab.index}. <span id="textToCopy">${vocab.meaning}</span>
+                                    <a href="#" onclick="document.getElementById('${vocab.index}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.index}-audio" src="${vocab.audio}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }else{
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `${vocab.index}. <span id="textToCopy">${vocab.word}</span>
+                                    <br/> <span style="color: blue"><i>(${vocab.pronunciation})</i></span>
+                                    <br/> <span style="color: gray"><i>(${vocab.meaning})</i></span>
+                                    <a href="#" onclick="document.getElementById('${vocab.index}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.index}-audio" src="${vocab.audio}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }
+
+            playAllButton.addEventListener('click', () => {
+                let currentTrack = 0;
+                const audioPlayer = document.getElementById('audioPlayer');
+                const playButton = document.getElementById('playButton');
+                const pauseButton = document.getElementById('pauseButton');
+                const trackInfo = document.getElementById('trackInfo');
+                const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                // const vocabularies = data.vocabularies;
+                // --- Phân trang
+                const startIndex = document.getElementById('startIndex');
+                const numItems = document.getElementById('numItems');
+
+                const start = startIndex.value - 1;
+                const end = start + numItems.value -1;
+                const vocabularies = data.vocabularies.slice(start, end);
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                function playAudioAsync(url) {
+                    return new Promise((resolve, reject) => {
+                        const audio = new Audio(url);
+
+                        // Resolve the promise when the audio finishes playing
+                        audio.addEventListener('ended', resolve);
+
+                        // Optional: reject the promise if there's an error during playback
+                        audio.addEventListener('error', (e) => reject(e));
+
+                        // Start playing the audio
+                        audio.play();
+                    });
+                }
+
+                // Hàm cập nhật bài hát và thông tin hiển thị
+                async function loadTrack(index) {
+                    const vocab = vocabularies[index];
+                    trackInfo.innerHTML = `${vocab.index}. <span id="textToCopy">${vocab.word}</span>
+                                    <br/> <span style="color: blue"><i>(${vocab.pronunciation})</i></span>
+                                    <br/> <span style="color: gray"><i>(${vocab.meaning})</i></span>`;
+                    await playAudioAsync(vocab.audio);
+                    await delayFc(1000);
+                    await playAudioAsync(vocab.audio);
+                    await delayFc(3000);
+                    currentTrack++;
+                    if (currentTrack < vocabularies.length) {
+                        loadTrack(currentTrack);
+                    } else {
+                        currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                        loadTrack(currentTrack);
+                    }
+                }
+
+                // Bắt đầu phát bài hát đầu tiên
+                loadTrack(currentTrack);
+
+                // Nút Play
+                playButton.addEventListener('click', function() {
+                    audioPlayer.play();
+                });
+
+                // Nút Pause
+                pauseButton.addEventListener('click', function() {
+                    audioPlayer.pause();
+                });
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+            });
+        }
+
+        // Sự kiện cho nút Trang trước
+        prevButton.addEventListener('click', function() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        // Sự kiện cho nút Trang sau
+        nextButton.addEventListener('click', function() {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            if (currentPage < Math.ceil(data.vocabularies.length / itemsPerPage) - 1) {
+                currentPage++;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        window.onload = () => {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            const vocabularies = data.vocabularies;
+            const startIndex = document.getElementById('startIndex');
+            const numItems = document.getElementById('numItems');
+            startIndex.value = 1;
+            numItems.value = vocabularies.length;
+
+            loadVocabulary(currentPage);
+        }
+        // Chức năng ẩn/hiện phần tiếng Anh
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            // Kiểm tra xem đoạn văn bản có đang bị ẩn không
+            if (this.textContent === 'Ôn tập') {
+                this.textContent = 'Học bài';  // Hiện lại đoạn văn bản
+            } else {
+                this.textContent = 'Ôn tập';  // Ẩn đoạn văn bản
+            }
+            loadVocabulary(currentPage);
+        });
+    </script>
+    <script id="vocabulary-data" type="application/json">
+        {
+            "vocabularies": [
+                {
+                    "index": 1,
+                    "word": "well done",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Làm tốt lắm, giỏi lăm",
+                    "audio": "./1.mp3"
+                },
+                {
+                    "index": 2,
+                    "word": "come on",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Thôi nào, thôi mà",
+                    "audio": "./2.mp3"
+                },
+                {
+                    "index": 3,
+                    "word": "good job",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Làm tốt lắm",
+                    "audio": "./3.mp3"
+                },
+                {
+                    "index": 4,
+                    "word": "not bad",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Làm tốt lắm",
+                    "audio": "./4.mp3"
+                },
+                {
+                    "index": 5,
+                    "word": "how much",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bao nhiêu?",
+                    "audio": "./5.mp3"
+                },
+                {
+                    "index": 6,
+                    "word": "how many",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bao nhiêu?",
+                    "audio": "./6.mp3"
+                },
+                {
+                    "index": 7,
+                    "word": "just kidding",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Đùa thôi, giỡn đó",
+                    "audio": "./7.mp3"
+                },
+                {
+                    "index": 8,
+                    "word": "hold on",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Chờ chút",
+                    "audio": "./8.mp3"
+                },
+                {
+                    "index": 9,
+                    "word": "I'm lost",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi lạc rồi",
+                    "audio": "./9.mp3"
+                },
+                {
+                    "index": 10,
+                    "word": "not yet",
+                    "pronunciation": "/TBD/",
+                    "meaning": "chưa, chưa đâu",
+                    "audio": "./10.mp3"
+                },
+                {
+                    "index": 11,
+                    "word": "me too",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tôi cũng vậy",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 12,
+                    "word": "me neither",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tôi cũng , tôi cũng chưa",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 13,
+                    "word": "try your best",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Cố gắng hết sức nha",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 14,
+                    "word": "i agree",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi đồng ý",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 15,
+                    "word": "be quiet",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Hãy yên lặng",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 16,
+                    "word": "no way",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Không đời nào, không thể nào",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 17,
+                    "word": "have fun",
+                    "pronunciation": "/TBD/",
+                    "meaning": "chúc vui vẻ",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 18,
+                    "word": "don't be mad at me",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đừng giận tôi nha",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 19,
+                    "word": "my treat",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tôi mời, để tôi đãi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 20,
+                    "word": "as soon as possible",
+                    "pronunciation": "/TBD/",
+                    "meaning": "sớm nhất có thể",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 21,
+                    "word": "let's go",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đi nào, đi thôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 22,
+                    "word": "I'm home",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tôi về nhà rồi đây",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 23,
+                    "word": "Sorry, i'm late",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Xin lỗi tôi đến muộn",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 24,
+                    "word": "This way",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Lối này, đường này",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 25,
+                    "word": "Sooner or later",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Sớm hay muộn thôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 26,
+                    "word": "Bottoms up",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Cạn ly",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 27,
+                    "word": "After you",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bạn trước đi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 28,
+                    "word": "It's up to you",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tuỳ bạn thôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 29,
+                    "word": "congratulations",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Xin chúc mừng",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 30,
+                    "word": "follow me",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đi theo tôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 31,
+                    "word": "easier said than done",
+                    "pronunciation": "/TBD/",
+                    "meaning": "nói thì dễ, làm mới khó",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 32,
+                    "word": "forget it",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Điều đó không quan trọng, quên nó đi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 33,
+                    "word": "I'm glad to hear that",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi rất vui khi nghe điều đó",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 34,
+                    "word": "the more the merrier",
+                    "pronunciation": "/TBD/",
+                    "meaning": "càng đông càng vui",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 35,
+                    "word": "no problem",
+                    "pronunciation": "/TBD/",
+                    "meaning": "không thành vấn đề, không có gì?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 35,
+                    "word": "good luck",
+                    "pronunciation": "/TBD/",
+                    "meaning": "chúc may mắn",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 36,
+                    "word": "my attention to me please",
+                    "pronunciation": "/TBD/",
+                    "meaning": "xin hãy chú ý đến tôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 37,
+                    "word": "I promise",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi xin hứa",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 38,
+                    "word": "same here",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi cũng vậy",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 39,
+                    "word": "same to you",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bạn cũng thế nhé",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 40,
+                    "word": "it's none of your business",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đó không phải việc của bạn",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 41,
+                    "word": "of course",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tất nhiên rồi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 42,
+                    "word": "enjoy your meal",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Chúc bạn ngon miệng",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 43,
+                    "word": "take it easy",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bình tĩnh, từ từ",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 44,
+                    "word": "slow down",
+                    "pronunciation": "/TBD/",
+                    "meaning": "chậm lại",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 45,
+                    "word": "speed up",
+                    "pronunciation": "/TBD/",
+                    "meaning": "nhanh lên",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 46,
+                    "word": "I'm almost there",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi gần tới rồi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 47,
+                    "word": "take care",
+                    "pronunciation": "/TBD/",
+                    "meaning": "bảo trọng nha",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 48,
+                    "word": "Money Talks",
+                    "pronunciation": "/TBD/",
+                    "meaning": "có tiền mua tiên cũng được",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 49,
+                    "word": "try again",
+                    "pronunciation": "/TBD/",
+                    "meaning": "thử lại xem",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 50,
+                    "word": "don't worry I won't tell anyone",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đừng lo lắng tôi sẽ không nói với ai đâu",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 51,
+                    "word": "be careful",
+                    "pronunciation": "/TBD/",
+                    "meaning": "hãy cẩn thận",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 52,
+                    "word": "have you had breakfast yet?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "bạn đã ăn sáng chưa",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 53,
+                    "word": "don't move",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đừng di chuyển",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 54,
+                    "word": "thanks in advance",
+                    "pronunciation": "/TBD/",
+                    "meaning": "cảm ơn trước nha",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 55,
+                    "word": "guess what",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đoán xem nào",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 55,
+                    "word": "make yourself at home",
+                    "pronunciation": "/TBD/",
+                    "meaning": "hãy tự nhiên như ở nhà",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 56,
+                    "word": "I doubt it",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi nghi ngờ điều đó",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 57,
+                    "word": "what did you say?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bạn nói gì cơ?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 58,
+                    "word": "keep it up",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tiếp tục phát huy nhé",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 59,
+                    "word": "did you sleep well last night?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đêm qua bạn ngủ có ngon không",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 60,
+                    "word": "let me see",
+                    "pronunciation": "/TBD/",
+                    "meaning": "để tôi xem đã",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 61,
+                    "word": "I never run a red light",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi không bao giờ vượt đèn đỏ",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 62,
+                    "word": "I just woke up",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi vừa mới thức dậy",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 63,
+                    "word": "are you tired?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bạn có mệt không?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 64,
+                    "word": "I don't think so",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi không nghĩ vậy",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 65,
+                    "word": "see you later",
+                    "pronunciation": "/TBD/",
+                    "meaning": "gặp lại bạn sau",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 66,
+                    "word": "have we met before",
+                    "pronunciation": "/TBD/",
+                    "meaning": "chúng ta đã gặp nhau trước đây chưa?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 67,
+                    "word": "you look familiar to me",
+                    "pronunciation": "/TBD/",
+                    "meaning": "bạn trông quen quen với tôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 68,
+                    "word": "how is the weather?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "thời tiết thế nào?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 69,
+                    "word": "it's very hot",
+                    "pronunciation": "/TBD/",
+                    "meaning": "trời rất nóng",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 70,
+                    "word": "just a little bit",
+                    "pronunciation": "/TBD/",
+                    "meaning": "chỉ một chút thôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 71,
+                    "word": "nice to meet you",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Rất vui được gặp bạn",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 72,
+                    "word": "are you okay",
+                    "pronunciation": "/TBD/",
+                    "meaning": "bạn có ổn không",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 73,
+                    "word": "have a nice day",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Chúc một ngày tốt lành",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 74,
+                    "word": "I'm really enjoying it",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi thực sự thích nó",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 75,
+                    "word": "good night",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Chúc ngủ ngon",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 76,
+                    "word": "what is it",
+                    "pronunciation": "/TBD/",
+                    "meaning": "nó là gì?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 77,
+                    "word": "what brings you have?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Điều gì mang bạn đến đây?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 78,
+                    "word": "long time no see",
+                    "pronunciation": "/TBD/",
+                    "meaning": "lâu rồi không gặp",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 79,
+                    "word": "what's this in English",
+                    "pronunciation": "/TBD/",
+                    "meaning": "cái này là gì trong tiếng anh",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 80,
+                    "word": "very good",
+                    "pronunciation": "/TBD/",
+                    "meaning": "rất tốt",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 81,
+                    "word": "be careful driving",
+                    "pronunciation": "/TBD/",
+                    "meaning": "lái xe cẩn thận nhé?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 82,
+                    "word": "excuse me",
+                    "pronunciation": "/TBD/",
+                    "meaning": "xin thứ lỗi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 83,
+                    "word": "where are you from",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bạn đến từ đâu",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 84,
+                    "word": "is he your friend?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "anh ấy có phải là bạn của bạn không",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 85,
+                    "word": "help yourself",
+                    "pronunciation": "/TBD/",
+                    "meaning": "cú tự nhiên nhé",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 86,
+                    "word": "what's your phone number?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "số điện thoại của bạn là gì",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 87,
+                    "word": "that's all",
+                    "pronunciation": "/TBD/",
+                    "meaning": "thế thôi, chỉ vậy thôi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 88,
+                    "word": "can I ask you some questions?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Tôi có thể hỏi bạn một số câu hỏi không?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 89,
+                    "word": "where are you now?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Giờ bạn đang ở đâu?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 90,
+                    "word": "are you married?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Bạn kết hôn rồi phải không?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 91,
+                    "word": "what's your job?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "công việc của bạn là gì?",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 91,
+                    "word": "don't be nervous",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đừng lo lắng",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 92,
+                    "word": "that will do",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Cái đó hay đấy, ý đó hay đấy",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 93,
+                    "word": "never mind",
+                    "pronunciation": "/TBD/",
+                    "meaning": "Đừng bận tâm, không cần để tâm đâu",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 94,
+                    "word": "what should I do",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tôi nên làm gì",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 95,
+                    "word": "that's right",
+                    "pronunciation": "/TBD/",
+                    "meaning": "đúng rồi",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 96,
+                    "word": "are you sure?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "bạn có chắc không",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 97,
+                    "word": "yes or no?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "có hay không",
+                    "audio": "./TBD.mp3"
+                },
+                {
+                    "index": 98,
+                    "word": "of course not?",
+                    "pronunciation": "/TBD/",
+                    "meaning": "tất nhiên là không",
+                    "audio": "./TBD.mp3"
+                }
+            ]
+        }
+        </script>
+</body>
+</html>
