@@ -8,6 +8,6 @@ Trong thê <audio ....>, clịck chuột phải vào link -> chọn open in new 
 # Lên google dịch copy 1 example từ cambridge
 # Vào chatgt: https://chatgpt.com/  nhập là phiên âm của cụm từ trên
 Coppy phiên âm này vào example
-# Lên https://ttsmaker.com/
+# Lên https://ttsmaker.com/ hoặc https://j2team.dev/tools/text-to-speech
 Text to speech lấy audio lưu dạng <word_sentence.mp3>
 Coppy ./<word_sentence.mp3> vào `audioEx`
