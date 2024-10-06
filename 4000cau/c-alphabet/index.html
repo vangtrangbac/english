@@ -365,6 +365,8 @@
                     }
                     //Play example audio
                     trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
+                    await playAudioAsync(voca.audioEx);
+                    await delayFc(5000);
 
                     audioPlayer.src = voca.audioEx;
                     audioPlayer.play();
@@ -1391,7 +1393,7 @@
                     }  
                 },
                 {
-                    "index": 64,
+                    "index": 65,
                     "word": "consignor",
                     "pronunciation": "/kənˈsaɪnər/",
                     "meaning": "người gửi hàng",
@@ -1406,7 +1408,7 @@
                     }  
                 },
                 {
-                    "index": 65,
+                    "index": 66,
                     "word": "consist of",
                     "pronunciation": "/kənˈsɪst - əv/",
                     "meaning": "gồm có, bao gồm",
@@ -1421,7 +1423,7 @@
                     }  
                 },
                 {
-                    "index": 66,
+                    "index": 67,
                     "word": "console",
                     "pronunciation": "/kənˈsoʊl/",
                     "meaning": "an ủi, khuyên bảo",
@@ -1436,7 +1438,7 @@
                     }  
                 },
                 {
-                    "index": 67,
+                    "index": 68,
                     "word": "consonant",
                     "pronunciation": "/ˈkɑːn.sə.nənt/",
                     "meaning": "phụ âm",
@@ -1451,7 +1453,7 @@
                     }  
                 },
                 {
-                    "index": 68,
+                    "index": 69,
                     "word": "constantly",
                     "pronunciation": "/ˈkɑːn.stənt.li/",
                     "meaning": "liên tục, bền lòng",
@@ -1466,7 +1468,7 @@
                     }  
                 },
                 {
-                    "index": 69,
+                    "index": 70,
                     "word": "construct",
                     "pronunciation": "/kənˈstrʌkt/",
                     "meaning": "xây dựng",
@@ -1481,7 +1483,7 @@
                     }  
                 },
                 {
-                    "index": 70,
+                    "index": 71,
                     "word": "construction",
                     "pronunciation": "/kənˈstrʌk.ʃən/",
                     "meaning": "sự xây dựng",
@@ -1496,7 +1498,7 @@
                     }  
                 },
                 {
-                    "index": 71,
+                    "index": 72,
                     "word": "consult",
                     "pronunciation": "/kənˈsʌlt/",
                     "meaning": "tra cứu, tham khảo, thăm dò",
@@ -1511,7 +1513,7 @@
                     }  
                 },
                 {
-                    "index": 72,
+                    "index": 73,
                     "word": "consumer",
                     "pronunciation": "/kənˈsuː.mɚ/",
                     "meaning": "khách hàng, người tiêu dùng",
@@ -1526,7 +1528,7 @@
                     }  
                 },
                 {
-                    "index": 73,
+                    "index": 74,
                     "word": "contact",
                     "pronunciation": "/ˈkɑːn.tækt/",
                     "meaning": "sự liên lạc, sự giao thiệp",
@@ -1541,7 +1543,7 @@
                     }  
                 },
                 {
-                    "index": 74,
+                    "index": 75,
                     "word": "contact (v)",
                     "pronunciation": "/ˈkɑːn.tækt/",
                     "meaning": "liên lạc, giao thiệp",
@@ -1556,7 +1558,7 @@
                     }  
                 },
                 {
-                    "index": 75,
+                    "index": 76,
                     "word": "contain",
                     "pronunciation": "/kənˈteɪn/",
                     "meaning": "chứa đựng, bao gồm, bao hàm",
@@ -1571,7 +1573,7 @@
                     }  
                 },
                 {
-                    "index": 76,
+                    "index": 77,
                     "word": "container",
                     "pronunciation": "/kənˈteɪ.nɚ/",
                     "meaning": "hộp đựng, chai, lọ, thùng chứa",
@@ -1583,6 +1585,321 @@
                         "sentence": "This container will take six litres.",
                         "translation": "Bình chứa này có thể chứa được sáu lít.",
                         "pronunciation": "/ðɪs kənˈteɪnər wɪl teɪk sɪks ˈliːtərz./"
+                    }  
+                },
+                {
+                    "index": 78,
+                    "word": "contemporary",
+                    "pronunciation": "/kənˈtem.pə.rer.i/",
+                    "meaning": "đương thời, đương đại",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conte/contemporary.mp3",
+                    "audioEx": "./contemporary.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I wanted to update my kitchen and put in something more contemporary.",
+                        "translation": "Tôi muốn tân trang lại căn bếp của mình và thêm vào đó thứ gì đó hiện đại hơn.",
+                        "pronunciation": "/aɪ ˈwɑːntɪd tə ˈʌpdeɪt maɪ ˈkɪtʃɪn ənd pʊt ɪn ˈsʌmθɪŋ mɔːr kənˈtɛmpərəri/"
+                    }  
+                },
+                {
+                    "index": 79,
+                    "word": "contender",
+                    "pronunciation": "/kənˈten.dɚ/",
+                    "meaning": "ứng cử viên, đối thủ, địch thủ",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conte/contender.mp3",
+                    "audioEx": "./contender.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Now aged 42, he is no longer considered a serious contender for the title.",
+                        "translation": "Hiện đã 42 tuổi, anh không còn được coi là ứng cử viên nặng ký cho danh hiệu này nữa.",
+                        "pronunciation": "/naʊ eɪdʒd ˈfɔːrti tuː, hi ɪz noʊ ˈlɔːŋɡər kənˈsɪdərd ə ˈsɪriəs kənˈtɛndər fər ðə ˈtaɪtəl/"
+                    }  
+                },
+                {
+                    "index": 80,
+                    "word": "contest",
+                    "pronunciation": "/ˈkɑːn.test/",
+                    "meaning": "cuộc thi, cuộc tranh luận, cuộc chiến đấu",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conte/contest_01_00.mp3",
+                    "audioEx": "./contest.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She's won a lot of beauty contests.",
+                        "translation": "Cô ấy đã giành chiến thắng trong rất nhiều cuộc thi sắc đẹp.",
+                        "pronunciation": "/ʃiːz wʌn ə lɒt əv ˈbjuːti ˈkɒntɛsts/"
+                    }  
+                },
+                {
+                    "index": 81,
+                    "word": "context",
+                    "pronunciation": "/ˈkɑːn.tekst/",
+                    "meaning": "khung cảnh, phạm vi, tình huống",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conte/context.mp3",
+                    "audioEx": "./context.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "To understand this issue, it must first be situated in its context.",
+                        "translation": "Để hiểu được vấn đề này, trước tiên phải đặt nó vào bối cảnh của nó.",
+                        "pronunciation": "/tə ˌʌndərˈstænd ðɪs ˈɪʃuː, ɪt mʌst fɜːrst bi ˈsɪtʃueɪtɪd ɪn ɪts ˈkɒntɛkst/"
+                    }  
+                },
+                {
+                    "index": 82,
+                    "word": "continent",
+                    "pronunciation": "/ˈkɑːn.tən.ənt/",
+                    "meaning": "lục địa, đại lục",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70988.mp3",
+                    "audioEx": "./continent.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He decided to cycle across the continent to raise money for charity.",
+                        "translation": "Anh quyết định đạp xe xuyên lục địa để gây quỹ từ thiện.",
+                        "pronunciation": "/hi dɪˈsaɪdɪd tə ˈsaɪkəl əˈkrɒs ðə ˈkɒntɪnənt tə reɪz ˈmʌni fər ˈʧærɪti/"
+                    }  
+                },
+                {
+                    "index": 83,
+                    "word": "continuation",
+                    "pronunciation": "/kənˌtɪn.juˈeɪ.ʃən/",
+                    "meaning": "sự tiếp tục",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conti/continuation.mp3",
+                    "audioEx": "./continuation.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's just a continuation of the bigger river, but with a different name.",
+                        "translation": "Nó chỉ là phần tiếp theo của con sông lớn hơn, nhưng có tên gọi khác.",
+                        "pronunciation": "/ɪts dʒʌst ə kənˌtɪnjuˈeɪʃən əv ðə ˈbɪɡər ˈrɪvər, bʌt wɪð ə ˈdɪfərənt neɪm/"
+                    }  
+                },
+                {
+                    "index": 84,
+                    "word": "continuity",
+                    "pronunciation": "/ˌkɑːn.tənˈuː.ə.t̬i/",
+                    "meaning": "sự liên tục, liên tiếp",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70990.mp3",
+                    "audioEx": "./continuity.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "There has been no continuity in that class - they've had six different teachers.",
+                        "translation": "Lớp học đó không có sự liên tục - các em đã học qua sáu giáo viên khác nhau.",
+                        "pronunciation": "/ðeər hæz bɪn noʊ ˌkɒntɪˈnjuːɪti ɪn ðæt klɑːs - ðeɪv hæd sɪks ˈdɪfərənt ˈtiːʧərz/"
+                    }  
+                },
+                {
+                    "index": 85,
+                    "word": "continuous",
+                    "pronunciation": "/kənˈtɪn.ju.əs/",
+                    "meaning": "liên tục, liên tiếp",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conti/continuous.mp3",
+                    "audioEx": "./continuous.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She is in continuous pain.",
+                        "translation": "Cô ấy liên tục bị đau.",
+                        "pronunciation": "/ʃi ɪz ɪn kənˈtɪnjuəs peɪn/"
+                    }  
+                },
+                {
+                    "index": 86,
+                    "word": "continuously",
+                    "pronunciation": "/kənˈtɪn.ju.əs.li/",
+                    "meaning": "liên tục, liên tiếp",
+                    "partOfSpeech": "adv",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conti/continuously.mp3",
+                    "audioEx": "./continuously.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You can't work continuously for six hours without a break!",
+                        "translation": "Bạn không thể làm việc liên tục trong sáu giờ mà không nghỉ ngơi!",
+                        "pronunciation": "/juː kɑːnt wɜːrk kənˈtɪnjuəsli fər sɪks aʊərz wɪˈðaʊt ə breɪk/"
+                    }  
+                },
+                {
+                    "index": 87,
+                    "word": "contort",
+                    "pronunciation": "/kənˈtɔːrt/",
+                    "meaning": "vặn vẹo, làm méo mó, làm nhăn nhó",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/conto/contort.mp3",
+                    "audioEx": "./contort.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "His face contorted with bitterness and rage.",
+                        "translation": "Khuôn mặt anh ta nhăn nhó vì cay đắng và giận dữ.",
+                        "pronunciation": "/hɪz feɪs kənˈtɔːrtɪd wɪð ˈbɪtərnɪs ənd reɪdʒ/"
+                    }  
+                },
+                {
+                    "index": 88,
+                    "word": "contract (n)",
+                    "pronunciation": "/ˈkɑːn.trækt/",
+                    "meaning": "hợp đồng",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contract_01_00.mp3",
+                    "audioEx": "./contract-n.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "My solicitor is drawing up a contract.",
+                        "translation": "Luật sư của tôi đang soạn thảo hợp đồng.",
+                        "pronunciation": "/maɪ səˈlɪsɪtər ɪz ˈdrɔːɪŋ ʌp ə ˈkɒntrækt/"
+                    }  
+                },
+                {
+                    "index": 89,
+                    "word": "contract (v)",
+                    "pronunciation": "/ˈkɑːn.trækt/",
+                    "meaning": "giao kèo, ký hợp đồng",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contract_01_00.mp3",
+                    "audioEx": "./contract-v.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Our company was contracted to build shelters for the homeless.",
+                        "translation": "Công ty chúng tôi được ký hợp đồng xây dựng nơi trú ẩn cho người vô gia cư.",
+                        "pronunciation": "/aʊər ˈkʌmpəni wəz ˈkɒntræktɪd tə bɪld ˈʃɛltərz fər ðə ˈhoʊmləs/"
+                    }  
+                },
+                {
+                    "index": 90,
+                    "word": "contradiction",
+                    "pronunciation": "/ˌkɑːn.trəˈdɪk.ʃən/",
+                    "meaning": "sự mâu thuẫn, sự cãi lại",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contradiction.mp3",
+                    "audioEx": "./contradiction.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "In answering the first question a series of contradictions arise.",
+                        "translation": "Khi trả lời câu hỏi đầu tiên, một loạt mâu thuẫn nảy sinh.",
+                        "pronunciation": "/ɪn ˈænsərɪŋ ðə fɜːrst ˈkwɛsʧən ə ˈsɪriz əv ˌkɒntrəˈdɪkʃənz əˈraɪz/"
+                    }  
+                },
+                {
+                    "index": 90,
+                    "word": "contradictory",
+                    "pronunciation": "/ˌkɑːn.trəˈdɪk.tɚ.i/",
+                    "meaning": "mâu thuẫn, cãi lại, lý sự cùn",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contradictory.mp3",
+                    "audioEx": "./contradictory.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I keep getting contradictory advice - some people tell me to keep it warm and some tell me to put ice on it.",
+                        "translation": "Tôi liên tục nhận được những lời khuyên trái ngược nhau - một số người bảo tôi giữ ấm và một số khác bảo tôi nên chườm đá.",
+                        "pronunciation": "/aɪ kiːp ˈɡɛtɪŋ ˌkɒntrəˈdɪktəri ədˈvaɪs - sʌm ˈpiːpl tɛl mi tə kiːp ɪt wɔːrm ənd sʌm tɛl mi tə pʊt aɪs ɒn ɪt/"
+                    }  
+                },
+                {
+                    "index": 91,
+                    "word": "contrast (n)",
+                    "pronunciation": "/ˈkɑːn.træst/",
+                    "meaning": "sự tương phản, phản chiếu",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contrast_01_00.mp3",
+                    "audioEx": "./contrast-n.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I love his use of contrast in his later photographs.",
+                        "translation": "Tôi thích cách ông sử dụng độ tương phản trong những bức ảnh sau này.",
+                        "pronunciation": "/aɪ lʌv hɪz juːs əv ˈkɒntræst ɪn hɪz ˈleɪtər ˈfoʊtəɡræfs/"
+                    }  
+                },
+                {
+                    "index": 92,
+                    "word": "contrast (v)",
+                    "pronunciation": "/ˈkɑːn.træst/",
+                    "meaning": "làm tương phản, phản chiếu",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contrast_01_00.mp3",
+                    "audioEx": "./contrast-v.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "if you contrast some of her early writing with her later work, you can see just how much she improved.",
+                        "translation": "nếu bạn đối chiếu một số tác phẩm đầu tay của bà với những tác phẩm sau này, bạn có thể thấy bà đã tiến bộ đến mức nào.",
+                        "pronunciation": "/ɪf juː ˈkɒntræst sʌm əv hɜːr ˈɜːrli ˈraɪtɪŋ wɪð hɜːr ˈleɪtər wɜːrk, juː kæn siː dʒʌst haʊ mʌʧ ʃi ɪmˈpruːvd/"
+                    }  
+                },
+                {
+                    "index": 93,
+                    "word": "contrasting",
+                    "pronunciation": "/kənˈtræs.tɪŋ/",
+                    "meaning": "tương phản, phản chiếu",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/u/usc/uscon/usconti017.mp3",
+                    "audioEx": "./contrasting.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The sudden changes at the political top have spawned two contrasting interpretations.",
+                        "translation": "Những thay đổi đột ngột ở tầng lớp lãnh đạo chính trị đã tạo ra hai cách giải thích trái ngược nhau.",
+                        "pronunciation": "/ðə ˈsʌdn ˈʧeɪndʒɪz æt ðə pəˈlɪtɪkəl tɒp hæv spɔːnd tuː ˈkɒntræstɪŋ ɪnˌtɜːrprɪˈteɪʃənz/"
+                    }  
+                },
+                {
+                    "index": 94,
+                    "word": "contribute",
+                    "pronunciation": "/kənˈtrɪb.juːt/",
+                    "meaning": "đóng góp, góp phần",
+                    "partOfSpeech": "v",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contribute.mp3",
+                    "audioEx": "./contribute.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Come to the meeting if you feel you have something to contribute.",
+                        "translation": "Hãy đến cuộc họp nếu bạn cảm thấy mình có thể đóng góp điều gì đó.",
+                        "pronunciation": "/kʌm tə ðə ˈmiːtɪŋ ɪf juː fiːl juː hæv ˈsʌmθɪŋ tə kənˈtrɪbjuːt/"
+                    }  
+                },
+                {
+                    "index": 95,
+                    "word": "contribution",
+                    "pronunciation": "/ˌkɑːn.trɪˈbjuː.ʃən/",
+                    "meaning": "sự đóng góp, góp phần",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/c/con/contr/contribution.mp3",
+                    "audioEx": "./contribution.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "All contributions for the school magazine must be received by 1 August.",
+                        "translation": "Mọi đóng góp cho tạp chí của trường phải được nhận trước ngày 1 tháng 8.",
+                        "pronunciation": "/ɔːl ˌkɒntrɪˈbjuːʃənz fə ðə skuːl ˌmægəˈziːn mʌst bi rɪˈsiːvd baɪ wʌn ˈɔːɡəst/"
+                    }  
+                },
+                {
+                    "index": 96,
+                    "word": "contributor",
+                    "pronunciation": "/kənˈtrɪb.jə.t̬ɚ/",
+                    "meaning": "người cộng tác",
+                    "partOfSpeech": "n",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70996.mp3",
+                    "audioEx": "./contributor.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "On the last page of the programme, there is a list of contributors to the theatre appeal.",
+                        "translation": "Ở trang cuối của chương trình có danh sách những người đóng góp cho hoạt động kêu gọi của nhà hát.",
+                        "pronunciation": "/ɒn ðə lɑːst peɪdʒ əv ðə ˈprəʊɡræm, ðɛr ɪz ə lɪst əv kənˈtrɪbjutərz tə ðə ˈθɪətə əˈpiːl/"
+                    }  
+                },
+                {
+                    "index": 97,
+                    "word": "contrite",
+                    "pronunciation": "/ˈkɑːn.traɪt/",
+                    "meaning": "ăn năn, hối lỗi",
+                    "partOfSpeech": "adj",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus70/eus70997.mp3",
+                    "audioEx": "./contrite.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "a contrite apology/expression",
+                        "translation": "một lời xin lỗi/biểu hiện ăn năn",
+                        "pronunciation": "/ə ˈkɒntraɪt əˈpɒlədʒi/ɛkˈsprɛʃən/"
                     }  
                 }
             ]
