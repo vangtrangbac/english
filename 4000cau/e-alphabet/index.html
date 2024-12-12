@@ -183,10 +183,10 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.meaning}</a> ${vocab.pronunciation} (${vocab.partOfSpeech})
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
                                     <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
@@ -199,10 +199,10 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
                                     <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
@@ -215,10 +215,10 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.example.sentence}</a> <br>${vocab.example.pronunciation} 
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
                                     <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
@@ -580,6 +580,846 @@
                         "sentence": "The east wall of the mosque is covered with a beautiful mosaic.",
                         "translation": "Bức tường phía đông của nhà thờ Hồi giáo được phủ bằng một bức tranh khảm tuyệt đẹp.",
                         "pronunciation": "/ði iːst wɔːl əv ðə mɒsk ɪz ˈkʌvərd wɪð ə ˈbjuːtɪfl məʊˈzeɪɪk/"
+                    }
+                },
+                {
+                    "index": 10,
+                    "word": "east (adv)",
+                    "pronunciation": "/iːst/",
+                    "meaning": "hướng Đông, Đông",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/east-adv.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eas/east_/east.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We'll drive east for a few more miles, then turn south.",
+                        "translation": "Chúng ta sẽ lái xe về phía đông thêm vài dặm nữa, sau đó rẽ về phía nam.",
+                        "pronunciation": "/wiːl draɪv iːst fɔːr ə fjuː mɔːr maɪlz, ðɛn tɜːrn saʊθ/"
+                    }
+                },
+                {
+                    "index": 11,
+                    "word": "eastern",
+                    "pronunciation": "/ˈiː.stɚn/",
+                    "meaning": "Đông, thuộc về phía Đông",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/eastern.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eas/easte/eastern.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The eastern part of the country is very mountainous.",
+                        "translation": "Phần phía đông của đất nước có nhiều núi.",
+                        "pronunciation": "/ði ˈiːstərn pɑːrt əv ðə ˈkʌntri ɪz ˈvɛri ˈmaʊntɪnəs/"
+                    }
+                },
+                {
+                    "index": 12,
+                    "word": "easy",
+                    "pronunciation": "/ˈiː.zi/",
+                    "meaning": "dễ dàng, thoải mái, dễ tính, ung dung",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/easy.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eas/easy_/easy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's easy to see why he's so popular.",
+                        "translation": "Thật dễ hiểu vì sao anh ấy lại nổi tiếng đến vậy.",
+                        "pronunciation": "/ɪts ˈiːzi tə siː waɪ hiz səʊ ˈpɒpjʊlər/"
+                    }
+                },
+                {
+                    "index": 13,
+                    "word": "easily",
+                    "pronunciation": "/ˈiː.zəl.i/",
+                    "meaning": "dễ dàng",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/easily.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eas/easil/easily.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I can easily be home early tonight, if you want.",
+                        "translation": "Tối nay tôi có thể dễ dàng về nhà sớm, nếu bạn muốn.",
+                        "pronunciation": "/aɪ kæn ˈiːzɪli bi hoʊm ˈɜːrli təˈnaɪt, ɪf ju wɒnt/"
+                    }
+                },
+                {
+                    "index": 14,
+                    "word": "eat",
+                    "pronunciation": "/iːt/",
+                    "meaning": "ăn",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/eat.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eat/eat__/eat.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "When I've got a cold, I don't feel like eating.",
+                        "translation": "Khi bị cảm lạnh, tôi không muốn ăn.",
+                        "pronunciation": "/wɛn aɪv ɡɒt ə koʊld, aɪ doʊnt fiːl laɪk ˈiːtɪŋ/"
+                    }
+                },
+                {
+                    "index": 15,
+                    "word": "economic",
+                    "pronunciation": "/ˌiː.kəˈnɑː.mɪk/",
+                    "meaning": "(thuộc) kinh tế",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/economic.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eco/econo/economic.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The country has been in a very poor economic state ever since the decline of its two major industries.",
+                        "translation": "Đất nước này đã ở trong tình trạng kinh tế rất kém kể từ khi hai ngành công nghiệp chính suy thoái.",
+                        "pronunciation": "/ðə ˈkʌntri hæz bɪn ɪn ə ˈvɛri pʊr ˌiːkəˈnɑːmɪk steɪt ˈɛvər sɪns ðə dɪˈklaɪn əv ɪts tuː ˈmeɪdʒər ˈɪndəstriz/"
+                    }
+                },
+                {
+                    "index": 16,
+                    "word": "economize",
+                    "pronunciation": "/iˈkɑː.nə.maɪz/",
+                    "meaning": "tiết kiệm",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/economize.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eco/econo/economize.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You could economize on food by not eating in restaurants all the time.",
+                        "translation": "Bạn có thể tiết kiệm thức ăn bằng cách không ăn ở nhà hàng thường xuyên.",
+                        "pronunciation": "/ju kəd ɪˈkɒnəmaɪz ɒn fuːd baɪ nɒt ˈiːtɪŋ ɪn ˈrɛstərɒnts ɔːl ðə taɪm/"
+                    }
+                },
+                {
+                    "index": 17,
+                    "word": "economy",
+                    "pronunciation": "/iˈkɑː.nə.mi/",
+                    "meaning": "nền kinh tế, sự tiết kiệm, sự quản lý kinh tế",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/economy.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eco/econo/economy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Technology companies are driving the global economy.",
+                        "translation": "Các công ty công nghệ đang thúc đẩy nền kinh tế toàn cầu.",
+                        "pronunciation": "/tɛkˈnɒlədʒi ˈkʌmpəniz ɑːr ˈdraɪvɪŋ ðə ˈɡloʊbəl ɪˈkɒnəmi/"
+                    }
+                },
+                {
+                    "index": 18,
+                    "word": "edge",
+                    "pronunciation": "/edʒ/",
+                    "meaning": "canh, mép, biên, rìa, miệng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/edge.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/edg/edge_/edge.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They built the church on the edge of the village.",
+                        "translation": "Họ xây dựng nhà thờ ở rìa làng.",
+                        "pronunciation": "/ðeɪ bɪlt ðə tʃɜːrtʃ ɒn ði ɛdʒ əv ðə ˈvɪlɪdʒ/"
+                    }
+                },
+                {
+                    "index": 19,
+                    "word": "edition",
+                    "pronunciation": "/ɪˈdɪʃ.ən/",
+                    "meaning": "sự xuất bản, loại sách in ra, loại sách xuất bản, lần in ra",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/edition.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71438.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The paperback/hardback edition of his book is published in July.",
+                        "translation": "Phiên bản bìa mềm/bìa cứng của cuốn sách này sẽ được xuất bản vào tháng 7.",
+                        "pronunciation": "/ðə ˈpeɪpərˌbæk/ˈhɑːrdˌbæk ɪˈdɪʃən əv hɪz bʊk ɪz ˈpʌblɪʃt ɪn dʒʊˈlaɪ/"
+                    }
+                },
+                {
+                    "index": 20,
+                    "word": "editor",
+                    "pronunciation": "/ˈed.ɪ.t̬ɚ/",
+                    "meaning": "chủ bút, người biên tập",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/editor.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/edi/edito/editor.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She's a senior editor in the reference department of a publishing company.",
+                        "translation": "Cô ấy là biên tập viên cao cấp tại phòng tham khảo của một công ty xuất bản.",
+                        "pronunciation": "/ʃiːz ə ˈsiːnjər ˈɛdɪtər ɪn ðə ˈrɛfərəns dɪˈpɑːrtmənt əv ə ˈpʌblɪʃɪŋ ˈkʌmpəni/"
+                    }
+                },
+                {
+                    "index": 21,
+                    "word": "editorial",
+                    "pronunciation": "/ˌed.əˈtɔːr.i.əl/",
+                    "meaning": "bài xã luận (của một tờ báo...)",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/editorial.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/edi/edito/editorial.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "All the papers deal with the same subject in their editorials.",
+                        "translation": "Tất cả các bài xã luận đều đề cập đến cùng một chủ đề.",
+                        "pronunciation": "/ɔːl ðə ˈpeɪpərz diːl wɪð ðə seɪm ˈsʌbdʒɪkt ɪn ðɛr ˌɛdɪˈtɔːriəlz/"
+                    }
+                },
+                {
+                    "index": 22,
+                    "word": "educate",
+                    "pronunciation": "/ˈedʒ.ə.keɪt/",
+                    "meaning": "giáo dục, rèn luyện",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/educate.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/edu/educa/educate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The form says he was educated in Africa.",
+                        "translation": "Tờ khai ghi rằng ông được đào tạo ở Châu Phi.",
+                        "pronunciation": "/ðə fɔːrm sɛz hi wəz ˈɛdʒuˌkeɪtɪd ɪn ˈæfrɪkə/"
+                    }
+                },
+                {
+                    "index": 23,
+                    "word": "educated",
+                    "pronunciation": "/ˈedʒ.ə.keɪ.t̬ɪd/",
+                    "meaning": "được giáo dục, được đào tạo",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/educated.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/edu/educa/educated.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She was probably the most highly educated prime minister of this century.",
+                        "translation": "Bà có lẽ là thủ tướng có trình độ học vấn cao nhất thế kỷ này.",
+                        "pronunciation": "/ʃi wəz ˈprɒbəbli ðə moʊst ˈhaɪli ˈɛdʒuˌkeɪtɪd praɪm ˈmɪnɪstər əv ðɪs ˈsɛnʧəri/"
+                    }
+                },
+                {
+                    "index": 24,
+                    "word": "education",
+                    "pronunciation": "/ˌedʒ.əˈkeɪ.ʃən/",
+                    "meaning": "sự giáo dục, sự rèn luyện (kỹ năng)",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/education.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus75/eus75651.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's a country that places great importance on education.",
+                        "translation": "Đây là một quốc gia rất coi trọng giáo dục.",
+                        "pronunciation": "/ɪts ə ˈkʌntri ðæt ˈpleɪsɪz ɡreɪt ɪmˈpɔːrtəns ɒn ˌɛdʒuˈkeɪʃən/"
+                    }
+                },
+                {
+                    "index": 25,
+                    "word": "effect",
+                    "pronunciation": "/əˈfekt/",
+                    "meaning": "hiệu quả, kết quả, hiệu lực, tác dụng, hiệu ứng, tác động, ảnh hưởng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/effect.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71442.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I think I'm suffering from the effects of too little sleep.",
+                        "translation": "Tôi nghĩ tôi đang bị ảnh hưởng bởi việc ngủ quá ít.",
+                        "pronunciation": "/aɪ θɪŋk aɪm ˈsʌfərɪŋ frʌm ði ɪˈfɛkts əv tuː ˈlɪtl sliːp/"
+                    }
+                },
+                {
+                    "index": 26,
+                    "word": "effective",
+                    "pronunciation": "/əˈfek.tɪv/",
+                    "meaning": "có kết quả, có hiệu lực, có tác động, có ảnh hưởng",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/effective.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71443.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The lighting for the production made a very effective use of shadow.",
+                        "translation": "Ánh sáng trong quá trình sản xuất đã tận dụng bóng tối một cách rất hiệu quả.",
+                        "pronunciation": "/ðə ˈlaɪtɪŋ fɔːr ðə prəˈdʌkʃən meɪd ə ˈvɛri ɪˈfɛktɪv juːs əv ˈʃædoʊ/"
+                    }
+                },
+                {
+                    "index": 27,
+                    "word": "effort",
+                    "pronunciation": "/ˈef.ɚt/",
+                    "meaning": "sự cố gắng, sự nỗ lực",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/effort.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eff/effor/effort.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "If we could all make an effort to keep this office tidier it would help.",
+                        "translation": "Nếu tất cả chúng ta cùng nỗ lực giữ cho văn phòng gọn gàng hơn thì sẽ rất có ích.",
+                        "pronunciation": "/ɪf wi kʊd ɔːl meɪk æn ˈɛfərt tə kiːp ðɪs ˈɒfɪs ˈtaɪdiər ɪt wʊd hɛlp/"
+                    }
+                },
+                {
+                    "index": 28,
+                    "word": "egg",
+                    "pronunciation": "/eɡ/",
+                    "meaning": "trứng, quả trứng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/egg.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/egg/egg__/egg.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Mix the butter with the sugar and then add the egg.",
+                        "translation": "Trộn bơ với đường rồi thêm trứng vào.",
+                        "pronunciation": "/mɪks ðə ˈbʌtər wɪð ðə ˈʃʊɡər ənd ðɛn æd ði ɛɡ/"
+                    }
+                },
+                {
+                    "index": 29,
+                    "word": "either (adv)",
+                    "pronunciation": "/ˈiː.ðɚ/",
+                    "meaning": "mỗi (trong hai), một (trong hai)",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/either-adv.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eit/eithe/either.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They do really good food at that restaurant and it's not very expensive either.",
+                        "translation": "Nhà hàng đó có đồ ăn rất ngon và giá cũng không đắt lắm.",
+                        "pronunciation": "/ðeɪ duː ˈrɪəli ɡʊd fuːd ət ðæt ˈrɛstərənt ənd ɪts nɒt ˈvɛri ɪkˈspɛnsɪv ˈiːðər/"
+                    }
+                },
+                {
+                    "index": 30,
+                    "word": "either (pron)",
+                    "pronunciation": "/ˈiː.ðɚ/",
+                    "meaning": "mỗi người (trong hai), mỗi vật (trong hai), một (trong hai)",
+                    "partOfSpeech": "pron",
+                    "audioEx": "./voice/either-pron.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eit/eithe/either.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Either candidate would be ideal for the job.",
+                        "translation": "Cả hai ứng viên đều lý tưởng cho công việc này.",
+                        "pronunciation": "/ˈiːðər ˈkændɪdət wʊd bi aɪˈdiːəl fə ðə ʤɒb/"
+                    }
+                },
+                {
+                    "index": 31,
+                    "word": "elbow",
+                    "pronunciation": "/ˈel.boʊ/",
+                    "meaning": "cùi chỏ, khuỷa tay",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/elbow.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/elb/elbow/elbow.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Her arm was bandaged from the elbow to the fingers.",
+                        "translation": "Cánh tay của cô được băng bó từ khuỷu tay đến các ngón tay.",
+                        "pronunciation": "/hɜːr ɑːrm wəz ˈbændɪdʒd frəm ði ˈɛlboʊ tə ðə ˈfɪŋɡərz/"
+                    }
+                },
+                {
+                    "index": 32,
+                    "word": "elderly",
+                    "pronunciation": "/ˈel.dɚ.li/",
+                    "meaning": "lớn tuổi, có tuổi, cao tuổi",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/elderly.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eld/elder/elderly.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A large number of elderly people live alone.",
+                        "translation": "Có rất nhiều người già sống một mình.",
+                        "pronunciation": "/ə lɑːrdʒ ˈnʌmbər əv ˈɛldərli ˈpiːpəl lɪv əˈloʊn/"
+                    }
+                },
+                {
+                    "index": 33,
+                    "word": "elect",
+                    "pronunciation": "/ɪˈlekt/",
+                    "meaning": "bầu, chọn, tuyển cử",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/elect.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/ele/elect/elect.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The President is elected for a four-year term of office.",
+                        "translation": "Tổng thống được bầu cho nhiệm kỳ bốn năm.",
+                        "pronunciation": "/ðə ˈprɛzɪdənt ɪz ɪˈlɛktɪd fɔːr ə ˈfɔːr-jɪr tɜːrm əv ˈɒfɪs/"
+                    }
+                },
+                {
+                    "index": 34,
+                    "word": "election",
+                    "pronunciation": "/ɪˈlek.ʃən/",
+                    "meaning": "sự bầu cử, cuộc tuyển cử",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/election.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71464.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Local government elections will take place in May.",
+                        "translation": "Cuộc bầu cử chính quyền địa phương sẽ diễn ra vào tháng 5.",
+                        "pronunciation": "/ˈloʊkl ˈɡʌvərnmənt ɪˈlɛkʃənz wɪl teɪk pleɪs ɪn meɪ/"
+                    }
+                },
+                {
+                    "index": 35,
+                    "word": "electric",
+                    "pronunciation": "/ɪˈlek.trɪk/",
+                    "meaning": "(thuộc) điện, có điện, phát điện",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/electric.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71469.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We've just changed over from gas central heating to electric.",
+                        "translation": "Chúng tôi vừa chuyển từ hệ thống sưởi ấm trung tâm bằng gas sang hệ thống sưởi ấm trung tâm bằng điện.",
+                        "pronunciation": "/wiːv dʒʌst tʃeɪndʒd ˈoʊvər frəm ɡæs ˈsɛntrəl ˈhiːtɪŋ tə ɪˈlɛktrɪk/"
+                    }
+                },
+                {
+                    "index": 36,
+                    "word": "elegant",
+                    "pronunciation": "/ˈel.ə.ɡənt/",
+                    "meaning": "thanh lịch, tao nhã",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/elegant.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/ele/elega/elegant.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She wore an elegant dove-grey jacket.",
+                        "translation": "Cô ấy mặc một chiếc áo khoác màu xám tro thanh lịch.",
+                        "pronunciation": "/ʃi wɔːr ən ˈɛlɪɡənt dʌv-ɡreɪ ˈdʒækɪt/"
+                    }
+                },
+                {
+                    "index": 37,
+                    "word": "element",
+                    "pronunciation": "/ˈel.ə.mənt/",
+                    "meaning": "nguyên tố, yếu tố, cơ sở, nguyên lý cơ bản",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/element.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/ele/eleme/element.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "List the elements that make up a perfect dinner party.",
+                        "translation": "Liệt kê các yếu tố tạo nên một bữa tiệc tối hoàn hảo.",
+                        "pronunciation": "/lɪst ði ˈɛlɪmənts ðæt meɪk ʌp ə ˈpɜːrfɪkt ˈdɪnər ˈpɑːrti/"
+                    }
+                },
+                {
+                    "index": 38,
+                    "word": "elevator",
+                    "pronunciation": "/ˈel.ə.veɪ.t̬ɚ/",
+                    "meaning": "thang máy",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/elevator.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus75/eus75658.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I took the elevator to her office on the fourteenth floor.",
+                        "translation": "Tôi đi thang máy lên văn phòng cô ấy ở tầng mười bốn.",
+                        "pronunciation": "/aɪ tʊk ði ˈɛləveɪtər tə hɜːr ˈɒfɪs ɒn ðə fɔːrˈtiːnθ flɔːr/"
+                    }
+                },
+                {
+                    "index": 39,
+                    "word": "else",
+                    "pronunciation": "/els/",
+                    "meaning": "nữa, khác",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/else.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/els/else_/else.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "If it doesn't work, try something else.",
+                        "translation": "Nếu không hiệu quả, hãy thử cách khác.",
+                        "pronunciation": "/ɪf ɪt ˈdʌznt wɜːrk, traɪ ˈsʌmθɪŋ ɛls/"
+                    }
+                },
+                {
+                    "index": 40,
+                    "word": "elsewhere",
+                    "pronunciation": "/ˈels.wer/",
+                    "meaning": "ở một nơi nào khác",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/elsewhere.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/els/elsew/elsewhere.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The report looks at economic growth in Europe and elsewhere.",
+                        "translation": "Báo cáo xem xét sự tăng trưởng kinh tế ở châu Âu và những nơi khác.",
+                        "pronunciation": "/ðə rɪˈpɔːrt lʊks æt ˌiːkəˈnɒmɪk ɡroʊθ ɪn ˈjʊrəp ənd ˈɛlswɛr/"
+                    }
+                },
+                {
+                    "index": 41,
+                    "word": "email (n)",
+                    "pronunciation": "/ˈiː.meɪl/",
+                    "meaning": "thư điện tử",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/email-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/e_m/e_mai/e_mail.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You can contact us by email or fax.",
+                        "translation": "Bạn có thể liên hệ với chúng tôi qua email hoặc fax.",
+                        "pronunciation": "/ju kən ˈkɒntækt ʌs baɪ ˈiːmeɪl ɔːr fæks/"
+                    }
+                },
+                {
+                    "index": 42,
+                    "word": "email (v)",
+                    "pronunciation": "/ˈiː.meɪl/",
+                    "meaning": "gửi thư điện tử",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/email-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/e_m/e_mai/e_mail.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Email me when you've got time.",
+                        "translation": "Hãy gửi email cho tôi khi bạn có thời gian.",
+                        "pronunciation": "/ˈiːmeɪl mi wɛn juv ɡɒt taɪm/"
+                    }
+                },
+                {
+                    "index": 43,
+                    "word": "embarrass",
+                    "pronunciation": "/ɪmˈber.əs/",
+                    "meaning": "làm bối rối, làm lúng túng, làm ngượng nghịu, làm rắc rối, gây khó khăn",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/embarrass.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71500.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You're embarrassing him with your compliments!",
+                        "translation": "Bạn đang làm anh ấy xấu hổ vì lời khen của mình!",
+                        "pronunciation": "/jʊr ɪmˈbærəsɪŋ hɪm wɪð jɔːr ˈkɒmplɪmənts/"
+                    }
+                },
+                {
+                    "index": 44,
+                    "word": "embarrassing",
+                    "pronunciation": "/ɪmˈber.ə.sɪŋ/",
+                    "meaning": "bối rối, lúng túng",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/embarrassing.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emb/embar/embarrassing.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's embarrassing to be caught telling a lie.",
+                        "translation": "Thật xấu hổ khi bị phát hiện nói dối.",
+                        "pronunciation": "/ɪts ɪmˈbærəsɪŋ tə bi kɔːt ˈtɛlɪŋ ə laɪ/"
+                    }
+                },
+                {
+                    "index": 45,
+                    "word": "embarrassment",
+                    "pronunciation": "/ɪmˈber.əs.mənt/",
+                    "meaning": "sự bối rối, sự lúng túng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/embarrassment.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71501.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She blushed with embarrassment.",
+                        "translation": "Cô ấy đỏ mặt vì xấu hổ.",
+                        "pronunciation": "/ʃi blʌʃt wɪð ɪmˈbærəsmənt/"
+                    }
+                },
+                {
+                    "index": 46,
+                    "word": "embody",
+                    "pronunciation": "/ɪmˈbɑː.di/",
+                    "meaning": "thể hiện hoặc đưa ra mẫu hình rõ ràng đối với các ý nghĩa, cảm xúc..., hiện thân, tiêu biểu, bao gồm",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/embody.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71507.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She embodied good sportsmanship on the playing field.",
+                        "translation": "Cô ấy thể hiện tinh thần thể thao tốt trên sân chơi.",
+                        "pronunciation": "/ʃi ɪmˈbɒdɪd ɡʊd ˈspɔːrtsmənʃɪp ɒn ðə ˈpleɪɪŋ fiːld/"
+                    }
+                },
+                {
+                    "index": 47,
+                    "word": "emergency",
+                    "pronunciation": "/ɪˈmɝː.dʒən.si/",
+                    "meaning": "tình trạng khẩn cấp",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/emergency.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71512.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The pilot of the aircraft was forced to make an emergency landing on Lake Geneva.",
+                        "translation": "Phi công của máy bay buộc phải hạ cánh khẩn cấp xuống Hồ Geneva.",
+                        "pronunciation": "/ðə ˈpaɪlət əv ði ˈeərkræft wəz fɔːrst tə meɪk ən ɪˈmɜːrdʒənsi ˈlændɪŋ ɒn leɪk dʒəˈniːvə/"
+                    }
+                },
+                {
+                    "index": 48,
+                    "word": "emigrant",
+                    "pronunciation": "/ˈem.ə.ɡrənt/",
+                    "meaning": "người di cư, di dân",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/emigrant.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus75/eus75670.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Some emigrants must have just longed to be deprived of this kind of social embeddedness.",
+                        "translation": "Một số người di cư hẳn chỉ mong muốn thoát khỏi sự ràng buộc xã hội này.",
+                        "pronunciation": "/sʌm ˈɛmɪɡrənts mʌst hæv dʒʌst lɔːŋd tə bi dɪˈpraɪvd əv ðɪs kaɪnd əv ˈsoʊʃəl ɪmˈbɛdɪdnəs/"
+                    }
+                },
+                {
+                    "index": 49,
+                    "word": "emigrate",
+                    "pronunciation": "/ˈem.ə.ɡreɪt/",
+                    "meaning": "di cư, đổi chỗ ở, đưa (ai) di cư",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/emigrate.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus75/eus75671.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Millions of Germans emigrated from Europe to America in the 19th century.",
+                        "translation": "Hàng triệu người Đức đã di cư từ châu Âu sang châu Mỹ vào thế kỷ 19.",
+                        "pronunciation": "/ˈmɪljənz əv ˈdʒɜːmənz ˈɛmɪɡreɪtɪd frəm ˈjʊərəp tə əˈmɛrɪkə ɪn ðə ˈnaɪnˌtiːnθ ˈsɛnʧʊri/"
+                    }
+                },
+                {
+                    "index": 50,
+                    "word": "emotion",
+                    "pronunciation": "/ɪˈmoʊ.ʃən/",
+                    "meaning": "sự cảm động, sự xúc động",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/emotion.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71515.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "My mother was overcome with emotion and burst into tears.",
+                        "translation": "Mẹ tôi vô cùng xúc động và bật khóc.",
+                        "pronunciation": "/maɪ ˈmʌðər wəz ˌoʊvərˈkʌm wɪð ɪˈmoʊʃən ənd bɜːrst ˈɪntə tɪərz/"
+                    }
+                },
+                {
+                    "index": 51,
+                    "word": "emotional",
+                    "pronunciation": "/ɪˈmoʊ.ʃən.əl/",
+                    "meaning": "cảm động, cảm kích, xúc động, dễ xúc động, dễ cảm động, dễ mủi lòng",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/emotional.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71516.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "My doctor said the problem was more emotional than physical.",
+                        "translation": "Bác sĩ nói rằng vấn đề của tôi liên quan nhiều đến cảm xúc hơn là thể chất.",
+                        "pronunciation": "/maɪ ˈdɒktər sæd ðə ˈprɒbləm wəz mɔːr ɪˈməʊʃənl ðən ˈfɪzɪkəl/"
+                    }
+                },
+                {
+                    "index": 52,
+                    "word": "emotionally",
+                    "pronunciation": "/ɪˈmoʊ.ʃən.əl.i/",
+                    "meaning": "xúc động",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/emotionally.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emo/emoti/emotionally.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She spoke emotionally about her experiences as a war correspondent.",
+                        "translation": "Bà đã xúc động kể về những trải nghiệm của mình khi làm phóng viên chiến trường.",
+                        "pronunciation": "/ʃi spoʊk ɪˈmoʊʃənəli əˈbaʊt hɜr ɪksˈpɪəriənsɪz æz ə wɔːr ˌkɔːrɪˈspɒndənt/"
+                    }
+                },
+                {
+                    "index": 53,
+                    "word": "emphasis",
+                    "pronunciation": "/ˈem.fə.sɪs/",
+                    "meaning": "sự nhấn mạnh, sự nhấn giọng, tầm quan trọng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/emphasis.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71517.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I think we should put as much emphasis on preventing disease as we do on curing it.",
+                        "translation": "Tôi nghĩ chúng ta nên chú trọng vào việc phòng ngừa bệnh tật nhiều như việc chữa bệnh.",
+                        "pronunciation": "/aɪ θɪŋk wi ʃʊd pʊt æz mʌʧ ˈɛmfəsɪs ɒn prɪˈvɛntɪŋ dɪˈziːz æz wi duː ɒn ˈkjʊərɪŋ ɪt/"
+                    }
+                },
+                {
+                    "index": 54,
+                    "word": "emphasize",
+                    "pronunciation": "/ˈem.fə.saɪz/",
+                    "meaning": "nhấn mạnh, làm nổi bật (sự kiện...)",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/emphasize.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emp/empha/emphasize.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He emphasized that all the people taking part in the research were volunteers.",
+                        "translation": "Ông nhấn mạnh rằng tất cả những người tham gia nghiên cứu đều là những người tình nguyện.",
+                        "pronunciation": "/hi ˈɛmfəsaɪzd ðæt ɔːl ðə ˈpiːpl ˈteɪkɪŋ pɑːrt ɪn ðə rɪˈsɜːrtʃ wɜːr ˌvɒlənˈtɪərz/"
+                    }
+                },
+                {
+                    "index": 55,
+                    "word": "empire",
+                    "pronunciation": "/ˈem.paɪr/",
+                    "meaning": "đế chế, đế quốc",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/empire.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emp/empir/empire.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The temple ruins are a distant reminder of a vanished empire.",
+                        "translation": "Những tàn tích của ngôi đền là lời nhắc nhở xa xôi về một đế chế đã biến mất.",
+                        "pronunciation": "/ðə ˈtɛmpl ˈruːɪnz ɑːr ə ˈdɪstənt rɪˈmaɪndər əv ə ˈvænɪʃt ˈɛmpaɪər/"
+                    }
+                },
+                {
+                    "index": 56,
+                    "word": "employ",
+                    "pronunciation": "/ɪmˈplɔɪ/",
+                    "meaning": "thuê (ai làm gì)",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/employ.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emp/emplo/employ.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We need to employ more supervisory staff.",
+                        "translation": "Chúng ta cần tuyển thêm nhân viên giám sát.",
+                        "pronunciation": "/wi niːd tə ɪmˈplɔɪ mɔːr ˌsuːpərˈvaɪzəri stɑːf/"
+                    }
+                },
+                {
+                    "index": 57,
+                    "word": "employee",
+                    "pronunciation": "/ɪmˈplɔɪ.iː/",
+                    "meaning": "công nhân, người lao động, người làm công",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/employee.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus75/eus75676.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The number of employees in the company has trebled over the past decade.",
+                        "translation": "Số lượng nhân viên của công ty đã tăng gấp ba lần trong thập kỷ qua.",
+                        "pronunciation": "/ðə ˈnʌmbər əv ɪmˈplɔɪiz ɪn ðə ˈkʌmpəni hæz ˈtrɛbəld ˈoʊvər ðə pæst ˈdɛkeɪd/"
+                    }
+                },
+                {
+                    "index": 58,
+                    "word": "employer",
+                    "pronunciation": "/ɪmˈplɔɪ.ɚ/",
+                    "meaning": "chủ, người sử dụng lao động",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/employer.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus75/eus75677.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We need a reference from your former employer.",
+                        "translation": "Chúng tôi cần thư giới thiệu từ công ty cũ của bạn.",
+                        "pronunciation": "/wi niːd ə ˈrɛfərəns frəm jɔːr ˈfɔːrmər ɪmˈplɔɪər/"
+                    }
+                },
+                {
+                    "index": 59,
+                    "word": "employment",
+                    "pronunciation": "/ɪmˈplɔɪ.mənt/",
+                    "meaning": "sự thuê mướn, sự làm công, việc làm",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/employment.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emp/emplo/employment.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Employment levels are unlikely to rise significantly before the end of next year.",
+                        "translation": "Mức độ việc làm khó có thể tăng đáng kể trước cuối năm sau.",
+                        "pronunciation": "/ɪmˈplɔɪmənt ˈlɛvəlz ɑːr ʌnˈlaɪkli tə raɪz sɪɡˈnɪfɪkəntli bɪˈfɔːr ðə ɛnd əv nɛkst jɪər/"
+                    }
+                },
+                {
+                    "index": 60,
+                    "word": "empty (v)",
+                    "pronunciation": "/ˈemp.ti/",
+                    "meaning": "đổ, dốc (chai...), làm cạn",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/empty-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emp/empty/empty.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I emptied the closet and put my belongings into the black overnight case.",
+                        "translation": "Tôi dọn sạch tủ quần áo và cất đồ đạc vào chiếc vali đen để qua đêm.",
+                        "pronunciation": "/aɪ ˈɛmptɪd ðə ˈklɒzɪt ənd pʊt maɪ bɪˈlɒŋɪŋz ˈɪntuː ðə blæk ˈoʊvərˌnaɪt keɪs/"
+                    }
+                },
+                {
+                    "index": 61,
+                    "word": "empty (adj)",
+                    "pronunciation": "/ˈemp.ti/",
+                    "meaning": "trống rỗng, rỗng, trống không",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/empty-adj.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/emp/empty/empty.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Put the empty box in the rubbish bin.",
+                        "translation": "Bỏ hộp rỗng vào thùng rác.",
+                        "pronunciation": "/ˈpʊt ðə ˈɛmpti bɒks ɪn ðə ˈrʌbɪʃ bɪn/"
+                    }
+                },
+                {
+                    "index": 62,
+                    "word": "enable",
+                    "pronunciation": "/ɪˈneɪ.bəl/",
+                    "meaning": "làm cho có thể, làm cho có khả năng, cho phép (ai làm gì)",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/enable.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/ena/enabl/enable.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Only good team work will enable us to get the job done on time.",
+                        "translation": "Chỉ có tinh thần làm việc nhóm tốt mới giúp chúng ta hoàn thành công việc đúng thời hạn.",
+                        "pronunciation": "/ˈəʊnli ɡʊd ˈtiːm wɜːk wɪl ɪˈneɪbl ʌs tə ɡɛt ðə ˈdʒɒb dʌn ɒn taɪm/"
+                    }
+                },
+                {
+                    "index": 63,
+                    "word": "encourage",
+                    "pronunciation": "/ɪnˈkɝː.ɪdʒ/",
+                    "meaning": "làm can đảm, làm mạnh dạn, khuyến khích, cỗ vũ, động viên, giúp đỡ, ủng hộ",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/encourage.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71530.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We were encouraged to learn foreign languages at school.",
+                        "translation": "Chúng tôi được khuyến khích học ngoại ngữ ở trường.",
+                        "pronunciation": "/wiː wɜːr ɪnˈkʌrɪdʒd tə lɜːn ˈfɒrɪn ˈlæŋɡwɪdʒɪz ət skuːl/"
+                    }
+                },
+                {
+                    "index": 64,
+                    "word": "encouragement",
+                    "pronunciation": "/ɪnˈkɝː.ɪdʒ.mənt/",
+                    "meaning": "sự cổ vũ, sự động viên, sự khuyến khích",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/encouragement.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71531.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Children need lots of encouragement from their parents.",
+                        "translation": "Trẻ em cần rất nhiều sự động viên từ cha mẹ.",
+                        "pronunciation": "/ˈtʃɪldrən niːd lɒts əv ɪnˈkʌrɪdʒmənt frəm ðeə ˈpeərənts/"
+                    }
+                },
+                {
+                    "index": 65,
+                    "word": "encyclopedia",
+                    "pronunciation": "/ɪnˌsaɪ.kləˈpiː.di.ə/",
+                    "meaning": "bộ sách giáo khoa, sách giáo khoa về kiến thức chung",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/encyclopedia.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/e/eus/eus71/eus71536.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The library was full of dictionaries, encyclopaedias, poetry, and plays.",
+                        "translation": "Thư viện có đầy đủ từ điển, bách khoa toàn thư, thơ và kịch.",
+                        "pronunciation": "/ðə ˈlaɪbrəri wəz fʊl əv ˈdɪkʃənəriz, ɪnˌsaɪkləˈpiːdiəz, ˈpəʊɪtri, ənd pleɪz/"
                     }
                 }
             ]

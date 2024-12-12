@@ -183,10 +183,10 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.meaning}</a> ${vocab.pronunciation} (${vocab.partOfSpeech})
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
                                     <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
@@ -199,10 +199,10 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
                                     <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
@@ -215,10 +215,10 @@
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${vocab.index}. </span>
                                     <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.example.sentence}</a> <br>${vocab.example.pronunciation} 
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
-                                    <a href="#" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
                                     <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
