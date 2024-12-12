@@ -197,8 +197,9 @@
             }else if(toggleBtn.textContent === 'Học từ'){
                 vocabularies.forEach((vocab) => {
                     const li = document.createElement('li');
+                    const isHardStyle = vocab.isHard ? "font-weight: bold; color:red" : "";
                     li.innerHTML = `<span>${vocab.index}. </span>
-                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a class="vocabulary" style="${isHardStyle}" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
                                     <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>

@@ -197,8 +197,9 @@
             }else if(toggleBtn.textContent === 'Học từ'){
                 vocabularies.forEach((vocab) => {
                     const li = document.createElement('li');
+                    const isHardStyle = vocab.isHard ? "font-weight: bold; color:red" : "";
                     li.innerHTML = `<span>${vocab.index}. </span>
-                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a class="vocabulary" style="${isHardStyle}" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
                                     <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
                                         <i class="fas fa-volume-up"></i>
                                     </a>
@@ -460,7 +461,8 @@
                         "sentence": "You should eat more food that contains a lot of fibre, e.g. fruit, vegetables, and bread.",
                         "translation": "Bạn nên ăn nhiều thực phẩm có chứa nhiều chất xơ, ví dụ như trái cây, rau và bánh mì.",
                         "pronunciation": "/ju ʃəd iːt mɔːr fuːd ðæt kənˈteɪnz ə lɒt əv ˈfaɪbər, iː.ˈdʒiː ˈfruːt, ˈvɛdʒtəblz ənd brɛd/"
-                    }
+                    },
+                    "isHard": true
                 },
                 {
                     "index": 2,
