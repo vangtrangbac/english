@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách từ vựng với âm thanh</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .vocabulary {
+            color: green;
+            cursor: pointer;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .index-number {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            margin-right: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .index-circle-detail {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .play-all-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .play-all-button:hover {
+            background-color: #45a049;
+        }
+        #playButton, #pauseButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #playButton:hover, #pauseButton:hover {
+            background-color: #0056b3;
+        }
+        #trackInfo {
+            font-size: 18px;
+        }
+
+        #toggleButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #e7a414;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Danh sách từ vựng</h1>
+    <div style="display: flex; justify-content: space-between; max-width: 600px;">
+        <div class="play-audio">
+            <button class="play-all-button" id="play-all-button">Phát tất cả âm thanh</button>
+            <div id="trackInfo"><b>Now playing:</b></div>
+    
+            <!-- Các nút điều khiển -->
+            <div id="controls">
+                <button id="playButton">Play</button>
+                <button id="pauseButton">Pause</button>
+            </div>
+    
+            <audio id="audioPlayer" src=""></audio>
+        </div>
+            <!-- Nút Ôn tập (ẩn/hiện tiếng Anh) -->
+        <div id="area-toggle">
+            <button id="toggleButton">Học từ</button>
+            <div id="inputForm">
+                <label for="startIndex">Số t/t của từ: </label>
+                <input type="number" id="startIndex" value="1" min="1"><br/>
+                
+                <label for="numItems">Số lượng từ: </label>
+                <input type="number" id="numItems" value="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <ul id="vocabulary-list"></ul>
+    <!-- Các nút điều hướng trang -->
+    <div class="controls">
+        <button id="prevButton">Trang trước</button>
+        <button id="nextButton">Trang sau</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="vocabulary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0; // Trang hiện tại
+        const itemsPerPage = 20; // Mỗi trang hiển thị 1 từ vựng
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        function loadVocabulary(page) {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            // --- Phân trang
+            console.log("page - itemsPerPage", page, itemsPerPage)
+            const start = page * itemsPerPage;
+            const end = start + itemsPerPage;
+            console.log("start - end", start, end)
+            const vocabularies = data.vocabularies.slice(start, end);
+
+            const vocabularyList = document.getElementById('vocabulary-list');
+            const modal = document.getElementById('vocabulary-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModal = document.querySelector('.close');
+            const playAllButton = document.getElementById('play-all-button');
+            vocabularyList.innerHTML="";
+
+            const toggleBtn = document.getElementById('toggleButton');
+
+            if(toggleBtn.textContent === 'Ôn tập'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.meaning}</a> ${vocab.pronunciation} (${vocab.partOfSpeech})
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }else if(toggleBtn.textContent === 'Học từ'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    const isHardStyle = vocab.isHard ? "font-weight: bold; color:red" : "";
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" style="${isHardStyle}" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            } else {
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.example.sentence}</a> <br>${vocab.example.pronunciation} 
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }
+
+            document.querySelectorAll('.vocabulary').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const index = e.target.getAttribute('data-index');
+                    const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                    const vocabularies = data.vocabularies;
+                    const vocab = vocabularies[index];
+
+                    modalBody.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="index-circle-detail">${vocab.index}</div>
+                            <div>
+                                <h3>${vocab.word}</h3>
+                                <p>${vocab.pronunciation}</p>
+                                <img src="${vocab.image}" alt="${vocab.word}">
+                                <p><b>(${vocab.partOfSpeech})</b> ${vocab.meaning}</p>
+                                <p><b>Example</b>: <br/> <span id="textToCopy">${vocab.example.sentence}</span>
+                                    <br/> <span style="color: blue"><i>(${vocab.example?.pronunciation})</i></span>
+                                    <br/> <span style="color: gray"><i>(${vocab.example.translation})</i></span>
+                                </p>
+                                <button id="copyButton">Sao chép</button>
+                                <p></p>
+                                <audio controls>
+                                    <source src="${vocab.audio}" type="audio/mpeg">
+                                    Trình duyệt của bạn không hỗ trợ phần tử âm thanh.
+                                </audio>
+                            </div>
+                        </div>
+                    `;
+                    modal.style.display = 'block';
+
+                    /// ------ Coppy to clipboard
+                    document.getElementById('copyButton').addEventListener('click', function() {
+                        // Tạo một phần tử tạm thời để chứa văn bản
+                        var tempInput = document.createElement('input');
+                        tempInput.value = document.getElementById('textToCopy').innerText;
+
+                        // Thêm phần tử vào trang để sao chép
+                        document.body.appendChild(tempInput);
+
+                        // Chọn văn bản trong phần tử tạm thời
+                        tempInput.select();
+                        tempInput.setSelectionRange(0, 99999); // Đối với thiết bị di động
+
+                        // Sao chép văn bản
+                        document.execCommand('copy');
+
+                        // Xóa phần tử tạm thời khỏi trang
+                        document.body.removeChild(tempInput);
+
+                        // Thông báo sao chép thành công
+                        alert('Đã sao chép văn bản!');
+                    });
+                });
+            });
+
+            closeModal.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+
+            playAllButton.addEventListener('click', () => {
+                let currentTrack = 0;
+                const audioPlayer = document.getElementById('audioPlayer');
+                const playButton = document.getElementById('playButton');
+                const pauseButton = document.getElementById('pauseButton');
+                const trackInfo = document.getElementById('trackInfo');
+                const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                // const vocabularies = data.vocabularies;
+                // --- Phân trang
+                const startIndex = document.getElementById('startIndex');
+                const numItems = document.getElementById('numItems');
+
+                const start = startIndex.value - 1;
+                const end = start + numItems.value;
+                const vocabularies = data.vocabularies.slice(start, end);
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                function playAudioAsync(url) {
+                    return new Promise((resolve, reject) => {
+                        const audio = new Audio(url);
+
+                        // Resolve the promise when the audio finishes playing
+                        audio.addEventListener('ended', resolve);
+
+                        // Optional: reject the promise if there's an error during playback
+                        audio.addEventListener('error', (e) => reject(e));
+
+                        // Start playing the audio
+                        audio.play();
+                    });
+                }
+
+                // Hàm cập nhật bài hát và thông tin hiển thị
+                async function loadTrack(index) {
+                    const voca = vocabularies[index];
+                    trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
+                    //Play main voca audio
+                    await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+                    await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+
+                    //Play part of speech audio
+                    if(voca.partOfSpeech && voca.partOfSpeech !== '') {
+                        switch (voca.partOfSpeech) {
+                            case 'v':
+                                await playAudioAsync('./../verb.mp3');
+                                break;
+                            case 'n':
+                                await playAudioAsync('./../noun.mp3');
+                                break;
+                            case 'adj':
+                                await playAudioAsync('./../adjective.mp3');
+                                break;
+                            case 'adv':
+                                await playAudioAsync('./../adverb.mp3');
+                                break;
+                             case 'pre':
+                                await playAudioAsync('./../pre.mp3');
+                                break;
+                        
+                            default:
+                                break;
+                        }
+                        await delayFc(2000);
+                    }
+                    //Play example audio
+                    trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
+                    await playAudioAsync(voca.audioEx);
+                    await delayFc(5000);
+
+                    audioPlayer.src = voca.audioEx;
+                    audioPlayer.play();
+                    audioPlayer.onended = async () => {
+                        setTimeout(() => {
+                            currentTrack++;
+                            if (currentTrack < vocabularies.length) {
+                                loadTrack(currentTrack);
+                            } else {
+                                currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                                loadTrack(currentTrack);
+                            }
+                        }, 3000);
+                    };
+                    
+                }
+
+                // Bắt đầu phát bài hát đầu tiên
+                loadTrack(currentTrack);
+
+                // Nút Play
+                playButton.addEventListener('click', function() {
+                    audioPlayer.play();
+                });
+
+                // Nút Pause
+                pauseButton.addEventListener('click', function() {
+                    audioPlayer.pause();
+                });
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+            });
+        }
+
+        // Sự kiện cho nút Trang trước
+        prevButton.addEventListener('click', function() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        // Sự kiện cho nút Trang sau
+        nextButton.addEventListener('click', function() {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            if (currentPage < Math.ceil(data.vocabularies.length / itemsPerPage) - 1) {
+                currentPage++;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        window.onload = () => {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            const vocabularies = data.vocabularies;
+            const startIndex = document.getElementById('startIndex');
+            const numItems = document.getElementById('numItems');
+            startIndex.value = 1;
+            numItems.value = vocabularies.length;
+
+            loadVocabulary(currentPage);
+        }
+        // Chức năng ẩn/hiện phần tiếng Anh
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            // Kiểm tra xem đoạn văn bản có đang bị ẩn không
+            if (this.textContent === 'Ôn tập') {
+                this.textContent = 'Học từ';  // Hiện lại đoạn văn bản
+            } else if (this.textContent === 'Học từ'){
+                this.textContent = 'Học câu';  // Ẩn đoạn văn bản
+            } else {
+                this.textContent = 'Ôn tập';
+            }
+
+            loadVocabulary(currentPage);
+        });
+    </script>
+    <script id="vocabulary-data" type="application/json">
+        {
+            "vocabularies": [
+                {
+                    "index": 1,
+                    "word": "ice",
+                    "pronunciation": "/aɪs/",
+                    "meaning": "băng, nước đá",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/ice.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ice/ice__/ice.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The pond was covered in ice all winter.",
+                        "translation": "Ao nước bị băng bao phủ suốt mùa đông.",
+                        "pronunciation": "/ðə pɒnd wəz ˈkʌvərd ɪn aɪs ɔːl ˈwɪntər./"
+                    }
+                },
+                {
+                    "index": 2,
+                    "word": "ice cream",
+                    "pronunciation": "/ˈaɪs ˌkriːm/",
+                    "meaning": "kem",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/ice cream.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usc/uscld/uscld00700.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We sell 32 different flavours of ice cream.",
+                        "translation": "Chúng tôi bán 32 hương vị kem khác nhau.",
+                        "pronunciation": "/wi sɛl ˈθɜːrti tuː ˈdɪfrənt ˈfleɪvərz əv aɪs kriːm./"
+                    }
+                },
+                {
+                    "index": 3,
+                    "word": "icon",
+                    "pronunciation": "/ˈaɪ.kɑːn/",
+                    "meaning": "tượng, hình tượng, thần tượng, tượng thánh, thánh tượng, thần tượng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/icon.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ico/icon_/icon.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She's one of the country's best-loved sporting icons.",
+                        "translation": "Cô là một trong những biểu tượng thể thao được yêu thích nhất của đất nước.",
+                        "pronunciation": "/ʃiːz wʌn əv ðə ˈkʌntriz ˌbɛstˈlʌvd ˈspɔːrtɪŋ ˈaɪkɑːnz/"
+                    }
+                },
+                {
+                    "index": 4,
+                    "word": "idea",
+                    "pronunciation": "/aɪˈdiː.ə/",
+                    "meaning": "ý tưởng, ý kiến, kế hoạch, ý định",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/idea.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ide/idea_/idea.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "If you have any ideas for what I could buy Jack, let me know.",
+                        "translation": "Nếu bạn có ý tưởng nào về thứ tôi có thể mua cho Jack, hãy cho tôi biết.",
+                        "pronunciation": "/ɪf juː hæv ˈɛni aɪˈdɪəz fɔː wɒt aɪ kʊd baɪ ʤæk, lɛt miː nəʊ/"
+                    }
+                },
+                {
+                    "index": 5,
+                    "word": "identify",
+                    "pronunciation": "/aɪˈden.t̬ə.faɪ/",
+                    "meaning": "nhận biết, nhận ra, nhận dạng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/identify.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ide/ident/identify.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Even the smallest baby can identify its mother by her voice.",
+                        "translation": "Ngay cả đứa trẻ nhỏ nhất cũng có thể nhận ra mẹ mình qua giọng nói.",
+                        "pronunciation": "/ˈiːvən ðə ˈsmɔːlɪst ˈbeɪbi kən aɪˈdɛntɪfaɪ ɪts ˈmʌðər baɪ hɜːr vɔɪs/"
+                    }
+                },
+                {
+                    "index": 6,
+                    "word": "identity",
+                    "pronunciation": "/aɪˈden.t̬ə.t̬i/",
+                    "meaning": "sự đồng nhất, giống hệt",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/identity.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72306.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The man's identity was being kept secret while he was helping police with their enquiries.",
+                        "translation": "Danh tính của người đàn ông này được giữ bí mật trong khi anh ta giúp cảnh sát điều tra.",
+                        "pronunciation": "/ðə mænz aɪˈdɛntɪti wəz ˈbiːɪŋ kɛpt ˈsiːkrɪt waɪl hiː wəz ˈhɛlpɪŋ pəˈliːs wɪð ðeər ɪnˈkwaɪəriz/"
+                    }
+                },
+                {
+                    "index": 7,
+                    "word": "idiom",
+                    "pronunciation": "/ˈɪd.i.əm/",
+                    "meaning": "thành ngữ, đặc ngữ, cách biểu diễn, cách diễn đạt (của một nhà văn...)",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/idiom.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/idi/idiom/idiom.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The most difficult part is getting used to their slang and idioms.",
+                        "translation": "Phần khó nhất là làm quen với tiếng lóng và thành ngữ của họ.",
+                        "pronunciation": "/ðə moʊst ˈdɪfɪkəlt pɑːrt ɪz ˈɡɛtɪŋ juːst tuː ðɛr slæŋ ənd ˈɪdiəmz./"
+                    }
+                },
+                {
+                    "index": 8,
+                    "word": "ignore",
+                    "pronunciation": "/ɪɡˈnɔːr/",
+                    "meaning": "phớt lờ, tỏ ra không biết đến",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/ignore.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ign/ignor/ignore.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She can be really irritating but I try to ignore her.",
+                        "translation": "Cô ấy có thể thực sự khó chịu nhưng tôi cố gắng phớt lờ cô ấy.",
+                        "pronunciation": "/ʃi kæn bi ˈrɪli ˈɪrɪteɪtɪŋ bʌt aɪ traɪ tuː ɪɡˈnɔːr hɜːr./"
+                    }
+                },
+                {
+                    "index": 9,
+                    "word": "ill",
+                    "pronunciation": "/ɪl/",
+                    "meaning": "ốm",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/ill.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/ill__/ill.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I felt ill so I went home.",
+                        "translation": "Tôi cảm thấy không khỏe nên đã về nhà.",
+                        "pronunciation": "/aɪ fɛlt ɪl səʊ aɪ wɛnt həʊm./"
+                    }
+                },
+                {
+                    "index": 10,
+                    "word": "illegal",
+                    "pronunciation": "/ɪˈliː.ɡəl/",
+                    "meaning": "bất hợp pháp, trái luật",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/illegal.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/illeg/illegal.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It is illegal to drive a car that is not registered and insured.",
+                        "translation": "Việc lái xe ô tô chưa đăng ký và chưa được bảo hiểm là bất hợp pháp.",
+                        "pronunciation": "/ɪt ɪz ɪˈliːɡl tuː draɪv ə kɑːr ðæt ɪz nɒt ˈrɛdʒɪstərd ənd ɪnˈʃʊrd./"
+                    }
+                },
+                {
+                    "index": 11,
+                    "word": "illiterate",
+                    "pronunciation": "/ɪˈlɪt̬.ɚ.ət/",
+                    "meaning": "dốt nát, mù chữ, thất học, dốt đặc, không hiểu biết gì (về một lĩnh vực nào đó)",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/illiterate.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/illit/illiterate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A surprising percentage of the population is illiterate.",
+                        "translation": "Một tỷ lệ đáng ngạc nhiên dân số là người mù chữ.",
+                        "pronunciation": "/ə sərˈpraɪzɪŋ pərˈsɛntɪdʒ əv ðə ˌpɑːpjəˈleɪʃən ɪz ɪˈlɪtərɪt./"
+                    }
+                },
+                {
+                    "index": 12,
+                    "word": "illogical",
+                    "pronunciation": "/ɪˈlɑː.dʒɪ.kəl/",
+                    "meaning": "không logic, phi lý",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/illogical.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/illog/illogical.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It is an illogical statement, because if one part is true, then the other must be false.",
+                        "translation": "Đây là một tuyên bố phi logic, bởi vì nếu một phần là đúng thì phần kia phải sai.",
+                        "pronunciation": "/ɪt ɪz ən ɪˈlɒdʒɪkəl ˈsteɪtmənt, bɪˈkɔːz ɪf wʌn pɑːrt ɪz truː, ðɛn ði ˈʌðər mʌst bi fɔːls./"
+                    }
+                },
+                {
+                    "index": 13,
+                    "word": "illusion",
+                    "pronunciation": "/ɪˈluː.ʒən/",
+                    "meaning": "ảo tưởng, ảo giác, ảo ảnh, sự đánh lừa, sự làm mắc lừa",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/illusion.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/illus/illusion.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He had no illusions about his talents as a singer.",
+                        "translation": "Anh ấy không hề ảo tưởng về tài năng ca hát của mình.",
+                        "pronunciation": "/hi hæd noʊ ɪˈluːʒənz əˈbaʊt hɪz ˈtælənts əz ə ˈsɪŋər./"
+                    }
+                },
+                {
+                    "index": 14,
+                    "word": "illusive",
+                    "pronunciation": "/ɪˈluː.sɪv/",
+                    "meaning": "đánh lừa, làm mắc lừa, hão huyền, viển vông",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/illusive.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo06/cdo0623usillu1938.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It is an illusive place where nothing is as it seems.",
+                        "translation": "Đó là một nơi khó nắm bắt, nơi không có gì giống như vẻ bề ngoài của nó.",
+                        "pronunciation": "/ɪt ɪz ən ɪˈluːsɪv pleɪs weər ˈnʌθɪŋ ɪz æz ɪt siːmz./"
+                    }
+                },
+                {
+                    "index": 15,
+                    "word": "illusory",
+                    "pronunciation": "/ɪˈluː.sɚ.i/",
+                    "meaning": "không thực tế, hão huyền, viển vông",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/illusory.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/illus/illusory.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Their hopes of a peaceful solution turned out to be illusory.",
+                        "translation": "Niềm hy vọng của họ về một giải pháp hòa bình hóa ra lại là ảo tưởng.",
+                        "pronunciation": "/ðeər hoʊps əv ə ˈpiːsfəl səˈluːʃən tɜːrnd aʊt tuː bi ɪˈluːsəri./"
+                    }
+                },
+                {
+                    "index": 16,
+                    "word": "illustrate",
+                    "pronunciation": "/ˈɪl.ə.streɪt/",
+                    "meaning": "minh hoạ, giải thích",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/illustrate.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ill/illus/illustrate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She writes children’s books and also illustrates them.",
+                        "translation": "Bà viết sách thiếu nhi và minh họa sách.",
+                        "pronunciation": "/ʃi raɪts ˈʧɪldrənz bʊks ənd ˈɔːlsoʊ ˈɪləstreɪts ðɛm./"
+                    }
+                },
+                {
+                    "index": 17,
+                    "word": "image",
+                    "pronunciation": "/ˈɪm.ɪdʒ/",
+                    "meaning": "ảnh, hình ảnh",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/image.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ima/image/image.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I have an image in my mind of how I want the garden to be.",
+                        "translation": "Tôi hình dung trong đầu về khu vườn mà tôi muốn có.",
+                        "pronunciation": "/aɪ hæv ən ˈɪmɪdʒ ɪn maɪ maɪnd əv haʊ aɪ wɒnt ðə ˈɡɑːrdən tuː bi./"
+                    }
+                },
+                {
+                    "index": 18,
+                    "word": "imaginable",
+                    "pronunciation": "/ɪˈmædʒ.ə.nə.bəl/",
+                    "meaning": "có thể tượng tưởng được, có thể hình dung được",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/imaginable.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ima/imagi/imaginable.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The school offers courses in every subject imaginable.",
+                        "translation": "Trường cung cấp các khóa học về mọi môn học có thể nghĩ tới.",
+                        "pronunciation": "/ðə skuːl ˈɔːfərz ˈkɔːrsɪz ɪn ˈɛvri ˈsʌbdʒɪkt ɪˈmædʒɪnəbl./"
+                    }
+                },
+                {
+                    "index": 19,
+                    "word": "imagination",
+                    "pronunciation": "/ɪˌmædʒ.əˈneɪ.ʃən/",
+                    "meaning": "trí tượng tưởng, sự tượng tưởng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/imagination.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ima/imagi/imagination.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "My younger son has a very vivid imagination.",
+                        "translation": "Con trai út của tôi có trí tưởng tượng rất phong phú.",
+                        "pronunciation": "/maɪ ˈjʌŋɡər sʌn hæz ə ˈvɛri ˈvɪvɪd ɪˌmædʒɪˈneɪʃən./"
+                    }
+                },
+                {
+                    "index": 20,
+                    "word": "imagine",
+                    "pronunciation": "/ɪˈmædʒ.ɪn/",
+                    "meaning": "tưởng tượng, hình dung, tưởng rằng, cho rằng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/imagine.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ima/imagi/imagine.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You can just imagine her storing up these anecdotes for her dinner parties.",
+                        "translation": "Bạn có thể tưởng tượng ra cảnh cô ấy lưu giữ những giai thoại này cho các bữa tiệc tối của mình.",
+                        "pronunciation": "/juː kən ʤʌst ɪˈmædʒɪn hɜːr ˈstɔːrɪŋ ʌp ðiːz ˈænɪkdoʊts fɔːr hɜːr ˈdɪnər ˈpɑːrtiz./"
+                    }
+                },
+                {
+                    "index": 21,
+                    "word": "immediate",
+                    "pronunciation": "/ɪˈmiː.di.ət/",
+                    "meaning": "lập tức, ngay lập tức, tức thì",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/immediate.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imm/immed/immediate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We must make an immediate response.",
+                        "translation": "Chúng ta phải phản ứng ngay lập tức.",
+                        "pronunciation": "/wi mʌst meɪk ən ɪˈmiːdiət rɪˈspɒns./"
+                    }
+                },
+                {
+                    "index": 22,
+                    "word": "immediately",
+                    "pronunciation": "/ɪˈmiː.di.ət.li/",
+                    "meaning": "ngay lập tức",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/immediately.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imm/immed/immediately.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We really ought to leave immediately.",
+                        "translation": "Chúng ta thực sự nên rời đi ngay lập tức.",
+                        "pronunciation": "/wi ˈrɪəli ɔːt tuː liːv ɪˈmiːdiətli./"
+                    }
+                },
+                {
+                    "index": 23,
+                    "word": "immigrant",
+                    "pronunciation": "/ˈɪm.ə.ɡrənt/",
+                    "meaning": "người nhập cư",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/immigrant.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus75/eus75792.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The surrounding area has a large immigrant population.",
+                        "translation": "Khu vực xung quanh có lượng dân nhập cư lớn.",
+                        "pronunciation": "/ðə səˈraʊndɪŋ ˈeəriə hæz ə lɑːrdʒ ˈɪmɪɡrənt ˌpɒpjəˈleɪʃən./"
+                    }
+                },
+                {
+                    "index": 24,
+                    "word": "immigrate",
+                    "pronunciation": "/ˈɪm.ə.ɡreɪt/",
+                    "meaning": "nhập cư",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/immigrate.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus75/eus75793.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He immigrated with his parents in 1895 and grew up on Long Island.",
+                        "translation": "Ông di cư cùng cha mẹ vào năm 1895 và lớn lên ở Long Island.",
+                        "pronunciation": "/hi ˈɪmɪɡreɪtɪd wɪð hɪz ˈpɛrənts ɪn 1895 ənd ɡruː ʌp ɒn lɔːŋ ˈaɪlənd./"
+                    }
+                },
+                {
+                    "index": 25,
+                    "word": "immoral",
+                    "pronunciation": "/ɪˈmɔːr.əl/",
+                    "meaning": "trái đạo đức, trái luân lý, đồi bại",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/immoral.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imm/immor/immoral.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's an immoral tax, because the poor will pay relatively more.",
+                        "translation": "Đây là một loại thuế vô đạo đức vì người nghèo sẽ phải trả nhiều hơn.",
+                        "pronunciation": "/ɪts ən ɪˈmɒrəl tæks, bɪˈkɒz ðə pʊər wɪl peɪ ˈrɛlətɪvli mɔːr./"
+                    }
+                },
+                {
+                    "index": 26,
+                    "word": "impatience",
+                    "pronunciation": "/ɪmˈpeɪ.ʃəns/",
+                    "meaning": "sự thiếu kiên nhẫn, sự không kiên tâm, tính nóng vội, sự không chịu đựng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/impatience.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impat/impatience.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "There's a growing impatience among the electorate with the old two-party system.",
+                        "translation": "Cử tri ngày càng mất kiên nhẫn với hệ thống hai đảng cũ.",
+                        "pronunciation": "/ðerz ə ˈɡroʊɪŋ ɪmˈpeɪʃəns əˈmʌŋ ði ɪˈlɛktərɪt wɪð ði oʊld ˈtuː-ˈpɑːrti ˈsɪstəm./"
+                    }
+                },
+                {
+                    "index": 27,
+                    "word": "impatient",
+                    "pronunciation": "/ɪmˈpeɪ.ʃənt/",
+                    "meaning": "thiếu kiên nhẫn, nóng vội",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/impatient.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impat/impatient.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He's a good teacher, but inclined to be a bit impatient with slow learners.",
+                        "translation": "Anh ấy là một giáo viên giỏi, nhưng có vẻ hơi thiếu kiên nhẫn với những người học chậm.",
+                        "pronunciation": "/hiːz ə ɡʊd ˈtiːtʃər, bʌt ɪnˈklaɪnd tə bi ə bɪt ɪmˈpeɪʃənt wɪð sloʊ ˈlɝːnɚz./"
+                    }
+                },
+                {
+                    "index": 28,
+                    "word": "impatiently",
+                    "pronunciation": "/ɪmˈpeɪ.ʃənt.li/",
+                    "meaning": "nóng lòng, sốt ruột",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/impatiently.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impat/impatiently.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He snapped impatiently when I suggested I help him with his homework.",
+                        "translation": "Anh ấy cáu kỉnh khi tôi đề nghị giúp anh ấy làm bài tập về nhà.",
+                        "pronunciation": "/hi snæpt ɪmˈpeɪʃəntli wɛn aɪ səˈʤɛstɪd aɪ hɛlp hɪm wɪð hɪz ˈhoʊmˌwɝːk./"
+                    }
+                },
+                {
+                    "index": 29,
+                    "word": "impersonal",
+                    "pronunciation": "/ɪmˈpɝː.sən.əl/",
+                    "meaning": "khách quan, không có cá tính con người",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/impersonal.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/imper/impersonal.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She has a very cold and impersonal manner.",
+                        "translation": "Cô ấy có cách cư xử rất lạnh lùng và vô cảm.",
+                        "pronunciation": "/ʃiː hæz ə ˈvɛri kəʊld ənd ɪmˈpɜːsənl ˈmænə(r)/"
+                    }
+                },
+                {
+                    "index": 30,
+                    "word": "impolitic",
+                    "pronunciation": "/ɪmˈpɑː.lə.t̬ɪk/",
+                    "meaning": "không chíng trị, không khôn ngoan, vụng, thất sách",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/impolitic.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usi/usimp/usimper030.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I thought it impolitic to ask any questions about her ex-husband.",
+                        "translation": "Tôi nghĩ rằng việc hỏi bất kỳ câu hỏi nào về chồng cũ của cô ấy là không lịch sự.",
+                        "pronunciation": "/aɪ θɔːt ɪt ɪmˈpɒlɪtɪk tuː ɑːsk ˈɛni ˈkwɛsʧənz əˈbaʊt hɜːr ɛks-ˈhʌzbənd/"
+                    }
+                },
+                {
+                    "index": 31,
+                    "word": "import",
+                    "pronunciation": "/ɪmˈpɔːrt/",
+                    "meaning": "nhập, nhập khẩu",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/import.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impor/import_01_00.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We import a large number of cars from Japan.",
+                        "translation": "Chúng tôi nhập khẩu một số lượng lớn ô tô từ Nhật Bản.",
+                        "pronunciation": "/wiː ˈɪmpɔːt ə lɑːʤ ˈnʌmbər ɒv kɑːrz frɒm ʤəˈpæn/"
+                    }
+                },
+                {
+                    "index": 32,
+                    "word": "important",
+                    "pronunciation": "/ɪmˈpɔːr.tənt/",
+                    "meaning": "quan trọng, hệ trọng",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/important.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impor/important.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I think his career is more important to him than I am.",
+                        "translation": "Tôi nghĩ sự nghiệp của anh ấy quan trọng với anh ấy hơn tôi.",
+                        "pronunciation": "/aɪ θɪŋk hɪz kəˈrɪər ɪz mɔːr ɪmˈpɔːtənt tuː hɪm ðən aɪ æm/"
+                    }
+                },
+                {
+                    "index": 33,
+                    "word": "importation",
+                    "pronunciation": "/ˌɪm.pɔːrˈteɪ.ʃən/",
+                    "meaning": "sự nhập, sự nhập khẩu",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/importation.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo03/cdo0318usimpo2441.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He opposed efforts to allow the importation of prescription drugs from other countries.",
+                        "translation": "Ông phản đối những nỗ lực cho phép nhập khẩu thuốc theo toa từ các quốc gia khác.",
+                        "pronunciation": "/hi əˈpəʊzd ˈɛfɜːrts tuː əˈlaʊ ði ˌɪmpɔːrˈteɪʃən ɒv prɪsˈkrɪpʃən drʌɡz frɒm ˈʌðər ˈkʌntriz/"
+                    }
+                },
+                {
+                    "index": 34,
+                    "word": "importune",
+                    "pronunciation": "/ˌɪm.pɔːrˈtuːn/",
+                    "meaning": "quấy rầy, nhũng nhiễu, đòi dai, nài nỉ",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/importune.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usi/usimp/usimpon005.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "As a tourist, you are importuned for money the moment you step outside your hotel.",
+                        "translation": "Là một khách du lịch, bạn sẽ bị nài nỉ xin tiền ngay khi bước ra khỏi khách sạn.",
+                        "pronunciation": "/æz ə ˈtʊərɪst, juː ɑːr ˌɪm.pɔːrˈtjuːnd fɔːr ˈmʌni ðə ˈməʊmənt juː stɛp ˌaʊtˈsaɪd jɔː həʊˈtɛl/"
+                    }
+                },
+                {
+                    "index": 35,
+                    "word": "impossible",
+                    "pronunciation": "/ɪmˈpɑː.sə.bəl/",
+                    "meaning": "không thể được, không thể xảy ra",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/impossible.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impos/impossible.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It was impossible to sleep because of the noise.",
+                        "translation": "Không thể ngủ được vì tiếng ồn.",
+                        "pronunciation": "/ɪt wɒz ɪmˈpɒsəbəl tuː sliːp bɪˈkɒz ɒv ðə nɔɪz/"
+                    }
+                },
+                {
+                    "index": 36,
+                    "word": "impress",
+                    "pronunciation": "/ɪmˈpres/",
+                    "meaning": "gây ấn tượng mạnh, gây ảnh hưởng mạnh",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/impress.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72347.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He tried to impress me with his extensive knowledge of wine.",
+                        "translation": "Anh ấy cố gắng gây ấn tượng với tôi bằng kiến thức sâu rộng của mình về rượu vang.",
+                        "pronunciation": "/hi traɪd tuː ɪmˈprɛs mi wɪð hɪz ɪkˈstɛnsɪv ˈnɒlɪʤ ɒv waɪn/"
+                    }
+                },
+                {
+                    "index": 37,
+                    "word": "impression",
+                    "pronunciation": "/ɪmˈpreʃ.ən/",
+                    "meaning": "ấn tượng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/impression.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impre/impression.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I didn't get much of an impression of the place because it was dark when we drove through it.",
+                        "translation": "Tôi không có nhiều ấn tượng về nơi này vì trời tối khi chúng tôi lái xe qua đó.",
+                        "pronunciation": "/aɪ ˈdɪdnt gɛt mʌʧ ɒv ən ɪmˈprɛʃən ɒv ðə pleɪs bɪˈkɒz ɪt wɒz dɑːrk wɛn wi drəʊv θruː ɪt/"
+                    }
+                },
+                {
+                    "index": 38,
+                    "word": "improve",
+                    "pronunciation": "/ɪmˈpruːv/",
+                    "meaning": "cải thiện, cải tiến",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/improve.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impro/improve.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He did a lot to improve conditions for factory workers.",
+                        "translation": "Ông đã làm rất nhiều để cải thiện điều kiện làm việc cho công nhân nhà máy.",
+                        "pronunciation": "/hi dɪd ə lɒt tuː ɪmˈpruːv kənˈdɪʃənz fɔːr ˈfæktəri ˈwɜːrkərz/"
+                    }
+                },
+                {
+                    "index": 39,
+                    "word": "improvement",
+                    "pronunciation": "/ɪmˈpruːv.mənt/",
+                    "meaning": "sự cải thiện, sự cải tiến",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/improvement.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impro/improvement.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We expect to see some improvement in the economy.",
+                        "translation": "Chúng tôi hy vọng nền kinh tế sẽ có sự cải thiện.",
+                        "pronunciation": "/wi ɪkˈspɛkt tuː siː sʌm ɪmˈpruːvmənt ɪn ði ɪˈkɒnəmi/"
+                    }
+                },
+                {
+                    "index": 40,
+                    "word": "impulsion",
+                    "pronunciation": "/ɪmˈpʌl.ʃən/",
+                    "meaning": "sự đẩy tới, sức đẩy tới",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/impulsion.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/c/cdo/cdo06/cdo0623usimpu1996.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He accused journalists of an impulsion towards sensationalism.",
+                        "translation": "Ông cáo buộc các nhà báo có xu hướng đưa tin giật gân.",
+                        "pronunciation": "/hi əˈkjuːzd ˈʤɜːrnəlɪsts ɒv ən ɪmˈpʌlʃən təˈwɔːrdz sɛnˈseɪʃənəlɪzəm/"
+                    }
+                },
+                {
+                    "index": 41,
+                    "word": "impulsive",
+                    "pronunciation": "/ɪmˈpʌl.sɪv/",
+                    "meaning": "đẩy mạnh, đẩy tới",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/impulsive.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impul/impulsive.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She’s an impulsive shopper and often buys things she doesn’t need.",
+                        "translation": "Cô ấy là người mua sắm bốc đồng và thường mua những thứ cô ấy không cần.",
+                        "pronunciation": "/ʃiːz ən ɪmˈpʌlsɪv ˈʃɒpər ənd ˈɒfən baɪz θɪŋz ʃi ˈdʌznt niːd/"
+                    }
+                },
+                {
+                    "index": 42,
+                    "word": "impunity",
+                    "pronunciation": "/ɪmˈpjuː.ə.t̬i/",
+                    "meaning": "sự được miễn hình phạt, sự không bị trừng phạt",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/impunity.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72351.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Criminal gangs are terrorizing the city with apparent impunity.",
+                        "translation": "Các băng nhóm tội phạm đang khủng bố thành phố mà dường như không hề bị trừng phạt.",
+                        "pronunciation": "/ˈkrɪmɪnəl ˈɡæŋz ɑːr ˈtɛrəraɪzɪŋ ðə ˈsɪti wɪð əˈpærənt ɪmˈpjuːnɪti/"
+                    }
+                },
+                {
+                    "index": 43,
+                    "word": "impure",
+                    "pronunciation": "/ɪmˈpjʊr/",
+                    "meaning": "không trong sạch, không tinh khiết, dơ bẩn, ô uế",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/impure.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/imp/impur/impure.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She was accused of having impure thoughts about her male students.",
+                        "translation": "Cô bị cáo buộc có ý nghĩ không trong sáng về các học sinh nam của mình.",
+                        "pronunciation": "/ʃiː wəz əˈkjuːzd ʌv ˈhævɪŋ ɪmˈpjʊər θɔːts əˈbaʊt hɜːr meɪl ˈstjuːdənts/"
+                    }
+                },
+                {
+                    "index": 44,
+                    "word": "inch",
+                    "pronunciation": "/ɪntʃ/",
+                    "meaning": "đơn vị đo chiều dài Anh bằng 2,54cm",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/inch.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/inch_/inch.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He had a cut an inch long above his left eye.",
+                        "translation": "Anh ấy có một vết cắt dài một inch phía trên mắt trái",
+                        "pronunciation": "/hi hæd ə kʌt ən ɪntʃ lɒŋ əˈbʌv hɪz lɛft aɪ/"
+                    }
+                },
+                {
+                    "index": 45,
+                    "word": "incident",
+                    "pronunciation": "/ˈɪn.sɪ.dənt/",
+                    "meaning": "tai nạn, biến cố, việc xảy ra",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/incident.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incid/incident.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A youth was seriously injured in a shooting incident on Saturday night.",
+                        "translation": "Một thanh niên đã bị thương nghiêm trọng trong vụ nổ súng vào đêm thứ Bảy.",
+                        "pronunciation": "/ə juːθ wəz ˈsɪəriəsli ˈɪndʒərd ɪn ə ˈʃuːtɪŋ ˈɪnsɪdənt ɒn ˈsætədeɪ naɪt/"
+                    }
+                },
+                {
+                    "index": 46,
+                    "word": "incidentally",
+                    "pronunciation": "/ˌɪn.sɪˈden.t̬əl.i/",
+                    "meaning": "ngẫu nhiên, tình cờ, bất ngờ, nhân tiện, nhân thể, nhân đây",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/incidentally.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incid/incidentally.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Incidentally, I wanted to have a word with you about your travel expenses.",
+                        "translation": "Nhân tiện, tôi muốn trao đổi đôi lời với bạn về chi phí đi lại của bạn.",
+                        "pronunciation": "/ˌɪnsɪˈdɛntəli, aɪ ˈwɒntɪd tə hæv ə wɜːd wɪð juː əˈbaʊt jɔː ˈtrævəl ɪkˈspɛnsɪz/"
+                    }
+                },
+                {
+                    "index": 47,
+                    "word": "include",
+                    "pronunciation": "/ɪnˈkluːd/",
+                    "meaning": "bao gồm, kể cả",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/include.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/inclu/include.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Your responsibilities will include making appointments on my behalf.",
+                        "translation": "Trách nhiệm của bạn bao gồm việc thay mặt tôi sắp xếp cuộc hẹn.",
+                        "pronunciation": "/jɔːr rɪˌspɒnsəˈbɪlɪtiz wɪl ɪnˈkluːd ˈmeɪkɪŋ əˈpɔɪntmənts ɒn maɪ bɪˈhɑːf/"
+                    }
+                },
+                {
+                    "index": 48,
+                    "word": "income",
+                    "pronunciation": "/ˈɪn.kʌm/",
+                    "meaning": "lợi tức, thu nhập",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/income.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incom/income.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I haven't had much income from my stocks and shares this year.",
+                        "translation": "Năm nay tôi không có nhiều thu nhập từ cổ phiếu và trái phiếu.",
+                        "pronunciation": "/aɪ ˈhævənt hæd mʌtʃ ˈɪnkʌm frɒm maɪ stɒks ænd ʃeəz ðɪs jɪə(r)/"
+                    }
+                },
+                {
+                    "index": 49,
+                    "word": "incomparable",
+                    "pronunciation": "/ɪnˈkɑːm.pɚ.ə.bəl/",
+                    "meaning": "không thể so sánh được",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/incomparable.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incom/incomparable.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "In general, completed trace semantics and trace semantics are incomparable.",
+                        "translation": "Nhìn chung, ngữ nghĩa dấu vết hoàn chỉnh và ngữ nghĩa dấu vết là không thể so sánh được.",
+                        "pronunciation": "/ɪn ˈʤɛnərəl, kəmˈpliːtɪd treɪs sɪˈmæntɪks ænd treɪs sɪˈmæntɪks ɑːr ɪnˈkɒmp(ə)rəb(ə)l/"
+                    }
+                },
+                {
+                    "index": 50,
+                    "word": "incomplete",
+                    "pronunciation": "/ˌɪn.kəmˈpliːt/",
+                    "meaning": "thiếu, chưa đầy đủ, chưa hoàn thành, chưa xong",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/incomplete.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incom/incomplete.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The decision was based on incomplete or inaccurate information.",
+                        "translation": "Quyết định này dựa trên thông tin không đầy đủ hoặc không chính xác.",
+                        "pronunciation": "/phə dɪˈsɪʒ.ən wəz beɪst ɒn ˌɪn.kəmˈpliːt ɔːr ˌɪnˈæk.jʊ.rət ˌɪn.fəˈmeɪ.ʃən/"
+                    }
+                },
+                {
+                    "index": 51,
+                    "word": "incomprehensible",
+                    "pronunciation": "/ɪnˌkɑːm.prəˈhen.sə.bəl/",
+                    "meaning": "không thể hiểu nổi, khó hiểu",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/incomprehensible.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incom/incomprehensible.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's incomprehensible to me why he would want to kill himself.",
+                        "translation": "Tôi không hiểu nổi tại sao anh ấy lại muốn tự tử.",
+                        "pronunciation": "/ɪts ˌɪn.kɒm.prɪˈhɛn.sə.bəl tə miː waɪ hi wʊd wɒnt tə kɪl hɪmˈsɛlf/"
+                    }
+                },
+                {
+                    "index": 52,
+                    "word": "inconsistent",
+                    "pronunciation": "/ˌɪn.kənˈsɪs.tənt/",
+                    "meaning": "mâu thuẫn nhau, trái nhau, không trước sau như một",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inconsistent.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72379.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "These findings are inconsistent with those of previous studies.",
+                        "translation": "Những phát hiện này không nhất quán với các nghiên cứu trước đây.",
+                        "pronunciation": "/ðiːz ˈfaɪndɪŋz ɑːr ˌɪnkənˈsɪstənt wɪð ðəʊz əv ˈpriːviəs ˈstʌdiz/"
+                    }
+                },
+                {
+                    "index": 53,
+                    "word": "inconstant",
+                    "pronunciation": "/ɪnˈkɑːn.stənt/",
+                    "meaning": "không chung thuỷ, không bền lòng, kiên nhẫn, hay thay đổi",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inconstant.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usi/usinc/usincog023.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "His inconstant attitude towards work made it difficult for his colleagues to rely on him.",
+                        "translation": "Thái độ không kiên định của ông đối với công việc khiến đồng nghiệp khó có thể tin tưởng ông.",
+                        "pronunciation": "/hɪz ɪnˈkɒnstənt ˈætɪtjuːd təˈwɔːdz wɜːk meɪd ɪt ˈdɪfɪkəlt fɔː hɪz kəˈliːɡz tə rɪˈlaɪ ɒn hɪm/"
+                    }
+                },
+                {
+                    "index": 54,
+                    "word": "increase (n)",
+                    "pronunciation": "/ˈɪn.kriːs/",
+                    "meaning": "sự gia tăng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/increase-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incre/increase_01_01.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Recent tax increases are costing the average household £150 a month.",
+                        "translation": "Việc tăng thuế gần đây khiến mỗi hộ gia đình trung bình phải trả 150 bảng Anh mỗi tháng.",
+                        "pronunciation": "/ˈriːsnt tæks ˈɪnkriːsɪz ɑː ˈkɒstɪŋ ði ˈævərɪdʒ ˈhaʊshəʊld £150 ə mʌnθ/"
+                    }
+                },
+                {
+                    "index": 55,
+                    "word": "increase (v)",
+                    "pronunciation": "/ˈɪn.kriːs/",
+                    "meaning": "tăng, tăng thêm, làm tăng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/increase-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incre/increase_01_01.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We need to increase production to meet demand.",
+                        "translation": "Chúng ta cần tăng sản lượng để đáp ứng nhu cầu.",
+                        "pronunciation": "/wiː niːd tuː ɪnˈkriːs prəˈdʌkʃn tuː miːt dɪˈmɑːnd/"
+                    }
+                },
+                {
+                    "index": 56,
+                    "word": "increasingly",
+                    "pronunciation": "/ɪnˈkriː.sɪŋ.li/",
+                    "meaning": "ngày càng",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/increasingly.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inc/incre/increasingly.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Increasingly, there is pressure on the council to reverse its decision.",
+                        "translation": "Hội đồng ngày càng chịu nhiều áp lực đòi đảo ngược quyết định của mình.",
+                        "pronunciation": "/ɪnˈkriːsɪŋli, ðeər ɪz ˈprɛʃər ɒn ðə ˈkaʊnsl tuː rɪˈvɜːs ɪts dɪˈsɪʒn/"
+                    }
+                },
+                {
+                    "index": 57,
+                    "word": "indeed",
+                    "pronunciation": "/ɪnˈdiːd/",
+                    "meaning": "quả thật, thực sự (để nhấn mạnh lời nói, lời cảm ơn)",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/indeed.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indee/indeed.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Indeed, it could be the worst environmental disaster in Europe this century.",
+                        "translation": "Thật vậy, đây có thể là thảm họa môi trường tồi tệ nhất ở châu Âu trong thế kỷ này.",
+                        "pronunciation": "/ɪnˈdiːd, ɪt kʊd bi ðə wɜːst ɪnˌvaɪrənˈmɛntl dɪˈzɑːstər ɪn ˈjʊərəp ðɪs ˈsɛnʧʊri/"
+                    }
+                },
+                {
+                    "index": 58,
+                    "word": "independence",
+                    "pronunciation": "/ˌɪn.dɪˈpen.dəns/",
+                    "meaning": "sự độc lập, nền độc lập",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/independence.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indep/independence.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Mexico gained its independence from Spain in 1821.",
+                        "translation": "Mexico giành được độc lập từ Tây Ban Nha vào năm 1821.",
+                        "pronunciation": "/ˈmɛksɪkoʊ ɡeɪnd ɪts ˌɪndɪˈpɛndəns frəm speɪn ɪn ˌeɪtiːn ˌtwɛntiˈwʌn/"
+                    }
+                },
+                {
+                    "index": 59,
+                    "word": "independent",
+                    "pronunciation": "/ˌɪn.dɪˈpen.dənt/",
+                    "meaning": "độc lập",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/independent.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indep/independent.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "An independent enquiry will determine whether the case should move forward.",
+                        "translation": "Một cuộc điều tra độc lập sẽ quyết định liệu vụ việc có nên được tiếp tục hay không.",
+                        "pronunciation": "/ən ˌɪndɪˈpɛndənt ˈɪnkwəri wɪl dɪˈtɜːrmɪn ˈwɛðər ðə keɪs ʃʊd muːv ˈfɔːrwərd/"
+                    }
+                },
+                {
+                    "index": 60,
+                    "word": "independently",
+                    "pronunciation": "/ˌɪn.dɪˈpen.dənt.li/",
+                    "meaning": "độc lập",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/independently.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indep/independently.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Each part of the organization operates independently of the others.",
+                        "translation": "Mỗi bộ phận của tổ chức hoạt động độc lập với các bộ phận khác.",
+                        "pronunciation": "/iːtʃ pɑːrt ʌv ði ˌɔːrɡənəˈzeɪʃn ˈɒpəreɪts ˌɪndɪˈpɛndəntli ʌv ði ˈʌðərz/"
+                    }
+                },
+                {
+                    "index": 61,
+                    "word": "index",
+                    "pronunciation": "/ˈɪn.deks/",
+                    "meaning": "chỉ số, sự biểu thị",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/index.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/index/index.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He still has all his friends' names and addresses on a card index.",
+                        "translation": "Anh ấy vẫn còn lưu giữ tên và địa chỉ của tất cả bạn bè trên một tấm danh thiếp.",
+                        "pronunciation": "/hi stɪl hæz ɔːl hɪz frɛndz neɪmz ənd əˈdrɛsɪz ɒn ə kɑːd ˈɪndɛks/"
+                    }
+                },
+                {
+                    "index": 62,
+                    "word": "indicate",
+                    "pronunciation": "/ˈɪn.də.keɪt/",
+                    "meaning": "chỉ, chỉ rõ, cho biết, biểu thị, ngụ ý",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/indicate.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indic/indicate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Please indicate which free gift you would like to receive.",
+                        "translation": "Vui lòng cho biết món quà miễn phí nào bạn muốn nhận.",
+                        "pronunciation": "/pliːz ˈɪndɪkeɪt wɪʧ friː gɪft juː wʊd laɪk tə rɪˈsiːv/"
+                    }
+                },
+                {
+                    "index": 63,
+                    "word": "indication",
+                    "pronunciation": "/ˌɪn.dəˈkeɪ.ʃən/",
+                    "meaning": "sự chỉ, sự biểu thị, sự biểu lộ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/indication.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indic/indication.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Helen's face gave no indication of what she was thinking.",
+                        "translation": "Khuôn mặt của Helen không biểu lộ điều cô đang nghĩ.",
+                        "pronunciation": "/ˈhɛlənz feɪs ɡeɪv nəʊ ˌɪndɪˈkeɪʃən əv wɒt ʃiː wəz ˈθɪŋkɪŋ/"
+                    }
+                },
+                {
+                    "index": 64,
+                    "word": "indicator",
+                    "pronunciation": "/ˈɪn.də.keɪ.t̬ɚ/",
+                    "meaning": "dụng cụ chỉ cho biết, đồng hồ báo cho biết, chất chỉ thị",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/indicator.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indic/indicator.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Commodity prices can be a useful indicator of inflation, he claimed.",
+                        "translation": "Ông khẳng định giá hàng hóa có thể là một chỉ báo hữu ích về lạm phát.",
+                        "pronunciation": "/kəˈmɒdəti ˈpraɪsɪz kən bi ə ˈjuːsfəl ˈɪndɪkeɪtər ʌv ɪnˈfleɪʃən, hi kleɪmd./"
+                    }
+                },
+                {
+                    "index": 65,
+                    "word": "indict",
+                    "pronunciation": "/ɪnˈdaɪt/",
+                    "meaning": "truy tố, buộc tội",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/indict.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indic/indict.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Five people were indicted for making and selling counterfeit currency.",
+                        "translation": "Năm người đã bị truy tố vì tội làm và bán tiền giả.",
+                        "pronunciation": "/faɪv ˈpiːpəl wɜːr ɪnˈdaɪtɪd fɔːr ˈmeɪkɪŋ ənd ˈsɛlɪŋ ˈkaʊntərˌfɪt ˈkɜːrənsi./"
+                    }
+                },
+                {
+                    "index": 66,
+                    "word": "indirect",
+                    "pronunciation": "/ˌɪn.dɪˈrekt/",
+                    "meaning": "gián tiếp",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/indirect.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indir/indirect.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Indirect effects of the fighting include disease and food shortages.",
+                        "translation": "Những tác động gián tiếp của cuộc chiến bao gồm bệnh tật và tình trạng thiếu lương thực.",
+                        "pronunciation": "/ˌɪndɪˈrɛkt ɪˈfɛkts ʌv ðə ˈfaɪtɪŋ ɪnˈkluːd dɪˈziːz ənd fuːd ˈʃɔːrtɪdʒɪz./"
+                    }
+                },
+                {
+                    "index": 67,
+                    "word": "indirectly",
+                    "pronunciation": "/ˌɪn.daɪˈrekt.li/",
+                    "meaning": "gián tiếp",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/indirectly.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indir/indirectly.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She still controls the company indirectly through her son, who is the managing director.",
+                        "translation": "Bà vẫn điều hành công ty gián tiếp thông qua con trai mình, người giữ chức giám đốc điều hành.",
+                        "pronunciation": "/ʃi stɪl kənˈtroʊlz ðə ˈkʌmpəni ˌɪndəˈrɛktli θruː hɜːr sʌn, huː ɪz ðə ˈmænɪdʒɪŋ dɪˈrɛktər./"
+                    }
+                },
+                {
+                    "index": 68,
+                    "word": "indistinct",
+                    "pronunciation": "/ˌɪn.dɪˈstɪŋkt/",
+                    "meaning": "không rõ ràng, mơ hồ",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/indistinct.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indis/indistinct.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "This improved the recording greatly; however, portions of the interview are still indistinct.",
+                        "translation": "Điều này đã cải thiện đáng kể bản ghi âm; tuy nhiên, một số phần của cuộc phỏng vấn vẫn còn không rõ ràng.",
+                        "pronunciation": "/ðɪs ɪmˈpruːvd ðə rɪˈkɔːrdɪŋ ˈɡreɪtli; ˌhaʊˈɛvər, ˈpɔːrʃənz ʌv ði ˈɪntərvjuː ɑːr stɪl ˌɪndɪˈstɪŋkt./"
+                    }
+                },
+                {
+                    "index": 69,
+                    "word": "individual (n)",
+                    "pronunciation": "/ˌɪn.dəˈvɪdʒ.u.əl/",
+                    "meaning": "cá nhân, cá thể",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/individual-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indiv/individual.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Every individual has rights which must never be taken away.",
+                        "translation": "Mỗi cá nhân đều có những quyền không bao giờ được phép tước bỏ.",
+                        "pronunciation": "/ˈevri ˌɪndɪˈvɪdʒuəl hæz raɪts wɪtʃ mʌst ˈnevər bi ˈteɪkən əˈweɪ./"
+                    }
+                },
+                {
+                    "index": 70,
+                    "word": "individual (adj)",
+                    "pronunciation": "/ˌɪn.dəˈvɪdʒ.u.əl/",
+                    "meaning": "riêng, riêng lẻ, cá nhân, riêng biệt, độc đáo",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/individual-adj.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indiv/individual.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We deal with each case on an individual basis.",
+                        "translation": "Chúng tôi giải quyết từng trường hợp một cách riêng biệt.",
+                        "pronunciation": "/wiː diːl wɪð iːtʃ keɪs ɒn ən ˌɪndɪˈvɪdʒuəl ˈbeɪsɪs/"
+                    }
+                },
+                {
+                    "index": 71,
+                    "word": "indivisible",
+                    "pronunciation": "/ˌɪn.dɪˈvɪz.ə.bəl/",
+                    "meaning": "không thể chia được",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/indivisible.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indiv/indivisible.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He regards e-commerce as an indivisible part of modern retail.",
+                        "translation": "Ông coi thương mại điện tử là một phần không thể tách rời của bán lẻ hiện đại.",
+                        "pronunciation": "/hi rɪˈɡɑːrdz iː-ˈkɒmɜːrs æz ən ˌɪndɪˈvɪzəbl̩ pɑːrt ʌv ˈmɒdɚn ˈriːteɪl/"
+                    }
+                },
+                {
+                    "index": 72,
+                    "word": "indoor",
+                    "pronunciation": "/ˌɪnˈdɔːr/",
+                    "meaning": "trong nhà",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/indoor.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72398.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The indoor flower market is a big tourist attraction.",
+                        "translation": "Chợ hoa trong nhà là điểm thu hút khách du lịch lớn.",
+                        "pronunciation": "/ðə ˈɪndɔːr ˈflaʊər ˈmɑːrkɪt ɪz ə bɪɡ ˈtʊrɪst əˈtrækʃn/"
+                    }
+                },
+                {
+                    "index": 73,
+                    "word": "indoors",
+                    "pronunciation": "/ˌɪnˈdɔːrz/",
+                    "meaning": "ở trong nhà",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/indoors.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indoo/indoors.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Our dog took fright at the noise of the fireworks and ran indoors.",
+                        "translation": "Con chó của chúng tôi sợ tiếng pháo hoa và chạy vào nhà.",
+                        "pronunciation": "/aʊər dɔːɡ tʊk fraɪt ət ðə nɔɪz ʌv ðə ˈfaɪərwɜːrks ənd ræn ˌɪnˈdɔːrz/"
+                    }
+                },
+                {
+                    "index": 74,
+                    "word": "induct",
+                    "pronunciation": "/ɪnˈdʌkt/",
+                    "meaning": "làm lễ nhậm chức cho (ai), giới thiệu vào, đưa vào (một tổ chức), bổ nhiệm, đặt vào",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/induct.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/induc/induct.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He was inducted as the university's chancellor on June 8th.",
+                        "translation": "Ông được bổ nhiệm làm hiệu trưởng của trường đại học vào ngày 8 tháng 6.",
+                        "pronunciation": "/hiː wəz ɪnˈdʌktɪd əz ðə ˌjuːnɪˈvɜːrsətiz ˈtʃænsələr ɒn dʒuːn eɪtθ/"
+                    }
+                },
+                {
+                    "index": 75,
+                    "word": "industrial",
+                    "pronunciation": "/ɪnˈdʌs.tri.əl/",
+                    "meaning": "(thuộc) công nghiệp",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/industrial.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indus/industrial.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We would drink industrial quantities of coffee at every meeting.",
+                        "translation": "Chúng tôi uống một lượng lớn cà phê trong mỗi cuộc họp.",
+                        "pronunciation": "/wiː wʊd drɪŋk ɪnˈdʌstriəl kwɒnˈtɪtiz ʌv ˈkɒfi ət ˈevri ˈmiːtɪŋ/"
+                    }
+                },
+                {
+                    "index": 76,
+                    "word": "industry",
+                    "pronunciation": "/ˈɪn.də.stri/",
+                    "meaning": "công nghiệp, ngành công nghiệp",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/industry.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ind/indus/industry.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The strike seriously reduced coal deliveries to industry.",
+                        "translation": "Cuộc đình công đã làm giảm nghiêm trọng lượng than cung cấp cho ngành công nghiệp.",
+                        "pronunciation": "/ðə straɪk ˈsɪəriəsli rɪˈdjuːst kəʊl dɪˈlɪvəriz tuː ˈɪndəstri/"
+                    }
+                },
+                {
+                    "index": 77,
+                    "word": "inexpensive",
+                    "pronunciation": "/ˌɪn.ɪkˈspen.sɪv/",
+                    "meaning": "không đắt, rẻ",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inexpensive.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ine/inexp/inexpensive.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's an inexpensive perfume.",
+                        "translation": "Đây là loại nước hoa giá rẻ.",
+                        "pronunciation": "/ɪts ən ˌɪnɪkˈspɛnsɪv pɜːˈfjuːm/"
+                    }
+                },
+                {
+                    "index": 78,
+                    "word": "inexpressible",
+                    "pronunciation": "/ˌɪn.ɪkˈspres.ə.bəl/",
+                    "meaning": "không thể diễn đạt được, không thể nói ra được",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inexpressible.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usi/usind/usinduc026.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The news filled him with inexpressible delight.",
+                        "translation": "Tin tức này khiến ông tràn ngập niềm vui không thể diễn tả được.",
+                        "pronunciation": "/ðə njuːz fɪld hɪm wɪð ˌɪnɪkˈsprɛsəbəl dɪˈlaɪt/"
+                    }
+                },
+                {
+                    "index": 79,
+                    "word": "infect",
+                    "pronunciation": "/ɪnˈfekt/",
+                    "meaning": "nhiễm, truyền nhiễm, làm nhiễm độc, làm nhiễm trùng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/infect.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infec/infect.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Her optimism seemed to infect all those around her.",
+                        "translation": "Sự lạc quan của cô dường như đã lây lan sang những người xung quanh.",
+                        "pronunciation": "/hɜr ˈɑːptɪmɪzəm siːmd tuː ɪnˈfɛkt ɔːl ðoʊz əˈraʊnd hɜr/"
+                    }
+                },
+                {
+                    "index": 80,
+                    "word": "infected",
+                    "pronunciation": "/.ɪnˈfek.t̬ɪd/",
+                    "meaning": "bị nhiễm, bị đầu độc",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/infected.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infec/infected.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Scientists believe people died after eating meat from infected cattle.",
+                        "translation": "Các nhà khoa học tin rằng con người đã tử vong sau khi ăn thịt gia súc bị nhiễm bệnh.",
+                        "pronunciation": "/ˈsaɪəntɪsts bɪˈliːv ˈpiːpəl daɪd ˈæftər ˈiːtɪŋ miːt frʌm ɪnˈfɛktɪd ˈkætəl/"
+                    }
+                },
+                {
+                    "index": 81,
+                    "word": "infection",
+                    "pronunciation": "/ɪnˈfek.ʃən/",
+                    "meaning": "sự nhiễm, sự nhiễm độc, sự nhiễm trùng, bệnh lây nhiễm",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/infection.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infec/infection.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Bandage the wound to reduce the risk of infection.",
+                        "translation": "Băng vết thương để giảm nguy cơ nhiễm trùng.",
+                        "pronunciation": "/ˈbændɪdʒ ðə wuːnd tuː rɪˈduːs ðə rɪsk ʌv ɪnˈfɛkʃən/"
+                    }
+                },
+                {
+                    "index": 82,
+                    "word": "infectious",
+                    "pronunciation": "/ɪnˈfek.ʃəs/",
+                    "meaning": "lây nhiễm, nhiễm trùng",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/infectious.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infec/infectious.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "After the 21-day isolation period, Ebola survivors are no longer infectious.",
+                        "translation": "Sau thời gian cách ly 21 ngày, những người sống sót sau bệnh Ebola không còn khả năng lây nhiễm nữa.",
+                        "pronunciation": "/ˈæftər ðə ˈtwɛntiˈwʌn-deɪ ˌaɪsəˈleɪʃən ˈpɪəriəd, iˈboʊlə sərˈvaɪvərz ɑːr noʊ ˈlɔːŋɡər ɪnˈfɛkʃəs./"
+                    }
+                },
+                {
+                    "index": 83,
+                    "word": "inference",
+                    "pronunciation": "/ˈɪn.fɚ.əns/",
+                    "meaning": "sự suy ra, sự luận ra",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/inference.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infer/inference.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They were warned to expect a heavy air attack and by inference many casualties.",
+                        "translation": "Họ đã được cảnh báo về một cuộc không kích dữ dội và suy ra sẽ có nhiều thương vong.",
+                        "pronunciation": "/ðeɪ wɜːr wɔrnd tu ɪkˈspɛkt ə ˈhɛvi ɛr əˈtæk ənd baɪ ˈɪnfərəns ˈmɛni ˈkæʒuəltiz./"
+                    }
+                },
+                {
+                    "index": 84,
+                    "word": "infidelity",
+                    "pronunciation": "/ˌɪn.fəˈdel.ə.t̬i/",
+                    "meaning": "sự không trung thành, sự bội tín",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/infidelity.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72415.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She could not forgive his many infidelities.",
+                        "translation": "Cô không thể tha thứ cho những lần anh ngoại tình.",
+                        "pronunciation": "/ʃi kʊd nɒt fəˈɡɪv hɪz ˈmɛni ˌɪnfɪˈdɛlɪtiz./"
+                    }
+                },
+                {
+                    "index": 85,
+                    "word": "infirmary",
+                    "pronunciation": "/ɪnˈfɝː.mɚ.ri/",
+                    "meaning": "bệnh xá, bệnh viện, nhà thương",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/infirmary.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infir/infirmary.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A large number of infirmaries and institutions automatically came under the county council.",
+                        "translation": "Một số lượng lớn bệnh xá và cơ sở y tế tự động nằm dưới sự quản lý của hội đồng quận.",
+                        "pronunciation": "/ə lɑːrdʒ ˈnʌmbər ʌv ɪnˈfɜːrməriz ənd ˌɪnstɪˈtuːʃənz ˌɔːtəˈmætɪkli keɪm ˈʌndər ðə ˈkaʊnti ˈkaʊnsl./"
+                    }
+                },
+                {
+                    "index": 86,
+                    "word": "inflammable",
+                    "pronunciation": "/ɪnˈflæm.ə.bəl/",
+                    "meaning": "dễ cháy, dễ bị kích động",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inflammable.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infla/inflammable.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We have moved beyond the driver to anyone who is dealing with inflammable liquids.",
+                        "translation": "Chúng tôi đã chuyển từ người lái xe sang bất kỳ ai đang xử lý chất lỏng dễ cháy.",
+                        "pronunciation": "/wiː hæv muːvd bɪˈjɒnd ðə ˈdraɪvər tuː ˈeniwʌn huː ɪz ˈdiːlɪŋ wɪð ɪnˈflæməbəl ˈlɪkwɪdz./"
+                    }
+                },
+                {
+                    "index": 87,
+                    "word": "inflammation",
+                    "pronunciation": "/ˌɪn.fləˈmeɪ.ʃən/",
+                    "meaning": "sự đốt cháy, sự bốc cháy, sự bị kích động",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/inflammation.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infla/inflammation.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Aspirin reduces pain and inflammation.",
+                        "translation": "Aspirin có tác dụng giảm đau và giảm viêm.",
+                        "pronunciation": "/ˈæsprɪn rɪˈdjuːsɪz peɪn ænd ˌɪnfləˈmeɪʃən./"
+                    }
+                },
+                {
+                    "index": 88,
+                    "word": "inflexible",
+                    "pronunciation": "/ɪnˈflek.sə.bəl/",
+                    "meaning": "không uốn được, không bẻ",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inflexible.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infle/inflexible.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The prime minister has adopted an inflexible position on immigration.",
+                        "translation": "Thủ tướng đã áp dụng lập trường cứng rắn về vấn đề nhập cư.",
+                        "pronunciation": "/ðə praɪm ˈmɪnɪstər hæz əˈdɒptɪd ən ɪnˈflɛksəbl pəˈzɪʃən ɒn ˌɪmɪˈɡreɪʃən./"
+                    }
+                },
+                {
+                    "index": 89,
+                    "word": "influence (n)",
+                    "pronunciation": "/ˈɪn.flu.əns/",
+                    "meaning": "uy thế, thế lực, người có ảnh hưởng, điều có ảnh hưởng, ảnh hưởng, tác dụng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/influence-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/influ/influence.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Family is the most important influence on children.",
+                        "translation": "Gia đình là yếu tố ảnh hưởng quan trọng nhất đến trẻ em.",
+                        "pronunciation": "/ˈfæmɪli ɪz ðə moʊst ɪmˈpɔːrtnt ˈɪnfluəns ɒn ˈtʃɪldrən./"
+                    }
+                },
+                {
+                    "index": 90,
+                    "word": "influence (v)",
+                    "pronunciation": "/ˈɪn.flu.əns/",
+                    "meaning": "ảnh hưởng đến, có tác dụng đối với",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/influence-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/influ/influence.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "People who influence on social media can have a significant impact on consumer behaviour.",
+                        "translation": "Những người có sức ảnh hưởng trên mạng xã hội có thể tác động đáng kể đến hành vi của người tiêu dùng.",
+                        "pronunciation": "/ˈpiːpəl huː ˈɪnfluəns ˈʌðərz ɒn ˈsoʊʃl ˈmiːdiə kən hæv ə sɪɡˈnɪfɪkənt ˈɪmpækt ɒn kənˈsuːmər bɪˈheɪvjər./"
+                    }
+                },
+                {
+                    "index": 91,
+                    "word": "influx",
+                    "pronunciation": "/ˈɪn.flʌks/",
+                    "meaning": "sự chảy vào, sự tràn vào",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/influx.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/influ/influx.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Turkey is expecting an influx of several thousand refugees over the next few days.",
+                        "translation": "Thổ Nhĩ Kỳ dự kiến sẽ có hàng ngàn người tị nạn đổ vào trong vài ngày tới.",
+                        "pronunciation": "/ˈtɜːr.ki ɪz ɪkˈspektɪŋ ən ˈɪn.flʌks ʌv ˈsev.rəl ˈθaʊ.zənd ˌref.jʊˈdʒiːz ˈoʊ.vɚ ðə nekst fjuː deɪz./"
+                    }
+                },
+                {
+                    "index": 92,
+                    "word": "inform",
+                    "pronunciation": "/ɪnˈfɔːrm/",
+                    "meaning": "báo tin cho, cho biết",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/inform.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infor/inform.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I informed my boss that I was going to be away next week.",
+                        "translation": "Tôi thông báo với sếp rằng tôi sẽ đi vắng vào tuần tới.",
+                        "pronunciation": "/aɪ ɪnˈfɔːrmd maɪ bɑːs ðæt aɪ wəz ˈɡoʊɪŋ tə bi əˈweɪ nekst wiːk./"
+                    }
+                },
+                {
+                    "index": 93,
+                    "word": "informal",
+                    "pronunciation": "/ɪnˈfɔːr.məl/",
+                    "meaning": "không chính thức, không nghi thức, thân mật",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/informal.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infor/informal.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The two groups agreed to hold an informal meeting.",
+                        "translation": "Hai nhóm đã đồng ý tổ chức một cuộc họp không chính thức.",
+                        "pronunciation": "/ðə tuː ɡruːps əˈɡriːd tə hoʊld ən ɪnˈfɔːrml ˈmiːtɪŋ./"
+                    }
+                },
+                {
+                    "index": 94,
+                    "word": "information",
+                    "pronunciation": "/ˌɪn.fɚˈmeɪ.ʃən/",
+                    "meaning": "thông tin, tin tức, tài liệu, kiến thức",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/information.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus75/eus75806.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I read an interesting piece of information in the newspaper.",
+                        "translation": "Tôi đọc được một thông tin thú vị trên báo.",
+                        "pronunciation": "/aɪ rɛd ən ˈɪntrəstɪŋ piːs əv ˌɪnfərˈmeɪʃən ɪn ðə ˈnuːzˌpeɪpər./"
+                    }
+                },
+                {
+                    "index": 95,
+                    "word": "infrequent",
+                    "pronunciation": "/ɪnˈfriː.kwənt/",
+                    "meaning": "ít xảy ra, hiếm khi xảy ra, không thường xuyên",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/infrequent.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inf/infre/infrequent.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "His letters became infrequent, then stopped completely.",
+                        "translation": "Những lá thư của ông trở nên ít dần rồi ngừng hẳn.",
+                        "pronunciation": "/hɪz ˈlɛtərz bɪˈkeɪm ɪnˈfriːkwənt, ðɛn stɑːpt kəmˈpliːtli./"
+                    }
+                },
+                {
+                    "index": 96,
+                    "word": "ingredient",
+                    "pronunciation": "/ɪnˈɡriː.di.ənt/",
+                    "meaning": "thành phần, phần hợp thành",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/ingredient.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72426.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The list of ingredients included 250 g of almonds.",
+                        "translation": "Danh sách thành phần bao gồm 250 g hạnh nhân.",
+                        "pronunciation": "/ðə lɪst əv ɪnˈɡriːdiənts ɪnˈkluːdɪd ˈtuː fɪfti ɡræmz əv ˈɑːməndz./"
+                    }
+                },
+                {
+                    "index": 97,
+                    "word": "inherent",
+                    "pronunciation": "/ɪnˈhɪr.ənt/",
+                    "meaning": "vốn có, cố hữu",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inherent.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inh/inher/inherent.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "There are dangers inherent in almost every sport.",
+                        "translation": "Hầu như môn thể thao nào cũng tiềm ẩn những nguy hiểm.",
+                        "pronunciation": "/ðeər ɑːr ˈdeɪnʤərz ɪnˈhɪərənt ɪn ˈɔːlməʊst ˈevri spɔːrt./"
+                    }
+                },
+                {
+                    "index": 98,
+                    "word": "inhuman",
+                    "pronunciation": "/ɪnˈhjuː.mən/",
+                    "meaning": "không nhân đạo, tàn bạo",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/inhuman.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inh/inhum/inhuman.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Prisoners of war were subjected to inhuman and degrading treatment.",
+                        "translation": "Tù nhân chiến tranh phải chịu sự đối xử vô nhân đạo và tàn bạo.",
+                        "pronunciation": "/ˈprɪzənəz əv wɔː wə ˈsʌbʤɪktɪd tuː ɪnˈhjuːmən ənd dɪˈɡreɪdɪŋ ˈtriːtmənt./"
+                    }
+                },
+                {
+                    "index": 99,
+                    "word": "initial",
+                    "pronunciation": "/ɪˈnɪʃ.əl/",
+                    "meaning": "ban đầu",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/initial.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ini/initi/initial.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "My initial surprise was soon replaced by delight.",
+                        "translation": "Sự ngạc nhiên ban đầu của tôi nhanh chóng được thay thế bằng sự vui mừng.",
+                        "pronunciation": "/maɪ ˈɪnɪʃəl səˈpraɪz wəz suːn rɪˈpleɪst baɪ dɪˈlaɪt./"
+                    }
+                },
+                {
+                    "index": 100,
+                    "word": "initially",
+                    "pronunciation": "/ɪˈnɪʃ.əl.i/",
+                    "meaning": "vào lúc đầu, ban đầu",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/initially.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ini/initi/initially.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Initially, most people approved of the new plan.",
+                        "translation": "Ban đầu, hầu hết mọi người đều chấp thuận kế hoạch mới.",
+                        "pronunciation": "/ɪˈnɪʃəli, moʊst ˈpiːpəl əˈpruːvd ʌv ðə nuː plæn./"
+                    }
+                },
+                {
+                    "index": 101,
+                    "word": "initiative",
+                    "pronunciation": "/ɪˈnɪʃ.ə.t̬ɪv/",
+                    "meaning": "sáng kiến",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/initiative.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72432.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The peace initiative was welcomed by both sides.",
+                        "translation": "Sáng kiến hòa bình được cả hai bên hoan nghênh.",
+                        "pronunciation": "/ðə piːs ɪˈnɪʃətɪv wəz ˈwɛlkəmd baɪ boʊθ saɪdz./"
+                    }
+                },
+                {
+                    "index": 102,
+                    "word": "inject",
+                    "pronunciation": "/ɪnˈdʒekt/",
+                    "meaning": "tiêm (thuốc...), xen (lời nhận xét...) vào câu chuyện, xen (cái gì) vào một cách võ đoán, xen (cái gì) một cách lạc lõng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/inject.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inj/injec/inject.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Phil's a diabetic and has to inject himself with insulin every day.",
+                        "translation": "Phil bị tiểu đường và phải tiêm insulin mỗi ngày.",
+                        "pronunciation": "/ˈfɪlz ə ˌdaɪəˈbɛtɪk ənd hæz tuː ɪnˈʤɛkt hɪmˈsɛlf wɪð ˈɪnsjʊlɪn ˈɛvri deɪ./"
+                    }
+                },
+                {
+                    "index": 103,
+                    "word": "injunction",
+                    "pronunciation": "/ɪnˈdʒʌŋk.ʃən/",
+                    "meaning": "lệnh huấn thị, lệnh của toà",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/injunction.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72433.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The court has issued an injunction to prevent the airline from increasing its prices.",
+                        "translation": "Tòa án đã ban hành lệnh cấm hãng hàng không này tăng giá.",
+                        "pronunciation": "/ðə kɔːrt hæz ˈɪʃuːd ən ɪnˈʤʌŋkʃən tuː prɪˈvɛnt ði ˈɛrlaɪn frəm ɪnˈkriːsɪŋ ɪts ˈpraɪsɪz./"
+                    }
+                },
+                {
+                    "index": 104,
+                    "word": "injure",
+                    "pronunciation": "/ˈɪn.dʒɚ/",
+                    "meaning": "làm hại, làm tổn thương, xúc phạm",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/injure.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inj/injur/injure.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A bomb exploded at the embassy, injuring several people.",
+                        "translation": "Một quả bom phát nổ tại đại sứ quán khiến nhiều người bị thương.",
+                        "pronunciation": "/ə bɒm ɪkˈsploʊdɪd ət ði ˈɛmbəsi, ˈɪnʤərɪŋ ˈsɛvrəl ˈpiːpl./"
+                    }
+                },
+                {
+                    "index": 105,
+                    "word": "injured",
+                    "pronunciation": "/ˈɪn.dʒɚd/",
+                    "meaning": "bị thương, bị tổn thương, bị xúc phạm",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/injured.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inj/injur/injured.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She was told to stay in bed to rest her injured back.",
+                        "translation": "Cô được yêu cầu nằm trên giường để phần lưng bị thương được nghỉ ngơi.",
+                        "pronunciation": "/ʃi wəz toʊld tə steɪ ɪn bɛd tə rɛst hər ˈɪnʤərd bæk./"
+                    }
+                },
+                {
+                    "index": 106,
+                    "word": "injury",
+                    "pronunciation": "/ˈɪn.dʒər.i/",
+                    "meaning": "sự làm hại, sự làm tổn thương",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/injury.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/inj/injur/injury.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They were lucky to escape without injury.",
+                        "translation": "Họ may mắn thoát được mà không bị thương.",
+                        "pronunciation": "/ðeɪ wər ˈlʌki tʊ ɪˈskeɪp wɪˈðaʊt ˈɪnʤəri./"
+                    }
+                },
+                {
+                    "index": 107,
+                    "word": "ink",
+                    "pronunciation": "/ɪŋk/",
+                    "meaning": "mực (để viết)",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/ink.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ink/ink__/ink.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The book is printed in three different coloured inks.",
+                        "translation": "Cuốn sách được in bằng ba loại mực màu khác nhau.",
+                        "pronunciation": "/ðə bʊk ɪz ˈprɪntɪd ɪn θriː ˈdɪfrənt ˈkʌlərd ɪŋks./"
+                    }
+                },
+                {
+                    "index": 108,
+                    "word": "inkling",
+                    "pronunciation": "/ˈɪŋ.klɪŋ/",
+                    "meaning": "sự hiểu biết qua loa, ý niệm mơ hồ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/inkling.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/i/ink/inkli/inkling.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He must have had some inkling of what was happening.",
+                        "translation": "Chắc hẳn anh ấy đã có chút manh mối về chuyện gì đang xảy ra.",
+                        "pronunciation": "/hi mʌst hæv hæd sʌm ˈɪŋklɪŋ ʌv wɒt wəz ˈhæpənɪŋ./"
+                    }
+                }
+            ]
+        }  
+        </script>
+</body>
+</html>

@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách từ vựng với âm thanh</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .vocabulary {
+            color: green;
+            cursor: pointer;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .index-number {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            margin-right: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .index-circle-detail {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .play-all-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .play-all-button:hover {
+            background-color: #45a049;
+        }
+        #playButton, #pauseButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #playButton:hover, #pauseButton:hover {
+            background-color: #0056b3;
+        }
+        #trackInfo {
+            font-size: 18px;
+        }
+
+        #toggleButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #e7a414;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Danh sách từ vựng</h1>
+    <div style="display: flex; justify-content: space-between; max-width: 600px;">
+        <div class="play-audio">
+            <button class="play-all-button" id="play-all-button">Phát tất cả âm thanh</button>
+            <div id="trackInfo"><b>Now playing:</b></div>
+    
+            <!-- Các nút điều khiển -->
+            <div id="controls">
+                <button id="playButton">Play</button>
+                <button id="pauseButton">Pause</button>
+            </div>
+    
+            <audio id="audioPlayer" src=""></audio>
+        </div>
+            <!-- Nút Ôn tập (ẩn/hiện tiếng Anh) -->
+        <div id="area-toggle">
+            <button id="toggleButton">Học từ</button>
+            <div id="inputForm">
+                <label for="startIndex">Số t/t của từ: </label>
+                <input type="number" id="startIndex" value="1" min="1"><br/>
+                
+                <label for="numItems">Số lượng từ: </label>
+                <input type="number" id="numItems" value="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <ul id="vocabulary-list"></ul>
+    <!-- Các nút điều hướng trang -->
+    <div class="controls">
+        <button id="prevButton">Trang trước</button>
+        <button id="nextButton">Trang sau</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="vocabulary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0; // Trang hiện tại
+        const itemsPerPage = 20; // Mỗi trang hiển thị 1 từ vựng
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        function loadVocabulary(page) {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            // --- Phân trang
+            console.log("page - itemsPerPage", page, itemsPerPage)
+            const start = page * itemsPerPage;
+            const end = start + itemsPerPage;
+            console.log("start - end", start, end)
+            const vocabularies = data.vocabularies.slice(start, end);
+
+            const vocabularyList = document.getElementById('vocabulary-list');
+            const modal = document.getElementById('vocabulary-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModal = document.querySelector('.close');
+            const playAllButton = document.getElementById('play-all-button');
+            vocabularyList.innerHTML="";
+
+            const toggleBtn = document.getElementById('toggleButton');
+
+            if(toggleBtn.textContent === 'Ôn tập'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.meaning}</a> ${vocab.pronunciation} (${vocab.partOfSpeech})
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }else if(toggleBtn.textContent === 'Học từ'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    const isHardStyle = vocab.isHard ? "font-weight: bold; color:red" : "";
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" style="${isHardStyle}" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            } else {
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.example.sentence}</a> <br>${vocab.example.pronunciation} 
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }
+
+            document.querySelectorAll('.vocabulary').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const index = e.target.getAttribute('data-index');
+                    const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                    const vocabularies = data.vocabularies;
+                    const vocab = vocabularies[index];
+
+                    modalBody.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="index-circle-detail">${vocab.index}</div>
+                            <div>
+                                <h3>${vocab.word}</h3>
+                                <p>${vocab.pronunciation}</p>
+                                <img src="${vocab.image}" alt="${vocab.word}">
+                                <p><b>(${vocab.partOfSpeech})</b> ${vocab.meaning}</p>
+                                <p><b>Example</b>: <br/> <span id="textToCopy">${vocab.example.sentence}</span>
+                                    <br/> <span style="color: blue"><i>(${vocab.example?.pronunciation})</i></span>
+                                    <br/> <span style="color: gray"><i>(${vocab.example.translation})</i></span>
+                                </p>
+                                <button id="copyButton">Sao chép</button>
+                                <p></p>
+                                <audio controls>
+                                    <source src="${vocab.audio}" type="audio/mpeg">
+                                    Trình duyệt của bạn không hỗ trợ phần tử âm thanh.
+                                </audio>
+                            </div>
+                        </div>
+                    `;
+                    modal.style.display = 'block';
+
+                    /// ------ Coppy to clipboard
+                    document.getElementById('copyButton').addEventListener('click', function() {
+                        // Tạo một phần tử tạm thời để chứa văn bản
+                        var tempInput = document.createElement('input');
+                        tempInput.value = document.getElementById('textToCopy').innerText;
+
+                        // Thêm phần tử vào trang để sao chép
+                        document.body.appendChild(tempInput);
+
+                        // Chọn văn bản trong phần tử tạm thời
+                        tempInput.select();
+                        tempInput.setSelectionRange(0, 99999); // Đối với thiết bị di động
+
+                        // Sao chép văn bản
+                        document.execCommand('copy');
+
+                        // Xóa phần tử tạm thời khỏi trang
+                        document.body.removeChild(tempInput);
+
+                        // Thông báo sao chép thành công
+                        alert('Đã sao chép văn bản!');
+                    });
+                });
+            });
+
+            closeModal.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+
+            playAllButton.addEventListener('click', () => {
+                let currentTrack = 0;
+                const audioPlayer = document.getElementById('audioPlayer');
+                const playButton = document.getElementById('playButton');
+                const pauseButton = document.getElementById('pauseButton');
+                const trackInfo = document.getElementById('trackInfo');
+                const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                // const vocabularies = data.vocabularies;
+                // --- Phân trang
+                const startIndex = document.getElementById('startIndex');
+                const numItems = document.getElementById('numItems');
+
+                const start = startIndex.value - 1;
+                const end = start + numItems.value;
+                const vocabularies = data.vocabularies.slice(start, end);
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                function playAudioAsync(url) {
+                    return new Promise((resolve, reject) => {
+                        const audio = new Audio(url);
+
+                        // Resolve the promise when the audio finishes playing
+                        audio.addEventListener('ended', resolve);
+
+                        // Optional: reject the promise if there's an error during playback
+                        audio.addEventListener('error', (e) => reject(e));
+
+                        // Start playing the audio
+                        audio.play();
+                    });
+                }
+
+                // Hàm cập nhật bài hát và thông tin hiển thị
+                async function loadTrack(index) {
+                    const voca = vocabularies[index];
+                    trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
+                    //Play main voca audio
+                    await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+                    await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+
+                    //Play part of speech audio
+                    if(voca.partOfSpeech && voca.partOfSpeech !== '') {
+                        switch (voca.partOfSpeech) {
+                            case 'v':
+                                await playAudioAsync('./../verb.mp3');
+                                break;
+                            case 'n':
+                                await playAudioAsync('./../noun.mp3');
+                                break;
+                            case 'adj':
+                                await playAudioAsync('./../adjective.mp3');
+                                break;
+                            case 'adv':
+                                await playAudioAsync('./../adverb.mp3');
+                                break;
+                             case 'pre':
+                                await playAudioAsync('./../pre.mp3');
+                                break;
+                        
+                            default:
+                                break;
+                        }
+                        await delayFc(2000);
+                    }
+                    //Play example audio
+                    trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
+                    await playAudioAsync(voca.audioEx);
+                    await delayFc(5000);
+
+                    audioPlayer.src = voca.audioEx;
+                    audioPlayer.play();
+                    audioPlayer.onended = async () => {
+                        setTimeout(() => {
+                            currentTrack++;
+                            if (currentTrack < vocabularies.length) {
+                                loadTrack(currentTrack);
+                            } else {
+                                currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                                loadTrack(currentTrack);
+                            }
+                        }, 3000);
+                    };
+                    
+                }
+
+                // Bắt đầu phát bài hát đầu tiên
+                loadTrack(currentTrack);
+
+                // Nút Play
+                playButton.addEventListener('click', function() {
+                    audioPlayer.play();
+                });
+
+                // Nút Pause
+                pauseButton.addEventListener('click', function() {
+                    audioPlayer.pause();
+                });
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+            });
+        }
+
+        // Sự kiện cho nút Trang trước
+        prevButton.addEventListener('click', function() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        // Sự kiện cho nút Trang sau
+        nextButton.addEventListener('click', function() {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            if (currentPage < Math.ceil(data.vocabularies.length / itemsPerPage) - 1) {
+                currentPage++;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        window.onload = () => {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            const vocabularies = data.vocabularies;
+            const startIndex = document.getElementById('startIndex');
+            const numItems = document.getElementById('numItems');
+            startIndex.value = 1;
+            numItems.value = vocabularies.length;
+
+            loadVocabulary(currentPage);
+        }
+        // Chức năng ẩn/hiện phần tiếng Anh
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            // Kiểm tra xem đoạn văn bản có đang bị ẩn không
+            if (this.textContent === 'Ôn tập') {
+                this.textContent = 'Học từ';  // Hiện lại đoạn văn bản
+            } else if (this.textContent === 'Học từ'){
+                this.textContent = 'Học câu';  // Ẩn đoạn văn bản
+            } else {
+                this.textContent = 'Ôn tập';
+            }
+
+            loadVocabulary(currentPage);
+        });
+    </script>
+    <script id="vocabulary-data" type="application/json">
+        {
+            "vocabularies": [
+                {
+                    "index": 1,
+                    "word": "habit",
+                    "pronunciation": "/dæd/",
+                    "meaning": "thói quen, tập quán",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/habit.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus75/eus75781.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I always buy the same brand of toothpaste out of habit.",
+                        "translation": "Tôi luôn mua kem đánh răng cùng một nhãn hiệu theo thói quen.",
+                        "pronunciation": "/aɪ ˈɔːlweɪz baɪ ðə seɪm brænd əv ˈtuːθpeɪst aʊt əv ˈhæbɪt./"
+                    }
+                },
+                {
+                    "index": 2,
+                    "word": "hair",
+                    "pronunciation": "/her/",
+                    "meaning": "tóc, lông",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hair.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hai/hair_/hair.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She brushed her long, red hair.",
+                        "translation": "Cô ấy chải mái tóc dài màu đỏ của mình.",
+                        "pronunciation": "/ʃi brʌʃt hɜr lɔːŋ, rɛd hɛr./"
+                    }
+                },
+                {
+                    "index": 3,
+                    "word": "hairdresser",
+                    "pronunciation": "/ˈherˌdres.ɚ/",
+                    "meaning": "thợ làm tóc",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hairdresser.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usg/usgyr/usgyro_029.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I'm going to change my hairdresser.",
+                        "translation": "Tôi sẽ đổi thợ làm tóc.",
+                        "pronunciation": "/ˌaɪm ˈɡoʊɪŋ tə tʃeɪndʒ maɪ ˈhɛrˌdrɛsɚ./"
+                    }
+                },
+                {
+                    "index": 4,
+                    "word": "half (adj,adv)",
+                    "pronunciation": "/hæf/",
+                    "meaning": "nửa, một nửa",
+                    "partOfSpeech": "adj,adv",
+                    "audioEx": "./voice/half-adj.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hal/half_/half.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Each talk should last about a half hour.",
+                        "translation": "Mỗi bài nói chuyện nên kéo dài khoảng nửa giờ.",
+                        "pronunciation": "/iːtʃ tɔːk ʃʊd læst əˈbaʊt ə hæf ˈaʊɚ./"
+                    }
+                },
+                {
+                    "index": 5,
+                    "word": "half (n,det,pron)",
+                    "pronunciation": "/hæf/",
+                    "meaning": "một nửa",
+                    "partOfSpeech": "n,det,pron",
+                    "audioEx": "./voice/half-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hal/half_/half.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The recipe tells you to use a pound and a half of butter.",
+                        "translation": "Công thức này yêu cầu bạn sử dụng 1 pound rưỡi bơ.",
+                        "pronunciation": "/ðə ˈrɛsəpi tɛlz juː tuː juːz ə paʊnd ənd ə hæf əv ˈbʌtɚ./"
+                    }
+                },
+                {
+                    "index": 6,
+                    "word": "hall",
+                    "pronunciation": "/hɑːl/",
+                    "meaning": "đại sảnh, hội trường",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hall.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hal/hall_/hall.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "There is a meeting room down the hall from my office.",
+                        "translation": "Có một phòng họp ở cuối hành lang gần văn phòng của tôi.",
+                        "pronunciation": "/ðɛr ɪz ə ˈmiːtɪŋ ruːm daʊn ðə hɔl frəm maɪ ˈɔːfɪs./"
+                    }
+                },
+                {
+                    "index": 7,
+                    "word": "hammer",
+                    "pronunciation": "/ˈhæm.ɚ/",
+                    "meaning": "búa",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hammer.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/ham/hamme/hammer.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She hit her thumb with the hammer.",
+                        "translation": "Cô ấy đập búa vào ngón tay cái của mình.",
+                        "pronunciation": "/ʃi hɪt hɝ θʌm wɪð ðə ˈhæmɚ./"
+                    }
+                },
+                {
+                    "index": 8,
+                    "word": "hand (n)",
+                    "pronunciation": "/hænd/",
+                    "meaning": "tay, bàn tay",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hand-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/han/hand_/hand.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I delivered her invitation by hand.",
+                        "translation": "Tôi đã trao tận tay lời mời của cô ấy.",
+                        "pronunciation": "/aɪ dɪˈlɪvɚd hɝ ˌɪnvɪˈteɪʃən baɪ hænd./"
+                    }
+                },
+                {
+                    "index": 9,
+                    "word": "hand (v)",
+                    "pronunciation": "/hænd/",
+                    "meaning": "trao, dẫn, dắt",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hand-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/han/hand_/hand.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The waiter smiled politely as he handed my bill to me.",
+                        "translation": "Người phục vụ mỉm cười lịch sự khi đưa hóa đơn cho tôi.",
+                        "pronunciation": "/ðə ˈweɪtɚ smaɪld pəˈlaɪtli æz hi ˈhændɪd maɪ bɪl tu mi./"
+                    }
+                },
+                {
+                    "index": 10,
+                    "word": "handwriting",
+                    "pronunciation": "/ˈhændˌraɪ.t̬ɪŋ/",
+                    "meaning": "chữ viết tay, tự dạng, bản viết tay",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/handwriting.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/han/handw/handwriting.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We need to ensure that handwriting is properly taught in our primary schools.",
+                        "translation": "Chúng ta cần đảm bảo rằng việc dạy viết tay được thực hiện đúng cách ở các trường tiểu học.",
+                        "pronunciation": "/wi nid tu ɪnˈʃʊr ðæt ˈhændˌraɪtɪŋ ɪz ˈprɑpɚli tɔt ɪn aʊɚ ˈpraɪˌmɛri skulz./"
+                    }
+                },
+                {
+                    "index": 11,
+                    "word": "hang",
+                    "pronunciation": "/hæŋ/",
+                    "meaning": "treo, mắc",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hang.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/han/hang_/hang.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A heavy gold necklace hung around her neck.",
+                        "translation": "Một chiếc vòng cổ vàng nặng trĩu đeo quanh cổ cô.",
+                        "pronunciation": "/ə ˈhɛvi ɡoʊld ˈnɛklɪs hʌŋ əˈraʊnd hɜr nɛk/"
+                    }
+                },
+                {
+                    "index": 12,
+                    "word": "happen",
+                    "pronunciation": "/ˈhæp.ən/",
+                    "meaning": "xảy ra, xảy đến",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/happen.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hap/happe/happen.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Anything could happen in the next half hour.",
+                        "translation": "Bất cứ điều gì cũng có thể xảy ra trong nửa giờ tới.",
+                        "pronunciation": "/ˈɛniˌθɪŋ kʊd ˈhæpən ɪn ðə nɛkst hæf ˈaʊər/"
+                    }
+                },
+                {
+                    "index": 13,
+                    "word": "happily",
+                    "pronunciation": "/ˈhæp.əl.i/",
+                    "meaning": "sung sướng, hạnh phúc",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/happily.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hap/happi/happily.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He was happily married with two young children.",
+                        "translation": "Ông có cuộc sống hôn nhân hạnh phúc và có hai đứa con nhỏ.",
+                        "pronunciation": "/hi wəz ˈhæpɪli ˈmærid wɪð tuː jʌŋ ˈʧɪldrən/"
+                    }
+                },
+                {
+                    "index": 14,
+                    "word": "happiness",
+                    "pronunciation": "/ˈhæp.i.nəs/",
+                    "meaning": "sự sung sướng, sự hạnh phúc",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/happiness.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hap/happi/happiness.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It was only later in life that she found happiness and peace of mind.",
+                        "translation": "Chỉ đến giai đoạn sau này bà mới tìm thấy hạnh phúc và sự bình yên trong tâm hồn.",
+                        "pronunciation": "/ɪt wəz ˈoʊnli ˈleɪtər ɪn laɪf ðæt ʃi faʊnd ˈhæpinəs ənd piːs ʌv maɪnd/"
+                    }
+                },
+                {
+                    "index": 15,
+                    "word": "happy",
+                    "pronunciation": "/ˈhæp.i/",
+                    "meaning": "vui sướng, hạnh phúc",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/happy.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hap/happy/happy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You'll be happy to know that Jean is coming with us.",
+                        "translation": "Bạn sẽ vui mừng khi biết Jean sẽ đi cùng chúng tôi.",
+                        "pronunciation": "/juːl bi ˈhæpi tə noʊ ðæt ʤiːn ɪz ˈkʌmɪŋ wɪð ʌs/"
+                    }
+                },
+                {
+                    "index": 16,
+                    "word": "harass",
+                    "pronunciation": "/həˈræs/",
+                    "meaning": "quấy rầy và làm phiền ai liên tục, tấn công liên miên, quấy rối",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/harass.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/haras/harass.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He claimed that the police continued to harass foreign journalists.",
+                        "translation": "Ông tuyên bố cảnh sát vẫn tiếp tục quấy rối các nhà báo nước ngoài.",
+                        "pronunciation": "/hi kleɪmd ðæt ðə pəˈliːs kənˈtɪnjuːd tə həˈræs ˈfɔːrən ˈʤɜrnəlɪsts/"
+                    }
+                },
+                {
+                    "index": 17,
+                    "word": "hard",
+                    "pronunciation": "/hɑːrd/",
+                    "meaning": "cứng, rắn, chắc, khó, khắc nghiệt",
+                    "partOfSpeech": "adj,adv",
+                    "audioEx": "./voice/hard.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/hard_/hard.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "There was a heavy frost last night and the ground is still hard.",
+                        "translation": "Đêm qua có sương giá nặng và mặt đất vẫn còn cứng.",
+                        "pronunciation": "/ðer wəz ə ˈhɛvi frɔːst læst naɪt ənd ðə ɡraʊnd ɪz stɪl hɑːrd./"
+                    }
+                },
+                {
+                    "index": 18,
+                    "word": "hard-hearted",
+                    "pronunciation": "/ˌhɑːrdˈhɑːr.t̬ɪd/",
+                    "meaning": "nhẫn tâm, không biết",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hard-hearted.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/usc/uscld/uscld00639.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The hard-hearted businessman refused to help the struggling employees.",
+                        "translation": "Người doanh nhân cứng rắn đã từ chối giúp đỡ những nhân viên đang gặp khó khăn.",
+                        "pronunciation": "/ðə hɑːrd ˈhɑːrtɪd ˈbɪznɪsmən rɪˈfjuːzd tuː hɛlp ðə ˈstrʌɡlɪŋ ˌɛmplɔɪˈiːz./"
+                    }
+                },
+                {
+                    "index": 19,
+                    "word": "hardly",
+                    "pronunciation": "/ˈhɑːrd.li/",
+                    "meaning": "chỉ một tý, hiếm hoi, có lẽ không",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/hardly.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/hardl/hardly.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I could hardly hear her at the back.",
+                        "translation": "Tôi gần như không thể nghe thấy cô ấy ở phía sau.",
+                        "pronunciation": "/aɪ kʊd ˈhɑːrdli hɪr hɜːr ət ðə bæk./"
+                    }
+                },
+                {
+                    "index": 20,
+                    "word": "harm (n)",
+                    "pronunciation": "/hɑːrm/",
+                    "meaning": "sự thiệt hại, sự tổn thương",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/harm-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/harm_/harm.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A mistake like that will do his credibility a lot of harm.",
+                        "translation": "Một sai lầm như thế sẽ làm giảm đáng kể uy tín của anh ta.",
+                        "pronunciation": "/ə mɪsˈteɪk laɪk ðæt wɪl duː hɪz ˌkrɛdəˈbɪlɪti ə lɑːt ʌv hɑːrm./"
+                    }
+                },
+                {
+                    "index": 21,
+                    "word": "harm (v)",
+                    "pronunciation": "/hɑːrm/",
+                    "meaning": "làm thiệt hại, gây hại",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/harm-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/harm_/harm.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Thankfully no one was harmed in the accident.",
+                        "translation": "Rất may là không có ai bị thương trong vụ tai nạn.",
+                        "pronunciation": "/ˈθæŋkfəli noʊ wʌn wəz hɑːrmd ɪn ði ˈæksɪdənt./"
+                    }
+                },
+                {
+                    "index": 22,
+                    "word": "harmful",
+                    "pronunciation": "/ˈhɑːrm.fəl/",
+                    "meaning": "có hại, gây hại",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/harmful.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/harmf/harmful.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "This group of chemicals is known to be harmful to people with asthma.",
+                        "translation": "Nhóm hóa chất này được biết là có hại cho người bị hen suyễn.",
+                        "pronunciation": "/ðɪs ɡruːp ʌv ˈkɛmɪkəlz ɪz noʊn tuː biː ˈhɑːrmfl tuː ˈpiːpl wɪð ˈæzmə./"
+                    }
+                },
+                {
+                    "index": 23,
+                    "word": "harmless",
+                    "pronunciation": "/ˈhɑːrm.ləs/",
+                    "meaning": "không có hại",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/harmless.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/harml/harmless.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Peter might look a bit fierce, but actually he's fairly harmless.",
+                        "translation": "Peter có vẻ hơi hung dữ, nhưng thực ra anh ấy khá vô hại.",
+                        "pronunciation": "/ˈpiːtər maɪt lʊk ə bɪt fɪrs, bʌt ˈæktʃuəli hiːz ˈferli ˈhɑːrmləs./"
+                    }
+                },
+                {
+                    "index": 24,
+                    "word": "harmonious",
+                    "pronunciation": "/hɑːrˈmoʊ.ni.əs/",
+                    "meaning": "không có sự bất đồng hoặc ác cảm, hoà thuận, hoà hợp, được sắp xếp với nhau một cách thú vị, hài hoà, cân đối, (âm nhạc) du dương, êm ái",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/harmonious.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/har/harmo/harmonious.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The cake is a wonderful, harmonious balance of fish, potato and breadcrumbs.",
+                        "translation": "Chiếc bánh là sự kết hợp tuyệt vời, hài hòa giữa cá, khoai tây và vụn bánh mì.",
+                        "pronunciation": "/ðə keɪk ɪz ə ˈwʌndərfl, hɑːrˈmoʊniəs ˈbæləns ʌv fɪʃ, pəˈteɪtoʊ ənd ˈbrɛdkrʌmz./"
+                    }
+                },
+                {
+                    "index": 25,
+                    "word": "hat",
+                    "pronunciation": "/hæt/",
+                    "meaning": "cái mũ, nón",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hat.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hat/hat__/hat.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "For this movie, she is wearing the hats of director and actress.",
+                        "translation": "Trong bộ phim này, cô đảm nhiệm cả vai trò đạo diễn và diễn viên.",
+                        "pronunciation": "/fɔːr ðɪs ˈmuːvi, ʃiː ɪz ˈwerɪŋ ðə hæts ʌv dɪˈrɛktər ənd ˈæktrəs./"
+                    }
+                },
+                {
+                    "index": 26,
+                    "word": "hate (n)",
+                    "pronunciation": "/heɪt/",
+                    "meaning": "sự căm ghét, lòng căm thù",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hate-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hat/hate_/hate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The feelings of hate grew stronger every day.",
+                        "translation": "Cảm giác căm ghét ngày một lớn hơn.",
+                        "pronunciation": "/ðə ˈfiːlɪŋz ʌv heɪt ɡruː ˈstrɔːŋɡər ˈɛvri deɪ./"
+                    }
+                },
+                {
+                    "index": 27,
+                    "word": "hate (v)",
+                    "pronunciation": "/heɪt/",
+                    "meaning": "ghét, căm ghét",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hate-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hat/hate_/hate.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She hated the cold, dark days of winter.",
+                        "translation": "Cô ghét những ngày mùa đông lạnh lẽo và u ám.",
+                        "pronunciation": "/ʃi ˈheɪtɪd ðə koʊld, dɑːrk deɪz ʌv ˈwɪntər./"
+                    }
+                },
+                {
+                    "index": 28,
+                    "word": "hazard",
+                    "pronunciation": "/ˈhæz.ɚd/",
+                    "meaning": "mối nguy hiểm, rủi ro",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hazard.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/haz/hazar/hazard.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The busy traffic entrance was a hazard to pedestrians.",
+                        "translation": "Lối vào đông đúc gây nguy hiểm cho người đi bộ.",
+                        "pronunciation": "/ðə ˈbɪzi ˈtræfɪk ˈɛntrəns wəz ə ˈhæzərd tuː pəˈdɛstriənz./"
+                    }
+                },
+                {
+                    "index": 29,
+                    "word": "head (n)",
+                    "pronunciation": "/hed/",
+                    "meaning": "cái đầu (người, thú), người đứng đầu, người chịu trách nhiệm nhất trong tổ chức",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/head-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/head_/head.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He banged his head on the car as he was getting in.",
+                        "translation": "Anh ta đập đầu vào xe khi đang bước vào.",
+                        "pronunciation": "/hi bæŋd hɪz hɛd ɒn ðə kɑːr æz hi wəz ˈɡɛtɪŋ ɪn./"
+                    }
+                },
+                {
+                    "index": 30,
+                    "word": "head (v)",
+                    "pronunciation": "/hed/",
+                    "meaning": "dẫn đầu, chỉ huy",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/head-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/head_/head.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I was heading out of the room when she called me back.",
+                        "translation": "Tôi đang định ra khỏi phòng thì cô ấy gọi tôi lại.",
+                        "pronunciation": "/aɪ wəz ˈhɛdɪŋ aʊt ʌv ðə ruːm wɛn ʃi kɔːld mi bæk./"
+                    }
+                },
+                {
+                    "index": 31,
+                    "word": "headache",
+                    "pronunciation": "/ˈhed.eɪk/",
+                    "meaning": "chứng nhức đầu",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/headache.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/ush/ushau/ushaute019.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I tried taking tablets for the headache but they didn't have any effect.",
+                        "translation": "Tôi đã thử uống thuốc giảm đau đầu nhưng không có tác dụng gì.",
+                        "pronunciation": "/aɪ traɪd ˈteɪkɪŋ ˈtæbləts fər ðə ˈhɛdeɪk bʌt ðeɪ dɪdnt hæv ˈɛni ɪˈfɛkt./"
+                    }
+                },
+                {
+                    "index": 32,
+                    "word": "heal",
+                    "pronunciation": "/hiːl/",
+                    "meaning": "chữa trị, làm lành",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/heal.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heal_/heal.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The plaster cast helps to heal the broken bone.",
+                        "translation": "Bó bột giúp chữa lành xương gãy.",
+                        "pronunciation": "/ðə ˈplæstər kæst hɛlps tuː hiːl ðə ˈbroʊkən boʊn./"
+                    }
+                },
+                {
+                    "index": 33,
+                    "word": "health",
+                    "pronunciation": "/helθ/",
+                    "meaning": "sức khoẻ, thể chất, sự lành mạnh",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/health.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/healt/health.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He gave up work because of ill health.",
+                        "translation": "Ông ấy đã nghỉ việc vì sức khỏe yếu.",
+                        "pronunciation": "/hi ɡeɪv ʌp wɜːrk bɪˈkʌz ʌv ɪl hɛlθ./"
+                    }
+                },
+                {
+                    "index": 34,
+                    "word": "healthy",
+                    "pronunciation": "/ˈhel.θi/",
+                    "meaning": "khoẻ mạnh, lành mạnh",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/healthy.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/healt/healthy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She's a normal, healthy child.",
+                        "translation": "Cô bé là một đứa trẻ bình thường và khỏe mạnh.",
+                        "pronunciation": "/ʃiːz ə ˈnɔːrməl, ˈhɛlθi tʃaɪld./"
+                    }
+                },
+                {
+                    "index": 35,
+                    "word": "hear",
+                    "pronunciation": "/hɪr/",
+                    "meaning": "nghe, nghe thấy",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hear.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/hear_/hear.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "My grandfather is getting old and can't hear very well.",
+                        "translation": "Ông nội tôi đã già rồi và thính lực không còn tốt nữa.",
+                        "pronunciation": "/maɪ ˈɡrændˌfɑːðər ɪz ˈɡɛtɪŋ oʊld ənd kænt hɪr ˈvɛri wɛl./"
+                    }
+                },
+                {
+                    "index": 36,
+                    "word": "hearing",
+                    "pronunciation": "/ˈhɪr.ɪŋ/",
+                    "meaning": "sự nghe, thính giác",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hearing.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heari/hearing.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Pupils facing exclusion from school have the right to a fair hearing.",
+                        "translation": "Học sinh bị đuổi học có quyền được xét xử công bằng.",
+                        "pronunciation": "/ˈpjuːpɪlz ˈfeɪsɪŋ ɪksˈkluːʒən frʌm skuːl hæv ðə raɪt tuː ə fer ˈhɪrɪŋ./"
+                    }
+                },
+                {
+                    "index": 37,
+                    "word": "heart",
+                    "pronunciation": "/hɑːrt/",
+                    "meaning": "tim, trái tim",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heart.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heart/heart.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Isabel's heart was beating fast with fright.",
+                        "translation": "Tim Isabel đập nhanh vì sợ hãi.",
+                        "pronunciation": "/ˈɪzəbɛlz hɑːrt wəz ˈbiːtɪŋ fæst wɪð fraɪt./"
+                    }
+                },
+                {
+                    "index": 38,
+                    "word": "heat (n)",
+                    "pronunciation": "/hiːt/",
+                    "meaning": "sự nóng, hơi nóng, sức nóng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heat-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heat_/heat.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Cook the meat on a high heat.",
+                        "translation": "Nấu thịt ở nhiệt độ cao.",
+                        "pronunciation": "/kʊk ðə miːt ɒn ə haɪ hiːt./"
+                    }
+                },
+                {
+                    "index": 39,
+                    "word": "heat (v)",
+                    "pronunciation": "/hiːt/",
+                    "meaning": "làm nóng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/heat-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heat_/heat.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The room heats up quickly in the summer.",
+                        "translation": "Căn phòng nóng lên nhanh chóng vào mùa hè.",
+                        "pronunciation": "/ðə ruːm hiːts ʌp ˈkwɪkli ɪn ðə ˈsʌmər./"
+                    }
+                },
+                {
+                    "index": 40,
+                    "word": "heating",
+                    "pronunciation": "/ˈhiː.t̬ɪŋ/",
+                    "meaning": "sự đốt nóng, sự làm nóng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heating.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/ush/ushea/usheart017.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "What time does the heating come on in the morning?",
+                        "translation": "Hệ thống sưởi ấm được bật vào lúc mấy giờ vào buổi sáng?",
+                        "pronunciation": "/wɒt taɪm dʌz ðə ˈhiːtɪŋ kʌm ɒn ɪn ðə ˈmɔːrnɪŋ?/"
+                    }
+                },
+                {
+                    "index": 41,
+                    "word": "heaven",
+                    "pronunciation": "/ˈhev.ən/",
+                    "meaning": "thiên đường",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heaven.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heave/heaven.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Since they got married, they've been in seventh heaven.",
+                        "translation": "Từ khi kết hôn, họ như đang ở trên thiên đường thứ bảy.",
+                        "pronunciation": "/sɪns ðeɪ ɡɑːt ˈmærɪd, ðeɪv bɪn ɪn ˈsɛvənθ ˈhɛvən./"
+                    }
+                },
+                {
+                    "index": 42,
+                    "word": "heavily",
+                    "pronunciation": "/ˈhev.əl.i/",
+                    "meaning": "nặng, một lượng lớn",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/heavily.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heavi/heavily.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The compound is heavily guarded.",
+                        "translation": "Khu phức hợp được canh gác nghiêm ngặt.",
+                        "pronunciation": "/ðə ˈkɑːmpaʊnd ɪz ˈhɛvɪli ˈɡɑːrdɪd./"
+                    }
+                },
+                {
+                    "index": 43,
+                    "word": "heavy",
+                    "pronunciation": "/ˈhev.i/",
+                    "meaning": "nặng, nặng nề",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/heavy.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heavy/heavy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The ship ran aground in heavy seas.",
+                        "translation": "Con tàu bị mắc cạn khi biển động mạnh.",
+                        "pronunciation": "/ðə ʃɪp ræn əˈɡraʊnd ɪn ˈhɛvi siːz./"
+                    }
+                },
+                {
+                    "index": 44,
+                    "word": "heel",
+                    "pronunciation": "/hiːl/",
+                    "meaning": "gót chân",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heel.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hea/heal_/heal.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She got badly spiked when one of the runners trod on her heel.",
+                        "translation": "Cô ấy bị đau dữ dội khi một trong những người chạy bộ giẫm lên gót chân cô ấy.",
+                        "pronunciation": "/ʃi ɡɑːt ˈbædli spaɪkt wɛn wʌn ʌv ðə ˈrʌnərz trɑːd ɒn hɜːr hiːl./"
+                    }
+                },
+                {
+                    "index": 45,
+                    "word": "height",
+                    "pronunciation": "/haɪt/",
+                    "meaning": "chiều cao, độ cao, đỉnh, điểm cao",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/height.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hei/heigh/height.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The sheer height of New York's skyscrapers is so impressive.",
+                        "translation": "Chiều cao của những tòa nhà chọc trời ở New York thực sự ấn tượng.",
+                        "pronunciation": "/ðə ʃɪr haɪt ʌv nuː jɔːrk’s ˈskaɪskreɪpərz ɪz soʊ ɪmˈprɛsɪv./"
+                    }
+                },
+                {
+                    "index": 46,
+                    "word": "hell",
+                    "pronunciation": "/hel/",
+                    "meaning": "địa ngục",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hell.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hel/hell_/hell.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Work is sheer hell at the moment.",
+                        "translation": "Công việc hiện tại thực sự là địa ngục.",
+                        "pronunciation": "/wɜːrk ɪz ʃɪr hɛl ət ðə ˈmoʊmənt./"
+                    }
+                },
+                {
+                    "index": 47,
+                    "word": "help (n)",
+                    "pronunciation": "/help/",
+                    "meaning": "sự giúp đỡ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/help-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hel/help_/help.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Her parents gave her some help with her rent.",
+                        "translation": "Bố mẹ cô ấy đã giúp cô ấy một ít tiền thuê nhà.",
+                        "pronunciation": "/hɜːr ˈperənts ɡeɪv hɜːr sʌm hɛlp wɪð hɜːr rɛnt./"
+                    }
+                },
+                {
+                    "index": 48,
+                    "word": "help (v)",
+                    "pronunciation": "/help/",
+                    "meaning": "giúp đỡ",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/help-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hel/help_/help.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I feel that learning English will help my chances of promotion at work.",
+                        "translation": "Tôi cảm thấy việc học tiếng Anh sẽ giúp tôi có cơ hội thăng tiến trong công việc.",
+                        "pronunciation": "/aɪ fiːl ðæt ˈlɜrnɪŋ ˈɪŋɡlɪʃ wɪl hɛlp maɪ ˈtʃænsɪz ʌv prəˈmoʊʃən ət wɜːrk./"
+                    }
+                },
+                {
+                    "index": 49,
+                    "word": "helpful",
+                    "pronunciation": "/ˈhelp.fəl/",
+                    "meaning": "có ích, giúp đỡ",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/helpful.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hel/helpf/helpful.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She's such a pleasant, helpful child!",
+                        "translation": "Cô bé thực sự là một đứa trẻ dễ thương và hay giúp đỡ!",
+                        "pronunciation": "/ʃiːz sʌtʃ ə ˈplɛznt, ˈhɛlpfəl tʃaɪld!/"
+                    }
+                },
+                {
+                    "index": 50,
+                    "word": "hence",
+                    "pronunciation": "/hens/",
+                    "meaning": "từ đây, từ giờ, vì vậy",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/hence.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hen/hence/hence.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He's just got a pay rise, hence the new car.",
+                        "translation": "Anh ấy vừa được tăng lương nên mới có xe mới.",
+                        "pronunciation": "/hiːz dʒʌst ɡɑːt ə peɪ raɪz, hɛns ðə nuː kɑːr./"
+                    }
+                },
+                {
+                    "index": 51,
+                    "word": "heptagon",
+                    "pronunciation": "/ˈhep.tə.ɡɑːn/",
+                    "meaning": "(toán học) hình bảy cạnh",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heptagon.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/ush/ushen/ushenle008.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The illustration shows an example in which the seven points are the vertices of a regular heptagon.",
+                        "translation": "Hình minh họa cho thấy một ví dụ trong đó bảy điểm là các đỉnh của một hình thất giác đều.",
+                        "pronunciation": "/ði ˌɪləˈstreɪʃən ʃoʊz ən ɪɡˈzæmpl ɪn wɪtʃ ðə ˈsɛvən pɔɪnts ɑːr ðə ˈvɜrtɪsiːz ʌv ə ˈrɛɡjələr ˈhɛptəɡɑːn./"
+                    }
+                },
+                {
+                    "index": 52,
+                    "word": "heresy",
+                    "pronunciation": "/ˈher.ə.si/",
+                    "meaning": "dị giáo, tín ngưỡng dị giáo, ý kiến hoặc quan điểm dị biệt",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heresy.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/her/heres/heresy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He was burned at the stake for heresy in the 15th century.",
+                        "translation": "Ông đã bị thiêu sống vì tội dị giáo vào thế kỷ 15.",
+                        "pronunciation": "/hi wəz bɜːrnd ət ðə steɪk fər ˈhɛrəsi ɪn ðə ˈfɪfˌtiːnθ ˈsɛnʧəri./"
+                    }
+                },
+                {
+                    "index": 53,
+                    "word": "heretic",
+                    "pronunciation": "/ˈher.ə.tɪk/",
+                    "meaning": "người theo dị giáo",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heretic.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/her/heret/heretic.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "When he began to enunciate his views, Friedman was largely considered a heretic.",
+                        "translation": "Khi Friedman bắt đầu trình bày quan điểm của mình, phần lớn mọi người đều coi ông là một kẻ dị giáo.",
+                        "pronunciation": "/wɛn hi bɪˈɡæn tu ɪˈnʌnsieɪt hɪz vjuːz, ˈfriːdmən wəz ˈlɑːrdʒli kənˈsɪdərd ə ˈhɛrətɪk./"
+                    }
+                },
+                {
+                    "index": 54,
+                    "word": "heritage",
+                    "pronunciation": "/ˈher.ɪ.t̬ɪdʒ/",
+                    "meaning": "tài sản thừa kế, di sản",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/heritage.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72198.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "These monuments are a vital part of the cultural heritage of South America.",
+                        "translation": "Những di tích này là một phần quan trọng của di sản văn hóa Nam Mỹ.",
+                        "pronunciation": "/ðiːz ˈmɑːnjʊmənts ɑːr ə ˈvaɪtl pɑːrt ʌv ðə ˈkʌltʃərəl ˈhɛrɪtɪdʒ ʌv saʊθ əˈmɛrɪkə./"
+                    }
+                },
+                {
+                    "index": 55,
+                    "word": "hernia",
+                    "pronunciation": "/ˈhɝː.ni.ə/",
+                    "meaning": "(y học) chứng sa ruột, chứng thoát vị",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hernia.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/her/herni/hernia.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "One man was unemployed while he waited for a hernia operation.",
+                        "translation": "Một người đàn ông đã thất nghiệp trong khi chờ đợi phẫu thuật thoát vị.",
+                        "pronunciation": "/wʌn mæn wəz ˌʌnɪmˈplɔɪd waɪl hi ˈweɪtɪd fɔːr ə ˈhɜːrniə ˌɑːpəˈreɪʃən./"
+                    }
+                },
+                {
+                    "index": 56,
+                    "word": "hero",
+                    "pronunciation": "/ˈhɪr.oʊ/",
+                    "meaning": "người anh hùng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hero.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/her/hero_/hero.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He became an accidental hero when he unknowingly thwarted a robbery.",
+                        "translation": "Anh ấy đã trở thành anh hùng một cách tình cờ khi vô tình ngăn chặn một vụ cướp.",
+                        "pronunciation": "/hi bɪˈkeɪm ən ˌæksɪˈdɛntəl ˈhɪroʊ wɛn hi ʌnˈnoʊɪŋli ˈθwɔːrtɪd ə ˈrɑːbəri./"
+                    }
+                },
+                {
+                    "index": 57,
+                    "word": "hesitate",
+                    "pronunciation": "/ˈhez.ə.teɪt/",
+                    "meaning": "ngập ngừng, do dự, chần chừ",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hesitate.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72202.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Should you ever need anything, please don't hesitate to contact me.",
+                        "translation": "Nếu bạn cần bất cứ điều gì, xin đừng ngần ngại liên hệ với tôi.",
+                        "pronunciation": "/ʃʊd juː ˈɛvər niːd ˈɛniθɪŋ, pliːz doʊnt ˈhɛzɪteɪt tuː ˈkɑːntækt miː./"
+                    }
+                },
+                {
+                    "index": 58,
+                    "word": "heterodox",
+                    "pronunciation": "/ˈhet̬.ɚ.ə.dɑːks/",
+                    "meaning": "không chính thống",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/heterodox.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72205.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "His opinions have always been distinctly heterodox.",
+                        "translation": "Quan điểm của ông luôn luôn khác biệt rõ rệt.",
+                        "pronunciation": "/hɪz əˈpɪnjənz həv ˈɔːlweɪz bɪn dɪsˈtɪŋktli ˈhɛtərədɑːks./"
+                    }
+                },
+                {
+                    "index": 59,
+                    "word": "hexagon",
+                    "pronunciation": "/ˈhek.sə.ɡɑːn/",
+                    "meaning": "(toán học) hình sáu cạnh",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hexagon.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hex/hexag/hexagon.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The final pattern is composed of perfect hexagons.",
+                        "translation": "Mẫu cuối cùng bao gồm các hình lục giác đều.",
+                        "pronunciation": "/ðə ˈfaɪnəl ˈpætɚn ɪz kəmˈpoʊzd ʌv ˈpɜːrfɪkt ˈhɛksəɡənz./"
+                    }
+                },
+                {
+                    "index": 60,
+                    "word": "hide",
+                    "pronunciation": "/haɪd/",
+                    "meaning": "trốn, ẩn nấp, che giấu",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hide.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hid/hide_/hide.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She used to hide her diary under her pillow.",
+                        "translation": "Cô ấy thường giấu cuốn nhật ký của mình dưới gối.",
+                        "pronunciation": "/ʃi juːst tuː haɪd hɜːr ˈdaɪəri ˈʌndɚ hɜːr ˈpɪloʊ./"
+                    }
+                },
+                {
+                    "index": 61,
+                    "word": "hideous",
+                    "pronunciation": "/ˈhɪd.i.əs/",
+                    "meaning": "gớm guốc (hình thù), ghê tởm",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hideous.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hid/hideo/hideous.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They've just built some hideous new apartment blocks on the seafront.",
+                        "translation": "Họ vừa mới xây dựng một số khu chung cư mới kinh khủng trên bờ biển.",
+                        "pronunciation": "/ðeɪv dʒʌst bɪlt sʌm ˈhɪdɪəs nuː əˈpɑːrtmənt blɑːks ɑːn ðə ˈsiːfrʌnt./"
+                    }
+                },
+                {
+                    "index": 62,
+                    "word": "high",
+                    "pronunciation": "/haɪ/",
+                    "meaning": "cao, ở mức độ cao",
+                    "partOfSpeech": "adj, adv",
+                    "audioEx": "./voice/high.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hi_/hi___/hi.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The garden is surrounded by a high wall.",
+                        "translation": "Khu vườn được bao quanh bởi một bức tường cao.",
+                        "pronunciation": "/ðə ˈɡɑːrdn ɪz səˈraʊndɪd baɪ ə haɪ wɔːl./"
+                    }
+                },
+                {
+                    "index": 63,
+                    "word": "highlight (n)",
+                    "pronunciation": "/ˈhaɪ.laɪt/",
+                    "meaning": "chỗ nổi bật nhất, đẹp nhất, sáng nhất",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/highlight-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hig/highl/highlight.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Highlights of the match will be shown after the news.",
+                        "translation": "Những điểm nổi bật của trận đấu sẽ được phát sóng sau bản tin.",
+                        "pronunciation": "/ˈhaɪlaɪts ʌv ðə mætʃ wɪl bi ˈʃoʊn ˈæftər ðə nuːz./"
+                    }
+                },
+                {
+                    "index": 64,
+                    "word": "highlight (v)",
+                    "pronunciation": "/ˈhaɪ.laɪt/",
+                    "meaning": "làm nổi bật, nêu bật",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/highlight-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hig/highl/highlight.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The report highlights the need for improved safety.",
+                        "translation": "Báo cáo nhấn mạnh nhu cầu cải thiện an toàn.",
+                        "pronunciation": "/ðə rɪˈpɔːrt ˈhaɪlaɪts ðə niːd fɔːr ɪmˈpruːvd ˈseɪfti./"
+                    }
+                },
+                {
+                    "index": 65,
+                    "word": "highly",
+                    "pronunciation": "/ˈhaɪ.li/",
+                    "meaning": "tốt, cao, ở mức độ cao",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/highly.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hig/highl/highly.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She was offered a highly paid job in finance.",
+                        "translation": "Cô được mời làm một công việc lương cao trong ngành tài chính.",
+                        "pronunciation": "/ʃi wəz ˈɔːfərd ə ˈhaɪli peɪd dʒɑːb ɪn ˈfaɪnæns/ hoặc /ˈfɪnæns./"
+                    }
+                },
+                {
+                    "index": 66,
+                    "word": "highway",
+                    "pronunciation": "/ˈhaɪ.weɪ/",
+                    "meaning": "đường quốc lộ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/highway.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hig/highw/highway.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We were soon on the highway heading home.",
+                        "translation": "Chúng tôi nhanh chóng lên đường về nhà.",
+                        "pronunciation": "/wiː wɚ suːn ɑːn ðə ˈhaɪweɪ ˈhɛdɪŋ hoʊm./"
+                    }
+                },
+                {
+                    "index": 67,
+                    "word": "hilarious",
+                    "pronunciation": "/hɪˈler.i.əs/",
+                    "meaning": "vui vẻ, vui nhộn",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hilarious.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72219.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's the most hilarious comedy on television.",
+                        "translation": "Đây là bộ phim hài vui nhộn nhất trên truyền hình.",
+                        "pronunciation": "/ɪts ðə moʊst hɪˈleriəs ˈkɑːmədi ɑːn ˈteləvɪʒən./"
+                    }
+                },
+                {
+                    "index": 68,
+                    "word": "hill",
+                    "pronunciation": "/hɪl/",
+                    "meaning": "đồi",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hill.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hil/hill_/hill.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "In the summer, the shepherds move their sheep up into the hills",
+                        "translation": "Vào mùa hè, những người chăn cừu di chuyển đàn cừu của họ lên đồi",
+                        "pronunciation": "/ɪn ðə ˈsʌmɚ, ðə ˈʃɛpɚrdz muːv ðɛr ʃiːp ʌp ˈɪntuː ðə hɪlz./"
+                    }
+                },
+                {
+                    "index": 69,
+                    "word": "hillock",
+                    "pronunciation": "/ˈhɪl.ək/",
+                    "meaning": "đồi nhỏ, cồn, gò, đống, đụn, mô đất",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hillock.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/ush/ushid/ushideo016.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Even the famous butter mountain is really a hillock.",
+                        "translation": "Ngay cả ngọn núi bơ nổi tiếng thực chất cũng chỉ là một ngọn đồi nhỏ.",
+                        "pronunciation": "/ˈiːvən ðə ˈfeɪməs ˈbʌtɚ ˈmaʊntən ɪz ˈrɪəli ə ˈhɪlək./"
+                    }
+                },
+                {
+                    "index": 70,
+                    "word": "hinder",
+                    "pronunciation": "/ˈhɪn.dɚ/",
+                    "meaning": "cản trở, gây trở ngại",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hinder.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72221.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A poor diet can hinder mental and physical growth.",
+                        "translation": "Chế độ ăn uống kém có thể cản trở sự phát triển về thể chất và tinh thần.",
+                        "pronunciation": "/ə pʊr ˈdaɪət kən ˈhɪndɚ ˈmɛntl ənd ˈfɪzɪkəl ɡroʊθ./"
+                    }
+                },
+                {
+                    "index": 71,
+                    "word": "hip",
+                    "pronunciation": "/hɪp/",
+                    "meaning": "hông",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hip.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hip/hip__/hip.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "This exercise is designed to trim your hips and stomach.",
+                        "translation": "Bài tập này được thiết kế để làm săn chắc hông và bụng của bạn.",
+                        "pronunciation": "/ðɪs ˈɛksɚsaɪz ɪz dɪˈzaɪnd tuː trɪm jʊr hɪps ənd ˈstʌmək./"
+                    }
+                },
+                {
+                    "index": 72,
+                    "word": "hire (n)",
+                    "pronunciation": "/haɪr/",
+                    "meaning": "sự thuê mướn",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hire-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hir/hire_/hire.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The price includes flights, accommodation, and a hire car for the week.",
+                        "translation": "Giá bao gồm vé máy bay, chỗ ở và xe thuê trong tuần.",
+                        "pronunciation": "/ðə praɪs ɪnˈkluːdz flaɪts, əˌkɑːməˈdeɪʃən, ənd ə ˈhaɪɚ kɑːr fər ðə wiːk./"
+                    }
+                },
+                {
+                    "index": 73,
+                    "word": "hire (v)",
+                    "pronunciation": "/haɪr/",
+                    "meaning": "thuê cái gì, thuê ai",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hire-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hir/hire_/hire.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You could always hire a dress for the ball if you can't afford to buy one.",
+                        "translation": "Bạn luôn có thể thuê một chiếc váy dự tiệc nếu bạn không đủ khả năng mua.",
+                        "pronunciation": "/juː kʊd ˈɔːlweɪz ˈhaɪɚ ə drɛs fɔːr ðə bɔːl ɪf juː kænt əˈfɔːrd tuː baɪ wʌn./"
+                    }
+                },
+                {
+                    "index": 74,
+                    "word": "historical",
+                    "pronunciation": "/hɪˈstɔːr.ɪ.kəl/",
+                    "meaning": "về lịch sử, thuộc lịch sử",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/historical.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/his/histo/historical.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Many important historical documents were destroyed when the library was bombed.",
+                        "translation": "Nhiều tài liệu lịch sử quan trọng đã bị phá hủy khi thư viện bị đánh bom.",
+                        "pronunciation": "/ˈmɛni ɪmˈpɔːrtənt hɪsˈtɔːrɪkəl ˈdɑːkjəmənts wɚ dɪˈstrɔɪd wɛn ðə ˈlaɪbreri wəz bɑːmd./"
+                    }
+                },
+                {
+                    "index": 75,
+                    "word": "history",
+                    "pronunciation": "/ˈhɪs.t̬ɚ.i/",
+                    "meaning": "lịch sử, sử học, môn lịch sử",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/history.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/his/histo/history.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Annie's decided to write a history of electronic music.",
+                        "translation": "Annie quyết định viết nên lịch sử của âm nhạc điện tử.",
+                        "pronunciation": "/ˈæniːz dɪˈsaɪdɪd tuː raɪt ə ˈhɪstəri ʌv ɪlɛkˈtrɑːnɪk ˈmjuːzɪk./"
+                    }
+                },
+                {
+                    "index": 76,
+                    "word": "hit (n)",
+                    "pronunciation": "/hɪt/",
+                    "meaning": "cú đấm, đòn",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hit-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hit/hit__/hit.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Your cake was a real hit at the party - everyone commented.",
+                        "translation": "Chiếc bánh của bạn thực sự gây ấn tượng tại bữa tiệc - mọi người đều nhận xét như vậy.",
+                        "pronunciation": "/jʊr keɪk wəz ə rɪəl hɪt ət ðə ˈpɑːrti - ˈɛvrɪwʌn ˈkɑːmɛntɪd./"
+                    }
+                },
+                {
+                    "index": 77,
+                    "word": "hit (v)",
+                    "pronunciation": "/hɪt/",
+                    "meaning": "đấm, đánh, va, đụng",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hit-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hit/hit__/hit.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She hit her thumb with the hammer.",
+                        "translation": "Cô ấy đập búa vào ngón tay cái của mình.",
+                        "pronunciation": "/ʃi hɪt hɜːr θʌm wɪð ðə ˈhæmɚ./"
+                    }
+                },
+                {
+                    "index": 78,
+                    "word": "hoarse",
+                    "pronunciation": "/hɔːrs/",
+                    "meaning": "(về giọng nói) nghe cộc cằn và khàn",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hoarse.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hoa/hoars/hoarse.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "'I'm feeling a little better, thank you,'she replied, in a hoarse voice.",
+                        "translation": "'Tôi thấy khỏe hơn một chút rồi, cảm ơn anh', cô đáp lại bằng giọng khàn khàn.",
+                        "pronunciation": "/aɪm ˈfiːlɪŋ ə ˈlɪtl ˈbɛtɚ, θæŋk juː, ʃi rɪˈplaɪd, ɪn ə hɔːrs vɔɪs./"
+                    }
+                },
+                {
+                    "index": 79,
+                    "word": "hobby",
+                    "pronunciation": "/ˈhɑː.bi/",
+                    "meaning": "sở thích",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hobby.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hob/hobby/hobby.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Angela's hobby is restoring vintage motorcycles.",
+                        "translation": "Sở thích của Angela là phục chế xe máy cổ.",
+                        "pronunciation": "/ˈændʒələz ˈhɑːbi ɪz rɪˈstɔːrɪŋ ˈvɪntɪdʒ ˈmoʊtɚsaɪkəlz./"
+                    }
+                },
+                {
+                    "index": 80,
+                    "word": "hold (n)",
+                    "pronunciation": "/hoʊld/",
+                    "meaning": "sự cầm, sự giữ, sự nắm",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hold-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hol/hold_/hold.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Keep a tight hold on your tickets.",
+                        "translation": "Hãy giữ chặt vé của bạn.",
+                        "pronunciation": "/kiːp ə taɪt hoʊld ɑːn jʊr ˈtɪkɪts./"
+                    }
+                },
+                {
+                    "index": 81,
+                    "word": "hold (v)",
+                    "pronunciation": "/hoʊld/",
+                    "meaning": "giữ, cầm, nắm, nâng, chứa được, duy trì (sự chú ý)",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hold-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hol/hold_/hold.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "A wind was blowing which made it hard to hold he camera steady.",
+                        "translation": "Một cơn gió đang thổi khiến việc giữ máy ảnh ổn định trở nên khó khăn.",
+                        "pronunciation": "/ə wɪnd wəz ˈbloʊɪŋ wɪtʃ meɪd ɪt hɑːrd tuː hoʊld ðə ˈkæmərə ˈstɛdi./"
+                    }
+                },
+                {
+                    "index": 82,
+                    "word": "hole",
+                    "pronunciation": "/hoʊl/",
+                    "meaning": "lỗ, hố, lỗ trống, hang",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hole.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hol/hole_/hole.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We dug a hole and planted the tree.",
+                        "translation": "Chúng tôi đào một cái hố và trồng cây.",
+                        "pronunciation": "/wi dʌɡ ə hoʊl ənd ˈplæntɪd ðə triː./"
+                    }
+                },
+                {
+                    "index": 83,
+                    "word": "holiday",
+                    "pronunciation": "/ˈhɑː.lə.deɪ/",
+                    "meaning": "ngày lễ, ngày nghỉ, kỳ nghỉ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/holiday.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hol/holid/holiday.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We thought we'd go to France for our summer holiday.",
+                        "translation": "Chúng tôi dự định sẽ đi Pháp vào kỳ nghỉ hè.",
+                        "pronunciation": "/wiː θɔːt wiːd ɡoʊ tuː fræns fɔːr aʊɚ ˈsʌmɚ ˈhɑːlədeɪ./"
+                    }
+                },
+                {
+                    "index": 84,
+                    "word": "holy",
+                    "pronunciation": "/ˈhoʊ.li/",
+                    "meaning": "linh thiêng, sùng đạo",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/holy.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hol/holy_/holy.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He was regarded as righteous and holy.",
+                        "translation": "Ông được coi là người chính trực và thánh thiện.",
+                        "pronunciation": "/hi wəz rɪˈɡɑːrdɪd əz ˈraɪtʃəs ənd ˈhoʊli./"
+                    }
+                },
+                {
+                    "index": 85,
+                    "word": "homework",
+                    "pronunciation": "/ˈhoʊm.wɝːk/",
+                    "meaning": "bài tập về nhà",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/homework.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/u/ush/ushol/usholly016.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "You can't watch TV until you've done your homework.",
+                        "translation": "Bạn không thể xem TV cho đến khi làm xong bài tập về nhà.",
+                        "pronunciation": "/juː kænt wɑːtʃ ˌtiːˈviː ʌnˈtɪl juːv dʌn jʊr ˈhoʊmwɝːk./"
+                    }
+                },
+                {
+                    "index": 86,
+                    "word": "honest",
+                    "pronunciation": "/ˈɑː.nɪst/",
+                    "meaning": "lương thiện, trung thực, chân thật",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/honest.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hon/hones/honest.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He had an honest face.",
+                        "translation": "Anh ấy có khuôn mặt trung thực.",
+                        "pronunciation": "/hi həd ən ˈɑːnɪst feɪs./"
+                    }
+                },
+                {
+                    "index": 87,
+                    "word": "honestly",
+                    "pronunciation": "/ˈɑː.nɪst.li/",
+                    "meaning": "lương thiện, trung thực, chân thật",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/honestly.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hon/hones/honestly.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They have always dealt honestly and fairly with their customers.",
+                        "translation": "Họ luôn đối xử trung thực và công bằng với khách hàng.",
+                        "pronunciation": "/ðeɪ həv ˈɔːlweɪz dɛlt ˈɑːnɪstli ənd ˈferli wɪð ðɛr ˈkʌstəmɚz./"
+                    }
+                },
+                {
+                    "index": 88,
+                    "word": "honour",
+                    "pronunciation": "/ˈɑː.nɚ/",
+                    "meaning": "danh dự, thanh danh, lòng kính trọng, sự tôn kính",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/honour.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hon/honor/honor.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We fought for the honour of our country.",
+                        "translation": "Chúng tôi đã chiến đấu vì danh dự của đất nước.",
+                        "pronunciation": "/wi fɑːt fɔːr ði ˈɑːnɚ ʌv aʊɚ ˈkʌntri./"
+                    }
+                },
+                {
+                    "index": 89,
+                    "word": "hook",
+                    "pronunciation": "/hʊk/",
+                    "meaning": "cái móc, bản lề, lưỡi câu",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hook.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hoo/hook_/hook.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "There were four coat hooks next to the door.",
+                        "translation": "Có bốn cái móc treo áo bên cạnh cửa.",
+                        "pronunciation": "/ðɛr wɚ fɔːr koʊt hʊks nɛkst tuː ðə dɔːr./"
+                    }
+                },
+                {
+                    "index": 90,
+                    "word": "hope",
+                    "pronunciation": "/hoʊp/",
+                    "meaning": "hy vọng, mong đợi",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hope.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hop/hope_/hope.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We have to hope and pray that the operation will go well.",
+                        "translation": "Chúng ta phải hy vọng và cầu nguyện rằng ca phẫu thuật sẽ diễn ra tốt đẹp.",
+                        "pronunciation": "/wi hæv tuː hoʊp ənd preɪ ðæt ði ˌɑːpəˈreɪʃən wɪl ɡoʊ wɛl./"
+                    }
+                },
+                {
+                    "index": 91,
+                    "word": "horde",
+                    "pronunciation": "/hɔːrd/",
+                    "meaning": "bầy người (nguyên thuỷ), bộ lạc du cư, lũ, đám",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/horde.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hoa/hoard/hoard.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Hordes of students on bikes made crossing the road difficult.",
+                        "translation": "Hàng đoàn học sinh đi xe đạp khiến việc băng qua đường trở nên khó khăn.",
+                        "pronunciation": "/hɔːrdz ʌv ˈstuːdənts ɑːn baɪks meɪd ˈkrɔːsɪŋ ðə roʊd ˈdɪfɪkəlt./"
+                    }
+                },
+                {
+                    "index": 92,
+                    "word": "horizontal",
+                    "pronunciation": "/ˌhɔːr.ɪˈzɑːn.t̬əl/",
+                    "meaning": "(thuộc) chân trời, ở chân trời, ngang, nằm ngang (trục hoành)",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/horizontal.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72253.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Draw a horizontal line across the bottom of the page.",
+                        "translation": "Vẽ một đường ngang ở cuối trang.",
+                        "pronunciation": "/drɔː ə ˌhɔːrɪˈzɑːntəl laɪn əˈkrɔːs ðə ˈbɑːtəm əv ðə peɪdʒ/"
+                    }
+                },
+                {
+                    "index": 93,
+                    "word": "horn",
+                    "pronunciation": "/hɔːrn/",
+                    "meaning": "sừng (trâu, bò)",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/horn.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hor/horn_/horn.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The bull lowered its horns and charged straight at him.",
+                        "translation": "Con bò hạ sừng xuống và lao thẳng về phía anh ta.",
+                        "pronunciation": "/ðə bʊl ˈlaʊərd ɪts hɔːrnz ənd tʃɑːrdʒd streɪt ət hɪm/"
+                    }
+                },
+                {
+                    "index": 94,
+                    "word": "horror",
+                    "pronunciation": "/ˈhɔːr.ɚ/",
+                    "meaning": "điều kinh khủng, sự ghê rợn, cảm giác kinh sợ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/horror.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hor/horro/horror.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The crowd cried out in horror as the car burst into flames.",
+                        "translation": "Đám đông hét lên kinh hoàng khi chiếc xe bốc cháy.",
+                        "pronunciation": "/ðə kraʊd kraɪd aʊt ɪn ˈhɔːrər əz ðə kɑːr bɜːrst ˈɪntuː fleɪmz/"
+                    }
+                },
+                {
+                    "index": 95,
+                    "word": "horse",
+                    "pronunciation": "/hɔːrs/",
+                    "meaning": "con ngựa",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/horse.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hoa/hoars/hoarse.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He climbed onto his horse and set off at a relaxed trot down the lane.",
+                        "translation": "Anh ta trèo lên ngựa và thong thả chạy dọc theo con đường.",
+                        "pronunciation": "/hi klaɪmd ˈɒntuː hɪz hɔːrs ənd set ɒf ət ə rɪˈlækst trɒt daʊn ðə leɪn/"
+                    }
+                },
+                {
+                    "index": 96,
+                    "word": "hosiery",
+                    "pronunciation": "/ˈhoʊ.ʒɚ.i/",
+                    "meaning": "hàng dệt kim",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hosiery.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hos/hosie/hosiery_hose.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Pregnant women can also buy special maternity hosiery.",
+                        "translation": "Phụ nữ mang thai cũng có thể mua tất dành riêng cho bà bầu.",
+                        "pronunciation": "/ˈpreɡnənt ˈwɪmɪn kən ˈɔːlsoʊ baɪ ˈspɛʃl məˈtɜːrnɪti ˈhoʊʒəri/"
+                    }
+                },
+                {
+                    "index": 97,
+                    "word": "hospitable",
+                    "pronunciation": "/hɑːˈspɪt̬.ə.bəl/",
+                    "meaning": "mến khách, hiếu khách, vui vẻ, dễ chịu",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hospitable.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hos/hospi/hospitable.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The villagers were very hospitable to anyone who passed through.",
+                        "translation": "Dân làng rất hiếu khách với bất kỳ ai đi qua.",
+                        "pronunciation": "/ðə ˈvɪlɪdʒɚz wɜːr ˈvɛri hɒˈspɪtəbl tuː ˈɛniwʌn huː pɑːst θruː/"
+                    }
+                },
+                {
+                    "index": 98,
+                    "word": "hospital",
+                    "pronunciation": "/ˈhɑː.spɪ.t̬əl/",
+                    "meaning": "bệnh viện",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hospital.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72257.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "He worked as a nurse in a psychiatric hospital.",
+                        "translation": "Ông làm y tá tại một bệnh viện tâm thần.",
+                        "pronunciation": "/hi wɜːrkt əz ə nɜːrs ɪn ə ˌsaɪkiˈætrɪk ˈhɒspɪtl/"
+                    }
+                },
+                {
+                    "index": 99,
+                    "word": "hospitality",
+                    "pronunciation": "/ˌhɑː.spɪˈtæl.ə.t̬i/",
+                    "meaning": "lòng mến khách, lòng hiếu khách, các loại thực phẩm, đồ ăn, nước uống hay dịch vụ của tổ chức cung cấp tới du khách, khách hàng, khách du lịch...",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hospitality.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72258.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The local people showed me great hospitality.",
+                        "translation": "Người dân địa phương tỏ ra rất hiếu khách với tôi.",
+                        "pronunciation": "/ðə ˈloʊkl ˈpiːpl ʃoʊd mi ɡreɪt ˌhɒspɪˈtæləti/"
+                    }
+                },
+                {
+                    "index": 100,
+                    "word": "host (n)",
+                    "pronunciation": "/hoʊst/",
+                    "meaning": "nhà, chủ tiệc, người dẫn chương trình",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/host-n.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hos/host_/host.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "We thanked our hosts for a very enjoyable evening.",
+                        "translation": "Chúng tôi cảm ơn chủ nhà vì một buổi tối rất thú vị.",
+                        "pronunciation": "/wi θæŋkt aʊər hoʊsts fɔːr ə ˈvɛri ɪnˈdʒɔɪəbl ˈiːvnɪŋ/"
+                    }
+                },
+                {
+                    "index": 101,
+                    "word": "host (v)",
+                    "pronunciation": "/hoʊst/",
+                    "meaning": "tổ chức (sự kiện), dẫn chương trình",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/host-v.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hos/host_/host.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Do I need to download special software to host a meeting?",
+                        "translation": "Tôi có cần tải phần mềm đặc biệt để tổ chức cuộc họp không?",
+                        "pronunciation": "/du aɪ niːd tuː ˈdaʊnloʊd ˈspɛʃl ˈsɒftwer tuː hoʊst ə ˈmiːtɪŋ/"
+                    }
+                },
+                {
+                    "index": 102,
+                    "word": "hostility",
+                    "pronunciation": "/hɑːˈstɪl.ə.t̬i/",
+                    "meaning": "sự thù địch, thái độ thù địch, hành vi thù địch, sự chống đối, sự phản đối, hành động chiến tranh, chiến sự",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hostility.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/e/eus/eus72/eus72259.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They showed open hostility to their new neighbours.",
+                        "translation": "Họ tỏ ra thù địch công khai với những người hàng xóm mới.",
+                        "pronunciation": "/ðeɪ ʃoʊd ˈoʊpən hɒˈstɪlɪti tuː ðeər nuː ˈneɪbɚz/"
+                    }
+                },
+                {
+                    "index": 103,
+                    "word": "hot",
+                    "pronunciation": "/hɑːt/",
+                    "meaning": "nóng, nóng bức",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hot.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hot/hot__/hot.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It's too hot in here, can we turn down the heating?",
+                        "translation": "Ở đây nóng quá, chúng ta có thể giảm nhiệt độ xuống được không?",
+                        "pronunciation": "/ɪts tuː hɒt ɪn hɪr, kən wi tɜːrn daʊn ðə ˈhiːtɪŋ?/"
+                    }
+                },
+                {
+                    "index": 104,
+                    "word": "hotel",
+                    "pronunciation": "/hoʊˈtel/",
+                    "meaning": "khách sạn",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hotel.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hot/hotel/hotel.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "They've booked us into the hotel in the main square.",
+                        "translation": "Họ đã đặt phòng cho chúng tôi ở khách sạn tại quảng trường chính.",
+                        "pronunciation": "/ðeɪv bʊkt ʌs ˈɪntuː ðə hoʊˈtɛl ɪn ðə meɪn skwɛr./"
+                    }
+                },
+                {
+                    "index": 105,
+                    "word": "hour",
+                    "pronunciation": "/aʊr/",
+                    "meaning": "giờ",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hour.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hou/hour_/hour.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Trains leave every hour on the hour.",
+                        "translation": "Tàu khởi hành mỗi giờ đúng giờ.",
+                        "pronunciation": "/treɪnz liːv ˈɛvri ˈaʊər ɒn ði ˈaʊər/"
+                    }
+                },
+                {
+                    "index": 106,
+                    "word": "house",
+                    "pronunciation": "/haʊs/",
+                    "meaning": "nhà, căn nhà, toàn nhà",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/house.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hou/house/house.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It costs a lot to buy a house in this part of London.",
+                        "translation": "Phải tốn rất nhiều tiền để mua nhà ở khu vực này của London.",
+                        "pronunciation": "/ɪt kɒsts ə lɒt tuː baɪ ə haʊs ɪn ðɪs pɑːrt əv ˈlʌndən/"
+                    }
+                },
+                {
+                    "index": 107,
+                    "word": "household",
+                    "pronunciation": "/ˈhaʊs.hoʊld/",
+                    "meaning": "hộ gia đình",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/household.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hou/house/household.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The insurance doesn't cover you for household items.",
+                        "translation": "Bảo hiểm không chi trả cho các đồ dùng gia đình.",
+                        "pronunciation": "/ðə ɪnˈʃʊrəns ˈdʌzənt ˈkʌvər juː fɔːr ˈhaʊshoʊld ˈaɪtəmz/"
+                    }
+                },
+                {
+                    "index": 108,
+                    "word": "how",
+                    "pronunciation": "/haʊ/",
+                    "meaning": "thế nào, như thế nào, làm sao, ra sao",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/how.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/how/how__/how.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "How do we get to the town from here?",
+                        "translation": "Làm sao chúng ta có thể tới thị trấn từ đây?",
+                        "pronunciation": "/haʊ duː wi ɡɛt tuː ðə taʊn frəm hɪr?/"
+                    }
+                },
+                {
+                    "index": 109,
+                    "word": "however",
+                    "pronunciation": "/ˌhaʊˈev.ɚ/",
+                    "meaning": "tuy nhiên, tuy vậy, dù thế nào",
+                    "partOfSpeech": "adv",
+                    "audioEx": "./voice/however.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/how/howev/however.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "If Emma likes something she'll buy it however much it costs.",
+                        "translation": "Nếu Emma thích thứ gì đó, cô ấy sẽ mua nó bất kể giá của nó là bao nhiêu.",
+                        "pronunciation": "/ɪf ˈɛmə laɪks ˈsʌmθɪŋ, ʃiːl baɪ ɪt haʊˈɛvɚ mʌtʃ ɪt kɒsts./"
+                    }
+                },
+                {
+                    "index": 110,
+                    "word": "huckster",
+                    "pronunciation": "/ˈhʌk.stɚ/",
+                    "meaning": "người hám lợi, người vụ lợi, người bán hàng rong",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/huckster.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/huc/hucks/huckster.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "In the other two-thirds, the play of the market, the huckster value, will be the deciding factor.",
+                        "translation": "Ở hai phần ba còn lại, diễn biến của thị trường, giá trị của người bán hàng rong, sẽ là yếu tố quyết định.",
+                        "pronunciation": "/ɪn ði ˈʌðər tuː-θɜːrdz, ðə pleɪ əv ðə ˈmɑːrkɪt, ðə ˈhʌkstər ˈvæljuː, wɪl bi ðə dɪˈsaɪdɪŋ ˈfæktər./"
+                    }
+                },
+                {
+                    "index": 111,
+                    "word": "huge",
+                    "pronunciation": "/hjuːdʒ/",
+                    "meaning": "to lớn, khổng lồ",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/huge.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hug/huge_/huge.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The costs involved in building a spacecraft are huge.",
+                        "translation": "Chi phí để chế tạo một tàu vũ trụ là rất lớn.",
+                        "pronunciation": "/ðə kɒsts ɪnˈvɒlvd ɪn ˈbɪldɪŋ ə ˈspeɪskrɑːft ɑːr hjuːdʒ./"
+                    }
+                },
+                {
+                    "index": 112,
+                    "word": "human",
+                    "pronunciation": "/ˈhjuː.mən/",
+                    "meaning": "con người, loài người",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/human.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hum/human/human.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The human body is composed of about 60 percent water.",
+                        "translation": "Cơ thể con người có khoảng 60 phần trăm là nước.",
+                        "pronunciation": "/ðə ˈhjuːmən ˈbɒdi ɪz kəmˈpoʊzd əv əˈbaʊt ˈsɪksti pɚˈsɛnt ˈwɔːtər./"
+                    }
+                },
+                {
+                    "index": 113,
+                    "word": "humane",
+                    "pronunciation": "/hjuːˈmeɪn/",
+                    "meaning": "nhân đạo, nhân đức, nhân văn",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/humane.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hum/human/humane.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The humane way of dealing with a suffering animal is to kill it quickly.",
+                        "translation": "Cách nhân đạo để đối phó với một con vật đang đau khổ là giết nó ngay lập tức.",
+                        "pronunciation": "/ðə hjuːˈmeɪn weɪ əv ˈdiːlɪŋ wɪð ə ˈsʌfərɪŋ ˈænɪməl ɪz tuː kɪl ɪt ˈkwɪkli./"
+                    }
+                },
+                {
+                    "index": 114,
+                    "word": "humorous",
+                    "pronunciation": "/ˈhjuː.mə.rəs/",
+                    "meaning": "hài hước, hóm hỉnh",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/humorous.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hum/humor/humorous.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Her latest book is a humorous look at teenage life.",
+                        "translation": "Cuốn sách mới nhất của cô là cái nhìn hài hước về cuộc sống tuổi teen.",
+                        "pronunciation": "/hɜːr ˈleɪtɪst bʊk ɪz ə ˈhjuːmərəs lʊk ət ˈtiːneɪdʒ laɪf./"
+                    }
+                },
+                {
+                    "index": 115,
+                    "word": "hungry",
+                    "pronunciation": "/ˈhʌŋ.ɡri/",
+                    "meaning": "đói",
+                    "partOfSpeech": "adj",
+                    "audioEx": "./voice/hungry.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hun/hungr/hungry.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "The children are always hungry when they get home from school.",
+                        "translation": "Trẻ em luôn đói khi đi học về.",
+                        "pronunciation": "/ðə ˈtʃɪldrən ɑːr ˈɔːlweɪz ˈhʌŋɡri wɛn ðeɪ ɡɛt hoʊm frəm skuːl./"
+                    }
+                },
+                {
+                    "index": 116,
+                    "word": "hunt",
+                    "pronunciation": "/hʌnt/",
+                    "meaning": "săn, đi săn",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hunt.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hun/hunt_/hunt.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "When lion cubs are young, the mother stays with them while the father hunts for food.",
+                        "translation": "Khi sư tử con còn nhỏ, mẹ sẽ ở với chúng trong khi bố đi săn tìm thức ăn.",
+                        "pronunciation": "/wɛn ˈlaɪən kʌbz ɑːr jʌŋ, ðə ˈmʌðər steɪz wɪð ðəm waɪl ðə ˈfɑːðər hʌnts fɔːr fuːd./"
+                    }
+                },
+                {
+                    "index": 117,
+                    "word": "hunting",
+                    "pronunciation": "/ˈhʌn.t̬ɪŋ/",
+                    "meaning": "sự đi săn",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hunting.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hun/hunti/hunting.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Public opinion is currently running against fox hunting.",
+                        "translation": "Hiện nay, dư luận đang phản đối việc săn cáo.",
+                        "pronunciation": "/ˈpʌblɪk əˈpɪnjən ɪz ˈkɜːrəntli ˈrʌnɪŋ əˈɡɛnst fɒks ˈhʌntɪŋ./"
+                    }
+                },
+                {
+                    "index": 118,
+                    "word": "hurry",
+                    "pronunciation": "/ˈhɝː.i/",
+                    "meaning": "vội vàng, làm vội vã",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hurry.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hur/hurry/hurry.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "I hate to hurry you, but I have to leave in a few minutes.",
+                        "translation": "Tôi không muốn làm bạn vội, nhưng tôi phải đi trong vài phút nữa.",
+                        "pronunciation": "/aɪ heɪt tuː ˈhʌri juː, bʌt aɪ hæv tuː liːv ɪn ə fjuː ˈmɪnɪts./"
+                    }
+                },
+                {
+                    "index": 119,
+                    "word": "hurt",
+                    "pronunciation": "/hɝːt/",
+                    "meaning": "làm đau, làm bị thương",
+                    "partOfSpeech": "v",
+                    "audioEx": "./voice/hurt.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hur/hurt_/hurt.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Several people were seriously hurt in the explosion.",
+                        "translation": "Một số người bị thương nghiêm trọng trong vụ nổ.",
+                        "pronunciation": "/ˈsɛvrəl ˈpiːpl wɜːr ˈsɪriəsli hɜːrt ɪn ði ɪkˈsploʊʒən./"
+                    }
+                },
+                {
+                    "index": 120,
+                    "word": "husband",
+                    "pronunciation": "/ˈhʌz.bənd/",
+                    "meaning": "người chồng",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/husband.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hus/husba/husband.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "She confessed to her husband that she had sold her wedding ring.",
+                        "translation": "Cô thú nhận với chồng rằng cô đã bán nhẫn cưới.",
+                        "pronunciation": "/ʃi kənˈfɛst tuː hɜːr ˈhʌzbənd ðæt ʃi hæd soʊld hɜːr ˈwɛdɪŋ rɪŋ./"
+                    }
+                },
+                {
+                    "index": 121,
+                    "word": "hygiene",
+                    "pronunciation": "/ˈhaɪ.dʒiːn/",
+                    "meaning": "vệ sinh",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/hygiene.mp3",
+                    "audio": "https://dictionary.cambridge.org/vi/media/english/us_pron/h/hyg/hygie/hygiene.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "Poor standards of hygiene mean that the disease spreads fast.",
+                        "translation": "Tiêu chuẩn vệ sinh kém có nghĩa là bệnh lây lan nhanh.",
+                        "pronunciation": "/pʊr ˈstændərdz əv ˈhaɪdʒiːn miːn ðæt ðə dɪˈziːz sprɛdz fɑːst./"
+                    }
+                }
+            ]
+        }  
+        </script>
+</body>
+</html>
