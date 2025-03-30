@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách từ vựng với âm thanh</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .vocabulary {
+            color: green;
+            cursor: pointer;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .index-number {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            margin-right: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .index-circle-detail {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .play-all-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .play-all-button:hover {
+            background-color: #45a049;
+        }
+        #playButton, #pauseButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #playButton:hover, #pauseButton:hover {
+            background-color: #0056b3;
+        }
+        #trackInfo {
+            font-size: 18px;
+        }
+
+        #toggleButton {
+            padding: 4px 8px;
+            margin: 2px;
+            background-color: #e7a414;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Danh sách từ vựng</h1>
+    <div style="display: flex; justify-content: space-between; max-width: 600px;">
+        <div class="play-audio">
+            <button class="play-all-button" id="play-all-button">Phát tất cả âm thanh</button>
+            <div id="trackInfo"><b>Now playing:</b></div>
+    
+            <!-- Các nút điều khiển -->
+            <div id="controls">
+                <button id="playButton">Play</button>
+                <button id="pauseButton">Pause</button>
+            </div>
+    
+            <audio id="audioPlayer" src=""></audio>
+        </div>
+            <!-- Nút Ôn tập (ẩn/hiện tiếng Anh) -->
+        <div id="area-toggle">
+            <button id="toggleButton">Học từ</button>
+            <div id="inputForm">
+                <label for="startIndex">Số t/t của từ: </label>
+                <input type="number" id="startIndex" value="1" min="1"><br/>
+                
+                <label for="numItems">Số lượng từ: </label>
+                <input type="number" id="numItems" value="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <ul id="vocabulary-list"></ul>
+    <!-- Các nút điều hướng trang -->
+    <div class="controls">
+        <button id="prevButton">Trang trước</button>
+        <button id="nextButton">Trang sau</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="vocabulary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0; // Trang hiện tại
+        const itemsPerPage = 20; // Mỗi trang hiển thị 1 từ vựng
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        function loadVocabulary(page) {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            // --- Phân trang
+            console.log("page - itemsPerPage", page, itemsPerPage)
+            const start = page * itemsPerPage;
+            const end = start + itemsPerPage;
+            console.log("start - end", start, end)
+            const vocabularies = data.vocabularies.slice(start, end);
+
+            const vocabularyList = document.getElementById('vocabulary-list');
+            const modal = document.getElementById('vocabulary-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModal = document.querySelector('.close');
+            const playAllButton = document.getElementById('play-all-button');
+            vocabularyList.innerHTML="";
+
+            const toggleBtn = document.getElementById('toggleButton');
+
+            if(toggleBtn.textContent === 'Ôn tập'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.meaning}</a> ${vocab.pronunciation} (${vocab.partOfSpeech})
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }else if(toggleBtn.textContent === 'Học từ'){
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    const isHardStyle = vocab.isHard ? "font-weight: bold; color:red" : "";
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" style="${isHardStyle}" data-index="${vocab.index - 1}">${vocab.word}</a> ${vocab.pronunciation} (${vocab.partOfSpeech}) : ${vocab.meaning} 
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            } else {
+                vocabularies.forEach((vocab) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${vocab.index}. </span>
+                                    <a class="vocabulary" data-index="${vocab.index - 1}">${vocab.example.sentence}</a> <br>${vocab.example.pronunciation} 
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audio').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="document.getElementById('${vocab.word}-audioEx').play()">
+                                        <i class="fas fa-volume-up"></i>
+                                    </a>
+                                    <audio id="${vocab.word}-audio" src="${vocab.audio}"></audio>
+                                    <audio id="${vocab.word}-audioEx" src="${vocab.audioEx}"></audio>`;
+                                    
+                    vocabularyList.appendChild(li);
+                });
+            }
+
+            document.querySelectorAll('.vocabulary').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const index = e.target.getAttribute('data-index');
+                    const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                    const vocabularies = data.vocabularies;
+                    const vocab = vocabularies[index];
+
+                    modalBody.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="index-circle-detail">${vocab.index}</div>
+                            <div>
+                                <h3>${vocab.word}</h3>
+                                <p>${vocab.pronunciation}</p>
+                                <img src="${vocab.image}" alt="${vocab.word}">
+                                <p><b>(${vocab.partOfSpeech})</b> ${vocab.meaning}</p>
+                                <p><b>Example</b>: <br/> <span id="textToCopy">${vocab.example.sentence}</span>
+                                    <br/> <span style="color: blue"><i>(${vocab.example?.pronunciation})</i></span>
+                                    <br/> <span style="color: gray"><i>(${vocab.example.translation})</i></span>
+                                </p>
+                                <button id="copyButton">Sao chép</button>
+                                <p></p>
+                                <audio controls>
+                                    <source src="${vocab.audio}" type="audio/mpeg">
+                                    Trình duyệt của bạn không hỗ trợ phần tử âm thanh.
+                                </audio>
+                            </div>
+                        </div>
+                    `;
+                    modal.style.display = 'block';
+
+                    /// ------ Coppy to clipboard
+                    document.getElementById('copyButton').addEventListener('click', function() {
+                        // Tạo một phần tử tạm thời để chứa văn bản
+                        var tempInput = document.createElement('input');
+                        tempInput.value = document.getElementById('textToCopy').innerText;
+
+                        // Thêm phần tử vào trang để sao chép
+                        document.body.appendChild(tempInput);
+
+                        // Chọn văn bản trong phần tử tạm thời
+                        tempInput.select();
+                        tempInput.setSelectionRange(0, 99999); // Đối với thiết bị di động
+
+                        // Sao chép văn bản
+                        document.execCommand('copy');
+
+                        // Xóa phần tử tạm thời khỏi trang
+                        document.body.removeChild(tempInput);
+
+                        // Thông báo sao chép thành công
+                        alert('Đã sao chép văn bản!');
+                    });
+                });
+            });
+
+            closeModal.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+
+            playAllButton.addEventListener('click', () => {
+                let currentTrack = 0;
+                const audioPlayer = document.getElementById('audioPlayer');
+                const playButton = document.getElementById('playButton');
+                const pauseButton = document.getElementById('pauseButton');
+                const trackInfo = document.getElementById('trackInfo');
+                const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+                // const vocabularies = data.vocabularies;
+                // --- Phân trang
+                const startIndex = document.getElementById('startIndex');
+                const numItems = document.getElementById('numItems');
+
+                const start = startIndex.value - 1;
+                const end = start + numItems.value;
+                const vocabularies = data.vocabularies.slice(start, end);
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                function playAudioAsync(url) {
+                    return new Promise((resolve, reject) => {
+                        const audio = new Audio(url);
+
+                        // Resolve the promise when the audio finishes playing
+                        audio.addEventListener('ended', resolve);
+
+                        // Optional: reject the promise if there's an error during playback
+                        audio.addEventListener('error', (e) => reject(e));
+
+                        // Start playing the audio
+                        audio.play();
+                    });
+                }
+
+                // Hàm cập nhật bài hát và thông tin hiển thị
+                async function loadTrack(index) {
+                    const voca = vocabularies[index];
+                    trackInfo.innerHTML = `${voca.index}. <b style='color: red'>${voca.word}</b> ${voca.pronunciation} (${voca.partOfSpeech}): ${voca.meaning}`;
+                    //Play main voca audio
+                    await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+                    await playAudioAsync(voca.audio);
+                    await delayFc(1000);
+
+                    //Play part of speech audio
+                    if(voca.partOfSpeech && voca.partOfSpeech !== '') {
+                        switch (voca.partOfSpeech) {
+                            case 'v':
+                                await playAudioAsync('./../verb.mp3');
+                                break;
+                            case 'n':
+                                await playAudioAsync('./../noun.mp3');
+                                break;
+                            case 'adj':
+                                await playAudioAsync('./../adjective.mp3');
+                                break;
+                            case 'adv':
+                                await playAudioAsync('./../adverb.mp3');
+                                break;
+                             case 'pre':
+                                await playAudioAsync('./../pre.mp3');
+                                break;
+                        
+                            default:
+                                break;
+                        }
+                        await delayFc(2000);
+                    }
+                    //Play example audio
+                    trackInfo.innerHTML = `${voca.index}. ${voca.example.sentence}<br/> <i style='color: gray'>${voca.example.pronunciation}</i>`;
+                    await playAudioAsync(voca.audioEx);
+                    await delayFc(5000);
+
+                    audioPlayer.src = voca.audioEx;
+                    audioPlayer.play();
+                    audioPlayer.onended = async () => {
+                        setTimeout(() => {
+                            currentTrack++;
+                            if (currentTrack < vocabularies.length) {
+                                loadTrack(currentTrack);
+                            } else {
+                                currentTrack = 0;  // Quay lại bài đầu tiên nếu hết danh sách
+                                loadTrack(currentTrack);
+                            }
+                        }, 3000);
+                    };
+                    
+                }
+
+                // Bắt đầu phát bài hát đầu tiên
+                loadTrack(currentTrack);
+
+                // Nút Play
+                playButton.addEventListener('click', function() {
+                    audioPlayer.play();
+                });
+
+                // Nút Pause
+                pauseButton.addEventListener('click', function() {
+                    audioPlayer.pause();
+                });
+
+                function delayFc(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+            });
+        }
+
+        // Sự kiện cho nút Trang trước
+        prevButton.addEventListener('click', function() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        // Sự kiện cho nút Trang sau
+        nextButton.addEventListener('click', function() {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            if (currentPage < Math.ceil(data.vocabularies.length / itemsPerPage) - 1) {
+                currentPage++;
+                loadVocabulary(currentPage);
+            }
+        });
+
+        window.onload = () => {
+            const data = JSON.parse(document.getElementById('vocabulary-data').textContent);
+            const vocabularies = data.vocabularies;
+            const startIndex = document.getElementById('startIndex');
+            const numItems = document.getElementById('numItems');
+            startIndex.value = 1;
+            numItems.value = vocabularies.length;
+
+            loadVocabulary(currentPage);
+        }
+        // Chức năng ẩn/hiện phần tiếng Anh
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            // Kiểm tra xem đoạn văn bản có đang bị ẩn không
+            if (this.textContent === 'Ôn tập') {
+                this.textContent = 'Học từ';  // Hiện lại đoạn văn bản
+            } else if (this.textContent === 'Học từ'){
+                this.textContent = 'Học câu';  // Ẩn đoạn văn bản
+            } else {
+                this.textContent = 'Ôn tập';
+            }
+
+            loadVocabulary(currentPage);
+        });
+    </script>
+    <script id="vocabulary-data" type="application/json">
+        {
+            "vocabularies": [
+                {
+                    "index": 1,
+                    "word": "dad",
+                    "pronunciation": "/dæd/",
+                    "meaning": "cha",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/dad.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/d/dad/dad__/dad.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It was great to see your mum and dad at the concert last night.",
+                        "translation": "Thật tuyệt khi được gặp mẹ và bố của bạn tại buổi hòa nhạc tối qua",
+                        "pronunciation": "/ɪt wəz ɡreɪt tə si jɔr mʌm ənd dæd æt ðə ˈkɒnsərt læst naɪt/"
+                    }
+                },
+                {
+                    "index": 2,
+                    "word": "dad",
+                    "pronunciation": "/dæd/",
+                    "meaning": "cha",
+                    "partOfSpeech": "n",
+                    "audioEx": "./voice/dad.mp3",
+                    "audio": "https://dictionary.cambridge.org/media/english/us_pron/d/dad/dad__/dad.mp3",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWsZgdBDn6WOyzrz7r-o84wArPTSLnpE2Nww&s",
+                    "example": {
+                        "sentence": "It was great to see your mum and dad at the concert last night.",
+                        "translation": "Thật tuyệt khi được gặp mẹ và bố của bạn tại buổi hòa nhạc tối qua",
+                        "pronunciation": "/ɪt wəz ɡreɪt tə si jɔr mʌm ənd dæd æt ðə ˈkɒnsərt læst naɪt/"
+                    }
+                }
+            ]
+        }  
+        </script>
+</body>
+</html>
