@@ -1225,42 +1225,81 @@
                     translateToVietnamese(word)
                 ]);
                 
-                let newVocab = {
-                    word,
-                    phonetic: '',
-                    audio: '',
-                    partOfSpeech: '',
-                    definition: '',
-                    meaningVi: meaningVi || '',
-                    example: ''
-                };
-
+                // Get common phonetic and audio
+                let phonetic = '';
+                let audio = '';
+                
                 if (wordInfo) {
-                    newVocab.phonetic = wordInfo.phonetic || wordInfo.phonetics?.find(p => p.text)?.text || '';
+                    phonetic = wordInfo.phonetic || wordInfo.phonetics?.find(p => p.text)?.text || '';
                     const audioObj = wordInfo.phonetics?.find(p => p.audio && p.audio.includes('-us')) || wordInfo.phonetics?.find(p => p.audio);
-                    newVocab.audio = audioObj?.audio || '';
+                    audio = audioObj?.audio || '';
+                }
+                
+                // Create entries for each part of speech
+                const vocabsToAdd = [];
+                
+                if (wordInfo && wordInfo.meanings && wordInfo.meanings.length > 0) {
+                    // Track unique parts of speech to avoid duplicates
+                    const addedPOS = new Set();
                     
-                    const meaning = wordInfo.meanings?.[0];
-                    if (meaning) {
-                        newVocab.partOfSpeech = meaning.partOfSpeech || '';
+                    for (const meaning of wordInfo.meanings) {
+                        const pos = meaning.partOfSpeech || '';
+                        
+                        // Skip if we already added this part of speech
+                        if (addedPOS.has(pos)) continue;
+                        addedPOS.add(pos);
+                        
+                        // Find best definition (prefer one with example)
                         let bestDef = meaning.definitions?.find(d => d.example) || meaning.definitions?.[0];
-                        if (!bestDef?.example) {
-                            for (const m of wordInfo.meanings || []) {
-                                const defWithExample = m.definitions?.find(d => d.example);
-                                if (defWithExample) { bestDef = defWithExample; break; }
-                            }
+                        
+                        // Translate with context based on part of speech
+                        // verb: "to shower" → "tắm", noun: "shower" → "vòi hoa sen"
+                        let translateQuery = word;
+                        if (pos === 'verb') {
+                            translateQuery = `to ${word}`;
+                        } else if (pos === 'adjective') {
+                            translateQuery = `${word} (adj)`;
+                        } else if (pos === 'adverb') {
+                            translateQuery = `${word} (adv)`;
                         }
-                        newVocab.definition = bestDef?.definition || '';
-                        newVocab.example = bestDef?.example || '';
+                        const viMeaning = await translateToVietnamese(translateQuery);
+                        
+                        vocabsToAdd.push({
+                            word,
+                            phonetic,
+                            audio,
+                            partOfSpeech: pos,
+                            definition: bestDef?.definition || '',
+                            meaningVi: viMeaning || meaningVi || '',
+                            example: bestDef?.example || ''
+                        });
                     }
+                } else {
+                    // No API data, add single entry
+                    vocabsToAdd.push({
+                        word,
+                        phonetic: '',
+                        audio: '',
+                        partOfSpeech: '',
+                        definition: '',
+                        meaningVi: meaningVi || '',
+                        example: ''
+                    });
                 }
 
-                // Save to Firebase
-                const newRef = database.ref(`categories/${currentCategoryId}/vocabularies`).push();
-                await newRef.set(newVocab);
+                // Save all entries to Firebase
+                const vocabRef = database.ref(`categories/${currentCategoryId}/vocabularies`);
+                for (const vocab of vocabsToAdd) {
+                    await vocabRef.push().set(vocab);
+                }
                 
                 input.value = '';
-                showToast('Đã thêm: ' + word + (meaningVi ? ' → ' + meaningVi : ''), 'success');
+                const posCount = vocabsToAdd.length;
+                if (posCount > 1) {
+                    showToast(`Đã thêm: ${word} (${posCount} loại từ)`, 'success');
+                } else {
+                    showToast('Đã thêm: ' + word + (meaningVi ? ' → ' + meaningVi : ''), 'success');
+                }
                 showSyncIndicator();
             } catch (error) {
                 showToast('Lỗi: ' + error.message, 'error');
