@@ -1,0 +1,25 @@
+{
+  "name": "Vocabulary T4",
+  "vocabularies": [
+    {"word": "crew", "phonetic": "/kruː/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "nhóm, đồng đội", "example": ""},
+    {"word": "dedicated", "phonetic": "/ˈded.ə.keɪ.t̬ɪd/", "audio": "", "partOfSpeech": "adj", "definition": "", "meaningVi": "tận tuỵ, tận tâm", "example": ""},
+    {"word": "courtyard", "phonetic": "/ˈkɔːrt.jɑːrd/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "sân vườn", "example": ""},
+    {"word": "accommodate", "phonetic": "/əˈkɑː.mə.deɪt/", "audio": "", "partOfSpeech": "v", "definition": "", "meaningVi": "cung cấp chỗ ở, điều chỉnh", "example": ""},
+    {"word": "reserve", "phonetic": "/rɪˈzɝːv/", "audio": "", "partOfSpeech": "v", "definition": "", "meaningVi": "đặt trước, giữ chỗ", "example": ""},
+    {"word": "shuttle", "phonetic": "/ˈʃʌt̬.əl/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "phương tiện đưa đón", "example": ""},
+    {"word": "dull pain", "phonetic": "/dʌl peɪn/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "cơn đau âm ỉ", "example": ""},
+    {"word": "inauguration", "phonetic": "/ɪˌnɑː.ɡjəˈreɪ.ʃən/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "lễ khánh thành, khai mạc", "example": ""},
+    {"word": "ceremony", "phonetic": "/ˈser.ə.moʊ.ni/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "buổi lễ", "example": ""},
+    {"word": "lane", "phonetic": "/leɪn/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "làn đường", "example": ""},
+    {"word": "coolant", "phonetic": "/ˈkuː.lənt/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "chất làm mát", "example": ""},
+    {"word": "extenuating", "phonetic": "/ɪkˈsten.ju.eɪ.t̬ɪŋ/", "audio": "", "partOfSpeech": "adj", "definition": "", "meaningVi": "giảm nhẹ", "example": "extenuating circumstances - tình tiết giảm nhẹ"},
+    {"word": "bookkeeping", "phonetic": "", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "công việc kế toán", "example": ""},
+    {"word": "merger", "phonetic": "/ˈmɝː.dʒɚ/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "sự sát nhập", "example": ""},
+    {"word": "acquisition", "phonetic": "/ˌæk.wəˈzɪʃ.ən/", "audio": "", "partOfSpeech": "n", "definition": "", "meaningVi": "sự mua lại, thâu tóm", "example": ""},
+    {"word": "acquire", "phonetic": "", "audio": "", "partOfSpeech": "v", "definition": "", "meaningVi": "mua lại, thâu tóm", "example": ""},
+    {"word": "retain", "phonetic": "/rɪˈteɪn/", "audio": "", "partOfSpeech": "v", "definition": "", "meaningVi": "giữ lại, duy trì", "example": ""},
+    {"word": "determine", "phonetic": "", "audio": "", "partOfSpeech": "v", "definition": "", "meaningVi": "xác định, quyết định", "example": ""},
+    {"word": "appreciate", "phonetic": "", "audio": "", "partOfSpeech": "v", "definition": "", "meaningVi": "cảm kích, biết ơn", "example": ""}
+  ]
+}
+
