@@ -1,0 +1,13 @@
+{
+  "name": "Test",
+  "vocabularies": [
+    {
+      "word": "work",
+      "phonetic": "/wɜːk/",
+      "audio": "https://api.dictionaryapi.dev/media/pronunciations/en/work-us.ogg",
+      "partOfSpeech": "noun",
+      "definition": "(heading) Employment.",
+      "example": ""
+    }
+  ]
+}
