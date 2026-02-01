@@ -508,6 +508,28 @@
             transform: rotate(180deg);
         }
 
+        /* Learned state */
+        .vocabulary-item.learned {
+            opacity: 0.5;
+            background: var(--bg-secondary);
+        }
+
+        .vocabulary-item.learned .vocab-word {
+            color: var(--text-secondary);
+        }
+
+        .vocabulary-item.learned .vocab-index {
+            background: var(--text-secondary);
+        }
+
+        .vocab-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-success);
+            flex-shrink: 0;
+        }
+
         /* Expanded Details */
         .vocab-details {
             max-height: 0;
@@ -1061,7 +1083,7 @@
         // ============ VOCABULARY MANAGEMENT ============
         function renderVocabularies(vocabularies) {
             const list = document.getElementById('vocabulary-list');
-            const vocabEntries = Object.entries(vocabularies || {});
+            let vocabEntries = Object.entries(vocabularies || {});
             
             if (vocabEntries.length === 0) {
                 list.innerHTML = `
@@ -1074,10 +1096,21 @@
                 return;
             }
             
+            // Sort: từ chưa học lên trước, đã học xuống sau
+            vocabEntries.sort((a, b) => {
+                const learnedA = a[1].learned ? 1 : 0;
+                const learnedB = b[1].learned ? 1 : 0;
+                return learnedA - learnedB;
+            });
+            
             list.innerHTML = vocabEntries.map(([id, vocab], index) => `
-                <li class="vocabulary-item" id="vocab-${id}">
+                <li class="vocabulary-item ${vocab.learned ? 'learned' : ''}" id="vocab-${id}">
                     <div class="vocab-compact" onclick="toggleVocabDetails('${id}')">
                         <div class="vocab-compact-left">
+                            <input type="checkbox" class="vocab-checkbox" 
+                                ${vocab.learned ? 'checked' : ''} 
+                                onclick="event.stopPropagation(); toggleLearned('${id}', this.checked)"
+                                title="Đánh dấu đã học">
                             <span class="vocab-index">${index + 1}</span>
                             <span class="vocab-word">${escapeHtml(vocab.word)}</span>
                             <span class="vocab-phonetic">${escapeHtml(vocab.phonetic || '')}</span>
@@ -1121,6 +1154,16 @@
                     </div>
                 </li>
             `).join('');
+        }
+        
+        function toggleLearned(id, learned) {
+            if (!currentCategoryId) return;
+            
+            database.ref(`categories/${currentCategoryId}/vocabularies/${id}/learned`).set(learned)
+                .then(() => {
+                    showToast(learned ? '✓ Đã đánh dấu học xong' : 'Đã bỏ đánh dấu', 'success');
+                    showSyncIndicator();
+                });
         }
 
         function toggleVocabDetails(id) {
