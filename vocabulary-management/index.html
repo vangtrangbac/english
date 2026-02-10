@@ -530,6 +530,44 @@
             flex-shrink: 0;
         }
 
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .pagination button {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            min-width: 100px;
+            text-align: center;
+        }
+
         /* Expanded Details */
         .vocab-details {
             max-height: 0;
@@ -943,6 +981,8 @@
         // ============ DATA ============
         let categories = {};
         let currentCategoryId = null;
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 25;
 
         // ============ FIREBASE LISTENERS ============
         function initFirebaseListeners() {
@@ -1029,6 +1069,7 @@
 
         function selectCategory(id) {
             currentCategoryId = id;
+            currentPage = 1; // Reset to first page
             const category = categories[id];
             
             if (category) {
@@ -1103,7 +1144,16 @@
                 return learnedA - learnedB;
             });
             
-            list.innerHTML = vocabEntries.map(([id, vocab], index) => `
+            // Pagination
+            const totalPages = Math.ceil(vocabEntries.length / ITEMS_PER_PAGE);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            const pageEntries = vocabEntries.slice(startIndex, endIndex);
+            
+            let html = pageEntries.map(([id, vocab], index) => `
                 <li class="vocabulary-item ${vocab.learned ? 'learned' : ''}" id="vocab-${id}">
                     <div class="vocab-compact" onclick="toggleVocabDetails('${id}')">
                         <div class="vocab-compact-left">
@@ -1111,7 +1161,7 @@
                                 ${vocab.learned ? 'checked' : ''} 
                                 onclick="event.stopPropagation(); toggleLearned('${id}', this.checked)"
                                 title="Đánh dấu đã học">
-                            <span class="vocab-index">${index + 1}</span>
+                            <span class="vocab-index">${startIndex + index + 1}</span>
                             <span class="vocab-word">${escapeHtml(vocab.word)}</span>
                             <span class="vocab-phonetic">${escapeHtml(vocab.phonetic || '')}</span>
                             ${vocab.partOfSpeech ? `<span class="vocab-pos">${escapeHtml(vocab.partOfSpeech)}</span>` : ''}
@@ -1154,6 +1204,36 @@
                     </div>
                 </li>
             `).join('');
+            
+            // Add pagination controls if more than 1 page
+            if (totalPages > 1) {
+                html += `
+                    <li class="pagination">
+                        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="page-info">${currentPage} / ${totalPages}</span>
+                        <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </li>
+                `;
+            }
+            
+            list.innerHTML = html;
+        }
+        
+        function goToPage(page) {
+            currentPage = page;
+            if (currentCategoryId && categories[currentCategoryId]) {
+                renderVocabularies(categories[currentCategoryId].vocabularies);
+            }
         }
         
         function toggleLearned(id, learned) {
