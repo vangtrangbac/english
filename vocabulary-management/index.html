@@ -6,6 +6,8 @@
     <title>Vocabulary Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- ResponsiveVoice TTS -->
+    <script src="https://code.responsivevoice.org/responsivevoice.js?key=free"></script>
     <style>
         :root {
             --bg-primary: #0f0f23;
@@ -1947,7 +1949,7 @@
             readFirstWord();
         }
 
-        // Read first word synchronously in user gesture context
+        // Read first word in user gesture context
         function readFirstWord() {
             if (readingList.length === 0) return;
             
@@ -1963,39 +1965,8 @@
                 }, delay);
             };
             
-            // Speak immediately in user click context - this unlocks TTS
-            if ('speechSynthesis' in window) {
-                try {
-                    const utterance = new SpeechSynthesisUtterance(vocab.word);
-                    utterance.lang = 'en-US';
-                    utterance.rate = 0.85;
-                    utterance.volume = 1;
-                    
-                    const voices = speechSynthesis.getVoices();
-                    const englishVoice = voices.find(v => v.lang.startsWith('en'));
-                    if (englishVoice) utterance.voice = englishVoice;
-                    
-                    utterance.onend = goToNext;
-                    utterance.onerror = goToNext;
-                    
-                    speechSynthesis.speak(utterance);
-                    console.log('First word speaking:', vocab.word);
-                    
-                    // Timeout backup
-                    setTimeout(() => {
-                        if (readingIndex === 0 && isReading) {
-                            console.log('First word timeout, continuing...');
-                            goToNext();
-                        }
-                    }, 3000);
-                } catch (e) {
-                    console.log('First word TTS error:', e);
-                    goToNext();
-                }
-            } else {
-                // No TTS, just continue
-                goToNext();
-            }
+            // Use speakWord which handles ResponsiveVoice
+            speakWord(vocab.word, goToNext);
         }
 
         function updateReaderUI(vocab, index) {
@@ -2029,6 +2000,9 @@
                 currentAudio.pause();
             }
             // Cancel TTS
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.cancel();
+            }
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
             }
@@ -2063,35 +2037,7 @@
                     }, delay);
                 };
                 
-                // Speak in user gesture context
-                if ('speechSynthesis' in window) {
-                    try {
-                        const utterance = new SpeechSynthesisUtterance(vocab.word);
-                        utterance.lang = 'en-US';
-                        utterance.rate = 0.85;
-                        utterance.volume = 1;
-                        
-                        const voices = speechSynthesis.getVoices();
-                        const englishVoice = voices.find(v => v.lang.startsWith('en'));
-                        if (englishVoice) utterance.voice = englishVoice;
-                        
-                        utterance.onend = goToNext;
-                        utterance.onerror = goToNext;
-                        
-                        speechSynthesis.speak(utterance);
-                        
-                        // Timeout backup
-                        setTimeout(() => {
-                            if (isPaused === false && isReading) {
-                                goToNext();
-                            }
-                        }, 3000);
-                    } catch (e) {
-                        goToNext();
-                    }
-                } else {
-                    goToNext();
-                }
+                speakWord(vocab.word, goToNext);
             }
         }
 
@@ -2109,6 +2055,9 @@
                 currentAudio = null;
             }
             // Cancel TTS
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.cancel();
+            }
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
             }
@@ -2163,56 +2112,66 @@
                 }
             };
 
-            // Timeout backup - if TTS doesn't respond in 3 seconds, continue
+            // Timeout backup
             const timeoutId = setTimeout(() => {
                 console.log('TTS timeout for:', word);
                 safeCallback();
-            }, 3000);
+            }, 4000);
 
-            if ('speechSynthesis' in window) {
-                // Small delay to prevent rapid cancellation issues
-                setTimeout(() => {
-                    try {
-                        const utterance = new SpeechSynthesisUtterance(word);
-                        utterance.lang = 'en-US';
-                        utterance.rate = 0.85;
-                        utterance.pitch = 1;
-                        utterance.volume = 1;
-                        
-                        // Get voices - may be empty on first call
-                        let voices = speechSynthesis.getVoices();
-                        if (voices.length > 0) {
-                            const usVoice = voices.find(v => v.lang === 'en-US');
-                            const englishVoice = voices.find(v => v.lang.startsWith('en'));
-                            if (usVoice) utterance.voice = usVoice;
-                            else if (englishVoice) utterance.voice = englishVoice;
-                        }
-                        
-                        utterance.onend = () => {
-                            clearTimeout(timeoutId);
-                            safeCallback();
-                        };
-                        
-                        utterance.onerror = (e) => {
-                            console.log('TTS error:', e);
-                            clearTimeout(timeoutId);
-                            safeCallback();
-                        };
-
-                        // Speak
-                        speechSynthesis.speak(utterance);
-                        
-                        console.log('Speaking:', word);
-                    } catch (e) {
-                        console.log('TTS exception:', e);
+            // Try ResponsiveVoice first (works better on most browsers)
+            if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+                console.log('Using ResponsiveVoice for:', word);
+                responsiveVoice.speak(word, "US English Female", {
+                    rate: 0.9,
+                    onend: () => {
                         clearTimeout(timeoutId);
                         safeCallback();
+                    },
+                    onerror: () => {
+                        clearTimeout(timeoutId);
+                        // Fallback to native TTS
+                        speakWithNativeTTS(word, safeCallback);
                     }
-                }, 100);
-            } else {
-                // No TTS support
+                });
+            } 
+            // Fallback to native speechSynthesis
+            else if ('speechSynthesis' in window) {
+                clearTimeout(timeoutId);
+                speakWithNativeTTS(word, safeCallback);
+            } 
+            else {
                 clearTimeout(timeoutId);
                 safeCallback();
+            }
+        }
+
+        function speakWithNativeTTS(word, callback) {
+            const timeoutId = setTimeout(callback, 3000);
+            
+            try {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                utterance.volume = 1;
+                
+                const voices = speechSynthesis.getVoices();
+                const englishVoice = voices.find(v => v.lang.startsWith('en'));
+                if (englishVoice) utterance.voice = englishVoice;
+                
+                utterance.onend = () => {
+                    clearTimeout(timeoutId);
+                    callback();
+                };
+                utterance.onerror = () => {
+                    clearTimeout(timeoutId);
+                    callback();
+                };
+                
+                speechSynthesis.speak(utterance);
+                console.log('Native TTS for:', word);
+            } catch (e) {
+                clearTimeout(timeoutId);
+                callback();
             }
         }
 
