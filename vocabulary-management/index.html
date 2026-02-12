@@ -1033,6 +1033,41 @@
             transform: translateY(0);
         }
 
+        /* Mobile Category Toggle */
+        .mobile-category-toggle {
+            display: none;
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .mobile-category-toggle:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .mobile-category-toggle .toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .mobile-category-toggle.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .mobile-category-toggle span {
+            flex: 1;
+            text-align: left;
+            margin-left: 10px;
+        }
+
         /* Responsive */
         /* Tablet */
         @media (max-width: 900px) {
@@ -1072,14 +1107,46 @@
                 font-size: 0.8rem;
             }
 
-            /* Sidebar on mobile */
+            /* Mobile toggle button */
+            .mobile-category-toggle {
+                display: flex;
+            }
+
+            /* Sidebar on mobile - hidden by default */
             .sidebar {
+                display: none;
                 padding: 12px;
+                margin-top: -5px;
+                border-top: none;
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+                animation: slideDown 0.3s ease;
+            }
+
+            .sidebar.show {
+                display: block;
+            }
+
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .mobile-category-toggle.active {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                border-bottom: none;
+                background: var(--bg-secondary);
             }
 
             .sidebar h2 {
-                font-size: 1rem;
-                margin-bottom: 10px;
+                display: none;
             }
 
             .category-list {
@@ -1373,8 +1440,15 @@
         </div>
 
         <div class="main-layout">
+            <!-- Mobile Category Toggle -->
+            <button class="mobile-category-toggle" id="mobile-category-toggle" onclick="toggleMobileSidebar()">
+                <i class="fas fa-folder"></i>
+                <span>Categories</span>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </button>
+
             <!-- Sidebar -->
-            <aside class="sidebar">
+            <aside class="sidebar" id="sidebar">
                 <h2><i class="fas fa-folder"></i> Categories</h2>
                 <ul class="category-list" id="category-list"></ul>
                 <div class="add-category-form">
@@ -1632,6 +1706,7 @@
                 renderVocabularies(category.vocabularies || {});
             }
             renderCategories();
+            closeMobileSidebar(); // Auto close on mobile
         }
 
         function editCategory(id) {
@@ -1848,6 +1923,39 @@
             }
         }
 
+        // Unlock audio for browsers (required for autoplay policy)
+        let audioUnlocked = false;
+        
+        async function unlockAudio() {
+            if (audioUnlocked) return;
+            
+            try {
+                // Create and play a silent audio to unlock
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const buffer = audioContext.createBuffer(1, 1, 22050);
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+                
+                // Also try playing a silent Audio element
+                const silentAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+                await silentAudio.play();
+                
+                // Resume audio context if suspended
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                audioUnlocked = true;
+                console.log('Audio unlocked successfully');
+            } catch (e) {
+                console.log('Audio unlock attempt:', e.message);
+                // Still mark as attempted
+                audioUnlocked = true;
+            }
+        }
+
         function startAutoRead() {
             readingList = getReadingList();
             
@@ -1855,6 +1963,9 @@
                 showToast('Không có từ vựng để đọc', 'error');
                 return;
             }
+
+            // Unlock audio on user gesture (clicking Play button)
+            unlockAudio();
 
             isReading = true;
             isPaused = false;
@@ -1962,40 +2073,65 @@
                 currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
-            // Play audio if available
+            // Play audio
             const delay = parseFloat(document.getElementById('read-delay').value) * 1000;
             
-            if (vocab.audio) {
+            const goToNext = () => {
+                readingTimeout = setTimeout(() => {
+                    readingIndex++;
+                    readNextWord();
+                }, delay);
+            };
+
+            // Check if TTS marker or no audio
+            if (!vocab.audio || vocab.audio.startsWith('tts:')) {
+                speakWord(vocab.word, goToNext);
+                return;
+            }
+
+            // Try to play audio URL
+            try {
                 currentAudio = new Audio(vocab.audio);
-                currentAudio.play().then(() => {
-                    currentAudio.onended = () => {
-                        readingTimeout = setTimeout(() => {
-                            readingIndex++;
-                            readNextWord();
-                        }, delay);
-                    };
-                }).catch(() => {
-                    // Audio failed, use TTS fallback
-                    speakWord(vocab.word, () => {
-                        readingTimeout = setTimeout(() => {
-                            readingIndex++;
-                            readNextWord();
-                        }, delay);
+                
+                // Set up event handlers before playing
+                currentAudio.onended = goToNext;
+                currentAudio.onerror = () => {
+                    console.log('Audio error, using TTS for:', vocab.word);
+                    speakWord(vocab.word, goToNext);
+                };
+
+                // Attempt to play
+                const playPromise = currentAudio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch((error) => {
+                        console.log('Audio play failed:', error.message, '- using TTS');
+                        speakWord(vocab.word, goToNext);
                     });
-                });
-            } else {
-                // No audio URL, use Text-to-Speech
-                speakWord(vocab.word, () => {
-                    readingTimeout = setTimeout(() => {
-                        readingIndex++;
-                        readNextWord();
-                    }, delay);
-                });
+                }
+            } catch (e) {
+                console.log('Audio exception:', e.message, '- using TTS');
+                speakWord(vocab.word, goToNext);
             }
         }
 
         // Text-to-Speech function
         function speakWord(word, callback) {
+            let callbackCalled = false;
+            
+            const safeCallback = () => {
+                if (!callbackCalled) {
+                    callbackCalled = true;
+                    if (callback) callback();
+                }
+            };
+
+            // Timeout backup - if TTS doesn't respond in 5 seconds, continue
+            const timeoutId = setTimeout(() => {
+                console.log('TTS timeout, continuing...');
+                safeCallback();
+            }, 5000);
+
             if ('speechSynthesis' in window) {
                 // Cancel any ongoing speech
                 speechSynthesis.cancel();
@@ -2003,26 +2139,36 @@
                 const utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.9;
+                utterance.volume = 1;
                 
-                // Try to get English voice
+                // Try to get English voice (prefer US)
                 const voices = speechSynthesis.getVoices();
+                const usVoice = voices.find(v => v.lang === 'en-US');
                 const englishVoice = voices.find(v => v.lang.startsWith('en'));
-                if (englishVoice) {
-                    utterance.voice = englishVoice;
-                }
+                utterance.voice = usVoice || englishVoice || null;
                 
                 utterance.onend = () => {
-                    if (callback) callback();
+                    clearTimeout(timeoutId);
+                    safeCallback();
                 };
                 
-                utterance.onerror = () => {
-                    if (callback) callback();
+                utterance.onerror = (e) => {
+                    console.log('TTS error:', e);
+                    clearTimeout(timeoutId);
+                    safeCallback();
                 };
-                
+
+                // Chrome bug fix: pause and resume
                 speechSynthesis.speak(utterance);
+                
+                // Fix for Chrome bug where speech stops after ~15 seconds
+                if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                }
             } else {
                 // No TTS support, just callback
-                if (callback) callback();
+                clearTimeout(timeoutId);
+                safeCallback();
             }
         }
 
@@ -2030,6 +2176,25 @@
         if ('speechSynthesis' in window) {
             speechSynthesis.getVoices();
             speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+        }
+
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const toggle = document.getElementById('mobile-category-toggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            toggle.classList.toggle('active');
+            sidebar.classList.toggle('show');
+        }
+
+        // Auto-close sidebar when selecting category on mobile
+        function closeMobileSidebar() {
+            if (window.innerWidth <= 600) {
+                const toggle = document.getElementById('mobile-category-toggle');
+                const sidebar = document.getElementById('sidebar');
+                toggle.classList.remove('active');
+                sidebar.classList.remove('show');
+            }
         }
 
         // Update audio for all words in current category
