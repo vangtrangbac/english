@@ -387,7 +387,15 @@
         }
         
         .reader-status { font-size: 0.85rem; color: var(--text-secondary); }
-        .reader-current-word { color: var(--accent); font-weight: 600; }
+        .reader-current-word { 
+            color: var(--text-primary); 
+            font-size: 1rem;
+            flex: 1;
+        }
+        .reader-current-word strong {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
         
         /* Practice mode - hide Vietnamese */
         .practice-mode .vocab-meaning-vi {
@@ -1840,10 +1848,13 @@
             const el = document.getElementById(`vocab-${vocab.id}`);
             if (el) {
                 el.classList.add('reading');
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             
-            document.getElementById('readerCurrentWord').textContent = vocab.word;
+            // Show word with phonetic and Vietnamese meaning
+            const phonetic = vocab.phonetic || '';
+            const meaningVi = vocab.meaningVi || '';
+            document.getElementById('readerCurrentWord').innerHTML = 
+                `<strong>${vocab.word}</strong> ${phonetic} <span style="color: var(--accent-success);">${meaningVi}</span>`;
             document.getElementById('readerStatus').textContent = `${readingIndex + 1} / ${readingList.length}`;
             
             speakWord(vocab.word, vocab.audio, () => {
