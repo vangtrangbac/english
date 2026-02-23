@@ -4,1593 +4,969 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vocabulary Manager</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <!-- ResponsiveVoice TTS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.responsivevoice.org/responsivevoice.js?key=free"></script>
     <style>
         :root {
             --bg-primary: #0f0f23;
             --bg-secondary: #1a1a2e;
-            --bg-card: #16213e;
-            --accent-primary: #00d9ff;
-            --accent-secondary: #ff6b6b;
-            --accent-success: #4ade80;
-            --accent-warning: #fbbf24;
-            --accent-info: #0ea5e9;
-            --accent-danger: #ef4444;
+            --bg-tertiary: #16213e;
             --text-primary: #e4e4e7;
             --text-secondary: #a1a1aa;
-            --border-color: #2d2d44;
-            --shadow-glow: 0 0 20px rgba(0, 217, 255, 0.15);
+            --accent: #00d9ff;
+            --accent-hover: #00b8d4;
+            --accent-success: #4ade80;
+            --accent-danger: #ff6b6b;
+            --accent-warning: #fbbf24;
+            --border: #27272a;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
-            background-image: 
-                radial-gradient(ellipse at top left, rgba(0, 217, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom right, rgba(255, 107, 107, 0.05) 0%, transparent 50%);
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.25rem;
-        }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        /* Status Banner */
-        .status-banner {
-            background: linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.05) 100%);
-            border: 1px solid var(--accent-success);
-            border-radius: 10px;
-            padding: 0.6rem 1rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .status-banner.error {
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.05) 100%);
-            border-color: var(--accent-secondary);
-        }
-
-        .status-banner.error .status-text {
-            color: var(--accent-secondary);
-        }
-
-        .status-text {
-            color: var(--accent-success);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-success);
-            border-radius: 50%;
-            animation: pulse-dot 2s infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            gap: 1.5rem;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: var(--bg-secondary);
-            border-radius: 14px;
-            padding: 1.25rem;
-            border: 1px solid var(--border-color);
-            height: fit-content;
-            position: sticky;
-            top: 1rem;
-        }
-
-        .sidebar h2 {
-            font-size: 1rem;
-            color: var(--accent-primary);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .category-list {
-            list-style: none;
-            margin-bottom: 1rem;
-            max-height: 50vh;
-            overflow-y: auto;
-        }
-
-        .category-item {
-            padding: 0.65rem 0.85rem;
-            margin-bottom: 0.4rem;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s ease;
-            background: transparent;
-            border: 1px solid transparent;
-            font-size: 0.9rem;
-        }
-
-        .category-item:hover {
-            background: var(--bg-card);
-            border-color: var(--border-color);
-        }
-
-        .category-item.active {
-            background: linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(0, 217, 255, 0.05) 100%);
-            border-color: var(--accent-primary);
-        }
-
-        .category-item .name {
-            font-weight: 500;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .category-item .count {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            background: var(--bg-primary);
-            padding: 0.15rem 0.5rem;
-            border-radius: 10px;
-            margin-left: 0.5rem;
-        }
-
-        .category-actions {
-            display: flex;
-            gap: 0.25rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-            margin-left: 0.4rem;
-        }
-
-        .category-item:hover .category-actions {
-            opacity: 1;
-        }
-
-        .category-actions button {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 0.2rem;
-            font-size: 0.75rem;
-        }
-
-        .category-actions button:hover {
-            color: var(--accent-primary);
-        }
-
-        .category-actions button.delete:hover {
-            color: var(--accent-secondary);
-        }
-
-        .add-category-form {
-            display: flex;
-            gap: 0.4rem;
-        }
-
-        .add-category-form input {
-            flex: 1;
-            padding: 0.5rem 0.7rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.85rem;
-        }
-
-        .add-category-form input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-        }
-
-        .add-category-form button {
-            padding: 0.5rem 0.85rem;
-            background: var(--accent-primary);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .add-category-form button:hover {
-            transform: scale(1.05);
-        }
-
-        /* Main Content */
-        .main-content {
-            background: var(--bg-secondary);
-            border-radius: 14px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .content-header h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .vocab-count {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        /* Voice Input */
-        .voice-input-section {
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-            border-radius: 10px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .voice-input-section h3 {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .voice-controls {
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .voice-btn {
+        
+        .container { display: flex; min-height: 100vh; }
+        
+        /* Mobile toggle */
+        .mobile-category-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            border: 2px solid var(--accent-primary);
-            background: transparent;
-            color: var(--accent-primary);
-            font-size: 1.25rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-        }
-
-        .voice-btn:hover {
-            background: rgba(0, 217, 255, 0.1);
-            transform: scale(1.05);
-        }
-
-        .voice-btn.recording {
-            background: var(--accent-secondary);
-            border-color: var(--accent-secondary);
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.5); }
-            50% { box-shadow: 0 0 0 12px rgba(255, 107, 107, 0); }
-        }
-
-        .voice-result {
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .voice-result input {
-            width: 100%;
-            padding: 0.7rem 0.9rem;
-            font-size: 1rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .voice-result input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-        }
-
-        .confirm-btn {
-            padding: 0.7rem 1.2rem;
-            background: linear-gradient(135deg, var(--accent-success) 0%, #22c55e 100%);
+            background: var(--accent);
             color: var(--bg-primary);
             border: none;
-            border-radius: 8px;
+            font-size: 1.2rem;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 217, 255, 0.4);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
             display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .confirm-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
-        }
-
-        .confirm-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .loading-spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .loading-spinner.show {
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Vocabulary List */
-        .vocabulary-list {
-            list-style: none;
-        }
-
-        .vocabulary-item {
-            background: var(--bg-card);
-            border-radius: 10px;
-            margin-bottom: 0.6rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.2s ease;
-            overflow: hidden;
-        }
-
-        .vocabulary-item:hover {
-            border-color: rgba(0, 217, 255, 0.3);
-        }
-
-        .vocabulary-item.expanded {
-            border-color: var(--accent-primary);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .vocab-compact {
-            padding: 0.85rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .vocab-compact-left {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            flex: 1;
-            min-width: 0;
-            flex-wrap: wrap;
-        }
-
-        .vocab-index {
-            width: 26px;
-            height: 26px;
-            background: var(--accent-primary);
-            color: var(--bg-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
+            flex-direction: column;
             flex-shrink: 0;
         }
-
-        .vocab-word {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--accent-primary);
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
         }
-
-        .vocab-phonetic {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-secondary);
+        
+        .sidebar-header h1 {
+            color: var(--accent);
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .add-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .add-form input, .add-form select {
+            flex: 1;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
             font-size: 0.85rem;
         }
-
-        .vocab-pos {
-            background: rgba(0, 217, 255, 0.15);
-            color: var(--accent-primary);
-            padding: 0.1rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 500;
+        
+        .add-form button {
+            padding: 0.5rem 0.8rem;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
         }
-
-        .vocab-meaning-vi {
-            color: var(--accent-warning);
-            font-size: 0.9rem;
+        
+        .category-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
         }
-
-        .vocab-compact-right {
+        
+        /* Parent Category */
+        .parent-category {
+            margin-bottom: 0.5rem;
+        }
+        
+        .parent-header {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
-            flex-shrink: 0;
-        }
-
-        .vocab-audio-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            padding: 0.6rem 0.8rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
         }
-
-        .vocab-audio-btn:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
+        
+        .parent-header:hover {
+            background: var(--bg-primary);
         }
-
-        .vocab-expand-icon {
+        
+        .parent-expand {
+            margin-right: 0.5rem;
             color: var(--text-secondary);
             transition: transform 0.2s;
             font-size: 0.8rem;
         }
-
-        .vocabulary-item.expanded .vocab-expand-icon {
-            transform: rotate(180deg);
+        
+        .parent-category.expanded .parent-expand {
+            transform: rotate(90deg);
         }
-
-        /* Learned state */
-        .vocabulary-item.learned {
-            opacity: 0.5;
+        
+        .parent-name {
+            flex: 1;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .parent-count {
             background: var(--bg-secondary);
-        }
-
-        .vocabulary-item.learned .vocab-word {
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
-
-        .vocabulary-item.learned .vocab-index {
-            background: var(--text-secondary);
+        
+        .parent-actions {
+            display: flex;
+            gap: 0.2rem;
+            margin-left: 0.5rem;
         }
-
-        .vocabulary-item.reading {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        
+        .parent-actions button {
+            padding: 0.2rem 0.4rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.75rem;
         }
-
+        
+        .parent-actions button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Child Categories */
+        .children-list {
+            display: none;
+            padding-left: 1rem;
+            margin-top: 0.3rem;
+        }
+        
+        .parent-category.expanded .children-list {
+            display: block;
+        }
+        
+        .child-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.8rem;
+            margin: 0.2rem 0;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .child-item:hover {
+            background: var(--bg-primary);
+        }
+        
+        .child-item.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-left-color: var(--accent-success);
+        }
+        
+        .child-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .child-count {
+            background: var(--bg-tertiary);
+            padding: 0.1rem 0.4rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            margin-left: 0.3rem;
+        }
+        
+        .child-item.active .child-count {
+            background: var(--bg-primary);
+            color: var(--accent);
+        }
+        
+        .child-actions {
+            display: flex;
+            gap: 0.2rem;
+            margin-left: 0.3rem;
+        }
+        
+        .child-actions button {
+            padding: 0.2rem 0.3rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+        
+        .child-item.active .child-actions button {
+            color: var(--bg-primary);
+        }
+        
+        /* Main content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .main-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+        
+        .main-header h2 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .breadcrumb span {
+            color: var(--accent);
+        }
+        
+        .voice-input-section {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .voice-input-section input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.8rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .voice-input-section button {
+            padding: 0.8rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-voice {
+            background: var(--accent-warning);
+            color: var(--bg-primary);
+        }
+        
+        .btn-voice.recording {
+            background: var(--accent-danger);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .btn-add {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+        }
+        
+        /* Auto reader */
+        .auto-reader {
+            padding: 1rem 1.5rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            display: none;
+        }
+        
+        .auto-reader.show { display: block; }
+        
+        .reader-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .reader-header h3 {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+        
+        .reader-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .reader-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .reader-btn.play { background: var(--accent-success); color: var(--bg-primary); }
+        .reader-btn.pause { background: var(--accent-warning); color: var(--bg-primary); }
+        .reader-btn.stop { background: var(--accent-danger); color: white; }
+        
+        .reader-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+        
+        .reader-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .reader-options select {
+            padding: 0.3rem 0.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        
+        .reader-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .reader-status { font-size: 0.85rem; color: var(--text-secondary); }
+        .reader-current-word { color: var(--accent); font-weight: 600; }
+        
+        /* Vocabulary list */
+        .vocab-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.5rem;
+        }
+        
+        .vocab-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .vocab-item {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        
+        .vocab-item.learned { opacity: 0.5; }
+        
+        .vocab-item.reading {
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+        }
+        
+        .vocab-header {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            gap: 0.8rem;
+        }
+        
         .vocab-checkbox {
             width: 18px;
             height: 18px;
-            cursor: pointer;
             accent-color: var(--accent-success);
-            flex-shrink: 0;
+            cursor: pointer;
         }
-
+        
+        .vocab-number {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            min-width: 30px;
+        }
+        
+        .vocab-word {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        
+        .vocab-phonetic {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .vocab-pos {
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .vocab-meaning-vi {
+            color: var(--accent-success);
+            font-size: 0.95rem;
+            margin-left: auto;
+            margin-right: 1rem;
+        }
+        
+        .vocab-audio-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--accent);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .vocab-expand {
+            color: var(--text-secondary);
+            transition: transform 0.2s;
+        }
+        
+        .vocab-item.expanded .vocab-expand {
+            transform: rotate(180deg);
+        }
+        
+        .vocab-details {
+            display: none;
+            padding: 0 1rem 1rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .vocab-item.expanded .vocab-details {
+            display: block;
+        }
+        
+        .vocab-definition {
+            color: var(--text-secondary);
+            margin: 0.8rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .vocab-example {
+            background: var(--bg-tertiary);
+            padding: 0.8rem;
+            border-radius: 6px;
+            font-style: italic;
+            color: var(--text-secondary);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .vocab-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .vocab-actions button {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .vocab-actions button.edit { background: var(--accent); color: var(--bg-primary); }
+        .vocab-actions button.delete { background: var(--accent-danger); color: white; }
+        .vocab-actions button.sync {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .vocab-actions button.sync.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
         /* Pagination */
         .pagination {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            padding: 20px;
-            margin-top: 10px;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-top: 1px solid var(--border);
         }
-
+        
         .pagination button {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
             color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
         }
-
-        .pagination button:hover:not(:disabled) {
-            background: var(--accent-primary);
-            border-color: var(--accent-primary);
-        }
-
-        .pagination button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .pagination .page-info {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            min-width: 100px;
-            text-align: center;
-        }
-
-        /* Auto Reader */
-        .auto-reader {
-            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
+        
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination span { color: var(--text-secondary); }
+        
+        /* Modal */
+        .modal {
             display: none;
-        }
-
-        .auto-reader.visible {
-            display: block;
-        }
-
-        .reader-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .reader-header-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .sync-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .reader-header h4 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .reader-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .reader-select {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .reader-buttons {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .reader-btn {
-            display: flex;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
+            padding: 1rem;
+        }
+        
+        .modal.show { display: flex; }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .modal-header h3 { color: var(--accent); }
+        
+        .modal-close {
+            background: none;
             border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
             cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.2s;
         }
-
-        .reader-btn.play {
-            background: var(--accent-success);
-            color: white;
+        
+        .modal-body { padding: 1.5rem; }
+        
+        .form-group { margin-bottom: 1rem; }
+        
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
         }
-
-        .reader-btn.play:hover {
-            background: #10b981;
-            transform: scale(1.05);
-        }
-
-        .reader-btn.pause {
-            background: var(--accent-warning);
-            color: white;
-        }
-
-        .reader-btn.stop {
-            background: var(--accent-danger);
-            color: white;
-            width: 40px;
-            height: 40px;
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
             font-size: 1rem;
         }
-
-        .reader-progress {
-            flex: 1;
-            min-width: 200px;
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
         }
-
-        .reader-progress-bar {
-            height: 6px;
-            background: var(--bg-primary);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 6px;
-        }
-
-        .reader-progress-fill {
-            height: 100%;
-            background: var(--accent-primary);
-            border-radius: 3px;
-            transition: width 0.3s;
-            width: 0%;
-        }
-
-        .reader-status {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .reader-current-word {
-            font-size: 1.1rem;
-            color: var(--accent-primary);
-            font-weight: 600;
-            margin-top: 10px;
-            padding: 10px;
-            background: var(--bg-primary);
-            border-radius: 8px;
-            text-align: center;
-            display: none;
-        }
-
-        .reader-current-word.visible {
-            display: block;
-        }
-
-        .reader-current-word .word-phonetic {
-            color: var(--text-secondary);
-            font-weight: normal;
-            font-size: 0.9rem;
-            margin-left: 10px;
-        }
-
-        .reader-current-word .word-meaning {
-            display: block;
-            color: var(--accent-warning);
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-
-        .speed-control {
+        
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+            justify-content: flex-end;
+            gap: 0.5rem;
         }
-
-        .speed-control input[type="range"] {
-            width: 80px;
-            accent-color: var(--accent-primary);
-        }
-
-        .update-audio-btn {
-            background: var(--accent-info);
-            color: white;
+        
+        .modal-footer button {
+            padding: 0.7rem 1.5rem;
             border: none;
-            padding: 6px 12px;
             border-radius: 6px;
-            font-size: 0.75rem;
             cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-cancel { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-save { background: var(--accent-success); color: var(--bg-primary); }
+        
+        /* Review Modal */
+        .review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .review-item {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+        
+        .review-item-header {
             display: flex;
             align-items: center;
-            gap: 5px;
-            transition: all 0.2s;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
         }
-
-        .update-audio-btn:hover {
-            background: #0284c7;
+        
+        .review-item-header input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-success);
         }
-
-        .update-audio-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        
+        .review-word { color: var(--accent); font-weight: 600; font-size: 1.1rem; }
+        
+        .review-pos {
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
         }
-
-        .update-audio-btn .fa-sync.spinning {
-            animation: spin 1s linear infinite;
-        }
-
-        /* Expanded Details */
-        .vocab-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: var(--bg-primary);
-        }
-
-        .vocabulary-item.expanded .vocab-details {
-            max-height: 400px;
-        }
-
-        .vocab-details-inner {
-            padding: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .vocab-detail-row {
-            margin-bottom: 0.85rem;
-        }
-
-        .vocab-detail-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .vocab-detail-label {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.2rem;
-        }
-
-        .vocab-detail-content {
-            color: var(--text-primary);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .vocab-example-box {
-            background: var(--bg-card);
-            padding: 0.6rem 0.85rem;
-            border-radius: 6px;
-            border-left: 3px solid var(--accent-secondary);
+        
+        .review-phonetic { color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .review-info { font-size: 0.9rem; color: var(--text-secondary); }
+        .review-info p { margin: 0.3rem 0; }
+        .review-info strong { color: var(--text-primary); }
+        
+        .review-example {
+            background: var(--bg-secondary);
+            padding: 0.6rem;
+            border-radius: 4px;
             font-style: italic;
-            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            border-left: 3px solid var(--accent);
         }
-
-        .vocab-actions {
-            display: flex;
-            gap: 0.4rem;
-            margin-top: 0.85rem;
-            padding-top: 0.85rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .vocab-actions button {
-            padding: 0.35rem 0.7rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: transparent;
+        
+        .review-loading {
+            text-align: center;
+            padding: 2rem;
             color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
         }
-
-        .vocab-actions button:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-        }
-
-        .vocab-actions button.delete:hover {
-            border-color: var(--accent-secondary);
-            color: var(--accent-secondary);
-        }
-
-        .vocab-actions button.sync {
-            border-color: var(--accent-info);
-            color: var(--accent-info);
-        }
-
-        .vocab-actions button.sync:hover {
-            background: var(--accent-info);
-            color: white;
-        }
-
-        .vocab-actions button.sync .fa-sync.spinning {
+        
+        .review-loading i {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
             animation: spin 1s linear infinite;
         }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 2.5rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state i {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.4rem;
-            color: var(--text-primary);
-        }
-
+        
         /* Toast */
         .toast {
             position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            padding: 0.85rem 1.25rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
             border-radius: 8px;
-            color: var(--text-primary);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
             transform: translateX(150%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            max-width: 320px;
-            font-size: 0.9rem;
-        }
-
-        .toast.show {
-            transform: translateX(0);
-        }
-
-        .toast.success {
-            border-color: var(--accent-success);
-        }
-
-        .toast.error {
-            border-color: var(--accent-secondary);
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 1rem;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal {
-            background: var(--bg-secondary);
-            border-radius: 14px;
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid var(--border-color);
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .modal h3 {
-            margin-bottom: 1.25rem;
-            font-size: 1.2rem;
-        }
-
-        .modal-form label {
-            display: block;
-            color: var(--text-secondary);
-            margin-bottom: 0.4rem;
-            font-size: 0.85rem;
-        }
-
-        .modal-form input,
-        .modal-form textarea {
-            width: 100%;
-            padding: 0.65rem;
-            margin-bottom: 0.85rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-
-        .modal-form textarea {
-            min-height: 70px;
-            resize: vertical;
-        }
-
-        .modal-form input:focus,
-        .modal-form textarea:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-            margin-top: 1rem;
-        }
-
-        .modal-actions button {
-            padding: 0.6rem 1.25rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-
-        .modal-actions .cancel-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-
-        .modal-actions .save-btn {
-            background: var(--accent-primary);
-            border: none;
-            color: var(--bg-primary);
-        }
-
-        /* Sync indicator */
-        .sync-indicator {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.4rem 0.8rem;
-            background: var(--bg-card);
-            border: 1px solid var(--accent-success);
-            border-radius: 6px;
-            color: var(--accent-success);
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 999;
-        }
-
-        .sync-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Mobile Category Toggle */
-        .mobile-category-toggle {
-            display: none;
-            width: 100%;
-            padding: 12px 15px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s;
-        }
-
-        .mobile-category-toggle:hover {
-            border-color: var(--accent-primary);
-        }
-
-        .mobile-category-toggle .toggle-icon {
             transition: transform 0.3s;
         }
-
-        .mobile-category-toggle.active .toggle-icon {
-            transform: rotate(180deg);
+        
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: var(--accent-success); }
+        .toast.error { background: var(--accent-danger); }
+        .toast.info { background: var(--accent); color: var(--bg-primary); }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
         }
-
-        .mobile-category-toggle span {
-            flex: 1;
-            text-align: left;
-            margin-left: 10px;
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
         }
-
+        
         /* Responsive */
-        /* Tablet */
         @media (max-width: 900px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .sidebar {
-                position: static;
-                max-height: none;
-            }
-            
-            .category-list {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 8px;
-            }
+            .sidebar { width: 260px; }
+            .vocab-meaning-vi { display: none; }
         }
-
-        /* Mobile */
+        
         @media (max-width: 600px) {
-            .container {
-                padding: 0.75rem;
-            }
-
-            header {
-                padding: 1rem;
-                text-align: center;
-            }
-
-            header h1 {
-                font-size: 1.3rem;
-            }
-
-            header p {
-                font-size: 0.8rem;
-            }
-
-            /* Mobile toggle button */
             .mobile-category-toggle {
                 display: flex;
-            }
-
-            /* Sidebar on mobile - hidden by default */
-            .sidebar {
-                display: none;
-                padding: 12px;
-                margin-top: -5px;
-                border-top: none;
-                border-top-left-radius: 0;
-                border-top-right-radius: 0;
-                animation: slideDown 0.3s ease;
-            }
-
-            .sidebar.show {
-                display: block;
-            }
-
-            @keyframes slideDown {
-                from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .mobile-category-toggle.active {
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                border-bottom: none;
-                background: var(--bg-secondary);
-            }
-
-            .sidebar h2 {
-                display: none;
-            }
-
-            .category-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 6px;
-            }
-
-            .category-item {
-                padding: 8px 10px;
-                font-size: 0.85rem;
-            }
-
-            .category-item .category-actions {
-                position: static;
-                opacity: 1;
-                margin-top: 6px;
-                justify-content: flex-end;
-            }
-
-            .category-item .category-actions button {
-                padding: 4px 8px;
-                font-size: 0.7rem;
-            }
-
-            /* Main content */
-            .main-content {
-                padding: 12px;
-            }
-
-            .content-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-
-            .content-header h2 {
-                font-size: 1.1rem;
-            }
-
-            /* Voice input */
-            .voice-input-section {
-                padding: 12px;
-            }
-
-            .voice-input-section h3 {
-                font-size: 0.9rem;
-                margin-bottom: 10px;
-            }
-
-            .voice-controls {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
+                align-items: center;
+                justify-content: center;
             }
             
-            .voice-btn {
-                margin: 0 auto;
-                width: 60px;
-                height: 60px;
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                bottom: 0;
+                width: 85%;
+                max-width: 300px;
+                z-index: 1001;
+                transition: left 0.3s;
             }
-
-            .voice-result input {
-                font-size: 1rem;
+            
+            .sidebar.show { left: 0; }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 1000;
             }
-
-            .confirm-btn {
-                padding: 12px;
-            }
-
-            /* Auto Reader */
-            .auto-reader {
-                padding: 12px;
-            }
-
-            .reader-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-
-            .reader-header h4 {
-                font-size: 0.85rem;
-            }
-
-            .reader-header-controls {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .speed-control {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .sync-buttons {
-                width: 100%;
-            }
-
-            .update-audio-btn {
-                flex: 1;
-                justify-content: center;
-                padding: 8px 10px;
-            }
-
-            .reader-controls {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .reader-select {
-                width: 100%;
-            }
-
-            .reader-buttons {
-                justify-content: center;
-                width: 100%;
-            }
-
-            .reader-progress {
-                width: 100%;
-                min-width: unset;
-            }
-
-            .reader-current-word {
-                padding: 8px;
-                font-size: 1rem;
-            }
-
-            /* Vocabulary list */
-            .vocabulary-item {
-                border-radius: 10px;
-            }
-
-            .vocab-compact {
-                padding: 10px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            .vocab-compact-left {
-                width: 100%;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .vocab-checkbox {
-                width: 22px;
-                height: 22px;
-            }
-
-            .vocab-index {
-                font-size: 0.7rem;
-                padding: 2px 6px;
-            }
-
-            .vocab-word {
-                font-size: 1rem;
-                font-weight: 600;
-            }
-
-            .vocab-phonetic {
-                font-size: 0.8rem;
-            }
-
-            .vocab-pos {
-                font-size: 0.65rem;
-                padding: 2px 6px;
-            }
-
-            .vocab-meaning-vi {
-                width: 100%;
-                margin-top: 4px;
-                font-size: 0.85rem;
-            }
-
-            .vocab-compact-right {
-                align-self: flex-end;
-                position: absolute;
-                top: 10px;
-                right: 10px;
-            }
-
-            .vocabulary-item {
-                position: relative;
-            }
-
-            .vocab-audio-btn {
-                width: 36px;
-                height: 36px;
-            }
-
-            .vocab-expand-icon {
-                font-size: 0.8rem;
-            }
-
-            /* Vocab details */
-            .vocab-details-inner {
-                padding: 12px;
-            }
-
-            .vocab-detail-label {
-                font-size: 0.65rem;
-            }
-
-            .vocab-detail-content {
-                font-size: 0.85rem;
-            }
-
-            .vocab-example-box {
-                font-size: 0.85rem;
-                padding: 10px;
-            }
-
-            .vocab-actions {
-                flex-direction: row;
-                gap: 8px;
-            }
-
-            .vocab-actions button {
-                flex: 1;
-                padding: 10px;
-                font-size: 0.8rem;
-            }
-
-            /* Pagination */
-            .pagination {
-                padding: 15px 10px;
-                gap: 6px;
-            }
-
-            .pagination button {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-            }
-
-            .pagination .page-info {
-                font-size: 0.8rem;
-                min-width: 70px;
-            }
-
-            /* Empty state */
-            .empty-state {
-                padding: 30px 15px;
-            }
-
-            .empty-state i {
-                font-size: 2.5rem;
-            }
-
-            .empty-state h3 {
-                font-size: 1rem;
-            }
-
-            /* Toast */
-            .toast {
-                left: 10px;
-                right: 10px;
-                bottom: 20px;
-                max-width: none;
-            }
-        }
-
-        /* Very small screens */
-        @media (max-width: 380px) {
-            .category-list {
-                grid-template-columns: 1fr;
-            }
-
-            .vocab-word {
-                font-size: 0.95rem;
-            }
-
-            .pagination button {
-                padding: 6px 10px;
-            }
+            
+            .sidebar-overlay.show { display: block; }
+            
+            .main-header { padding: 1rem; }
+            
+            .voice-input-section { flex-direction: column; }
+            .voice-input-section button { width: 100%; justify-content: center; }
+            
+            .vocab-header { padding: 0.6rem; gap: 0.5rem; }
+            .vocab-word { font-size: 1rem; }
+            .vocab-phonetic { display: none; }
+            .vocab-container { padding: 0.5rem; }
+            .reader-options { flex-direction: column; gap: 0.5rem; }
+            .auto-reader { padding: 0.8rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-book-open"></i> Vocabulary Manager</h1>
-            <p>Quản lý từ vựng - Sync tự động qua Firebase</p>
-        </header>
-
-        <!-- Status Banner -->
-        <div class="status-banner" id="status-banner">
-            <span class="status-dot"></span>
-            <span class="status-text" id="status-text">Đang kết nối Firebase...</span>
-        </div>
-
-        <div class="main-layout">
-            <!-- Mobile Category Toggle -->
-            <button class="mobile-category-toggle" id="mobile-category-toggle" onclick="toggleMobileSidebar()">
-                <i class="fas fa-folder"></i>
-                <span>Categories</span>
-                <i class="fas fa-chevron-down toggle-icon"></i>
-            </button>
-
-            <!-- Sidebar -->
-            <aside class="sidebar" id="sidebar">
-                <h2><i class="fas fa-folder"></i> Categories</h2>
-                <ul class="category-list" id="category-list"></ul>
-                <div class="add-category-form">
-                    <input type="text" id="new-category-input" placeholder="Category mới...">
-                    <button onclick="addCategory()"><i class="fas fa-plus"></i></button>
+        <div class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-book"></i> Vocabulary</h1>
+                
+                <!-- Add Parent Category -->
+                <div class="add-form">
+                    <input type="text" id="newParentName" placeholder="Tên nhóm mới...">
+                    <button onclick="addParentCategory()" title="Thêm nhóm"><i class="fas fa-folder-plus"></i></button>
                 </div>
-            </aside>
-
-            <!-- Main Content -->
-            <main class="main-content">
-                <div class="content-header">
-                    <h2 id="current-category-title">Chọn category</h2>
-                    <span class="vocab-count" id="vocab-count"></span>
+                
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> Nhấn <i class="fas fa-plus"></i> trên nhóm để thêm category
+                </p>
+            </div>
+            <div class="category-list" id="categoryList"></div>
+        </aside>
+        
+        <main class="main-content">
+            <header class="main-header">
+                <div class="breadcrumb" id="breadcrumb"></div>
+                <h2 id="currentCategoryTitle">Chọn category</h2>
+                <div class="voice-input-section">
+                    <input type="text" id="wordInput" placeholder="Nhập từ vựng hoặc dùng voice...">
+                    <button class="btn-voice" id="voiceBtn" onclick="toggleVoiceInput()">
+                        <i class="fas fa-microphone"></i> Voice
+                    </button>
+                    <button class="btn-add" onclick="fetchAndReview()">
+                        <i class="fas fa-search"></i> Tìm & Review
+                    </button>
                 </div>
-
-                <!-- Voice Input -->
-                <div class="voice-input-section" id="voice-section" style="display: none;">
-                    <h3><i class="fas fa-microphone-alt"></i> Thêm từ vựng</h3>
-                    <div class="voice-controls">
-                        <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()">
-                            <i class="fas fa-microphone"></i>
-                        </button>
-                        <div class="voice-result">
-                            <input type="text" id="voice-result-input" placeholder="Nói hoặc gõ từ...">
-                        </div>
-                        <button class="confirm-btn" id="confirm-btn" onclick="confirmAndFetchWord()">
-                            <span class="loading-spinner" id="loading-spinner"></span>
-                            <i class="fas fa-plus"></i> Thêm
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Auto Reader -->
-                <div class="auto-reader" id="auto-reader">
-                    <div class="reader-header">
-                        <h4><i class="fas fa-headphones"></i> Auto Read</h4>
-                        <div class="reader-header-controls">
-                            <div class="speed-control">
-                                <span>Delay:</span>
-                                <input type="range" id="read-delay" min="1" max="5" value="2" step="0.5">
-                                <span id="delay-value">2s</span>
-                            </div>
-                            <div class="sync-buttons">
-                                <button class="update-audio-btn" onclick="updateAllPhonetic()" title="Cập nhật phiên âm">
-                                    <i class="fas fa-font"></i> Phonetic
-                                </button>
-                                <button class="update-audio-btn" onclick="updateAllAudio()" title="Cập nhật audio">
-                                    <i class="fas fa-volume-up"></i> Audio
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            </header>
+            
+            <section class="auto-reader" id="autoReader">
+                <div class="reader-header">
+                    <h3><i class="fas fa-headphones"></i> Auto Read</h3>
                     <div class="reader-controls">
-                        <select class="reader-select" id="reader-mode">
-                            <option value="current">📂 Category hiện tại</option>
-                            <option value="all">📚 Tất cả từ vựng</option>
-                            <option value="unlearned">📖 Chỉ từ chưa học</option>
+                        <button class="reader-btn play" onclick="startAutoRead()"><i class="fas fa-play"></i> Play</button>
+                        <button class="reader-btn pause" onclick="pauseAutoRead()" style="display:none;"><i class="fas fa-pause"></i> Pause</button>
+                        <button class="reader-btn stop" onclick="stopAutoRead()"><i class="fas fa-stop"></i> Stop</button>
+                    </div>
+                </div>
+                <div class="reader-options">
+                    <label>
+                        Chế độ:
+                        <select id="readerMode">
+                            <option value="current">Category hiện tại</option>
+                            <option value="unlearned">Chỉ từ chưa học</option>
+                            <option value="all">Tất cả categories</option>
                         </select>
-                        <div class="reader-buttons">
-                            <button class="reader-btn play" id="reader-play-btn" onclick="toggleAutoRead()">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <button class="reader-btn stop" id="reader-stop-btn" onclick="stopAutoRead()" style="display: none;">
-                                <i class="fas fa-stop"></i>
-                            </button>
-                        </div>
-                        <div class="reader-progress">
-                            <div class="reader-progress-bar">
-                                <div class="reader-progress-fill" id="reader-progress-fill"></div>
-                            </div>
-                            <div class="reader-status" id="reader-status">Nhấn Play để bắt đầu</div>
-                        </div>
-                    </div>
-                    <div class="reader-current-word" id="reader-current-word">
-                        <span class="word-text"></span>
-                        <span class="word-phonetic"></span>
-                        <span class="word-meaning"></span>
+                    </label>
+                    <label>
+                        Delay:
+                        <select id="readerDelay">
+                            <option value="1000">1s</option>
+                            <option value="2000" selected>2s</option>
+                            <option value="3000">3s</option>
+                            <option value="5000">5s</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="reader-progress">
+                    <span class="reader-status" id="readerStatus">Sẵn sàng</span>
+                    <span class="reader-current-word" id="readerCurrentWord"></span>
+                </div>
+            </section>
+            
+            <div class="vocab-container">
+                <div class="vocab-list" id="vocabList">
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Chọn một category để xem từ vựng</p>
                     </div>
                 </div>
-
-                <!-- Vocabulary List -->
-                <ul class="vocabulary-list" id="vocabulary-list">
-                    <li class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>Chọn category để bắt đầu</h3>
-                        <p>Hoặc tạo category mới</p>
-                    </li>
-                </ul>
-            </main>
-        </div>
+            </div>
+            
+            <div class="pagination" id="pagination" style="display:none;"></div>
+        </main>
     </div>
-
-    <!-- Sync indicator -->
-    <div class="sync-indicator" id="sync-indicator">
-        <i class="fas fa-cloud"></i> Đã sync
-    </div>
-
+    
+    <button class="mobile-category-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-list"></i>
+    </button>
+    
     <!-- Edit Modal -->
-    <div class="modal-overlay" id="edit-modal">
-        <div class="modal">
-            <h3><i class="fas fa-edit"></i> Sửa từ vựng</h3>
-            <form class="modal-form" id="edit-form">
-                <label>Từ vựng</label>
-                <input type="text" id="edit-word" required>
-                
-                <label>Phiên âm</label>
-                <input type="text" id="edit-phonetic">
-                
-                <label>Audio URL</label>
-                <input type="text" id="edit-audio">
-                
-                <label>Loại từ</label>
-                <input type="text" id="edit-pos">
-                
-                <label>Định nghĩa (EN)</label>
-                <textarea id="edit-definition"></textarea>
-                
-                <label>Nghĩa tiếng Việt</label>
-                <input type="text" id="edit-meaning-vi">
-                
-                <label>Ví dụ</label>
-                <textarea id="edit-example"></textarea>
-                
-                <div class="modal-actions">
-                    <button type="button" class="cancel-btn" onclick="closeEditModal()">Hủy</button>
-                    <button type="submit" class="save-btn">Lưu</button>
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chỉnh sửa từ vựng</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editVocabId">
+                <div class="form-group">
+                    <label>Từ vựng</label>
+                    <input type="text" id="editWord">
                 </div>
-            </form>
+                <div class="form-group">
+                    <label>Phiên âm</label>
+                    <input type="text" id="editPhonetic">
+                </div>
+                <div class="form-group">
+                    <label>Loại từ</label>
+                    <select id="editPos">
+                        <option value="n">Noun (n)</option>
+                        <option value="v">Verb (v)</option>
+                        <option value="adj">Adjective (adj)</option>
+                        <option value="adv">Adverb (adv)</option>
+                        <option value="prep">Preposition (prep)</option>
+                        <option value="conj">Conjunction (conj)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nghĩa tiếng Việt</label>
+                    <input type="text" id="editMeaningVi">
+                </div>
+                <div class="form-group">
+                    <label>Định nghĩa</label>
+                    <textarea id="editDefinition"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Ví dụ</label>
+                    <textarea id="editExample"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Audio URL</label>
+                    <input type="text" id="editAudio">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeEditModal()">Hủy</button>
+                <button class="btn-save" onclick="saveEditVocab()">Lưu</button>
+            </div>
         </div>
     </div>
-
-    <!-- Toast -->
+    
+    <!-- Review Modal -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-eye"></i> Review trước khi thêm</h3>
+                <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="reviewContent">
+                    <div class="review-loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Đang tìm kiếm thông tin...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeReviewModal()">Hủy</button>
+                <button class="btn-save" onclick="confirmAddSelected()">
+                    <i class="fas fa-plus"></i> Thêm đã chọn
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <div class="toast" id="toast"></div>
-
+    
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
     <script>
-        // ============ FIREBASE CONFIG ============
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyDpwi1P4QuwmBi6ytnH13LZfNY4ECQI0nQ",
             authDomain: "vocabulary-manager-cd26d.firebaseapp.com",
@@ -1601,1319 +977,1029 @@
             appId: "1:888267782177:web:257d782a51575d80064b60"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-
-        // ============ DATA ============
-        let categories = {};
-        let currentCategoryId = null;
+        
+        // State - 2 level categories
+        let parentCategories = {};
+        let currentParentId = null;
+        let currentChildId = null;
         let currentPage = 1;
         const ITEMS_PER_PAGE = 25;
-
-        // ============ FIREBASE LISTENERS ============
+        
+        // Auto read state
+        let isReading = false;
+        let isPaused = false;
+        let readingList = [];
+        let readingIndex = 0;
+        let readingTimeout = null;
+        
+        // Speech recognition
+        let recognition = null;
+        let isRecording = false;
+        
+        // Review data
+        let reviewData = [];
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebaseListeners();
+            initSpeechRecognition();
+        });
+        
         function initFirebaseListeners() {
-            // Listen for categories changes
-            database.ref('categories').on('value', (snapshot) => {
-                categories = snapshot.val() || {};
-                renderCategories();
+            database.ref('parentCategories').on('value', async (snapshot) => {
+                const data = snapshot.val();
                 
-                // Re-render current category if selected
-                if (currentCategoryId && categories[currentCategoryId]) {
-                    renderVocabularies(categories[currentCategoryId].vocabularies || []);
-                    document.getElementById('vocab-count').textContent = 
-                        `${Object.keys(categories[currentCategoryId].vocabularies || {}).length} từ`;
+                // Check if we need to migrate old data
+                if (!data) {
+                    await migrateOldData();
+                    return;
                 }
                 
-                updateStatus(true, 'Đã kết nối Firebase ✓');
+                parentCategories = data;
+                renderCategories();
+                
+                if (currentParentId && currentChildId) {
+                    const parent = parentCategories[currentParentId];
+                    if (parent && parent.children && parent.children[currentChildId]) {
+                        renderVocabularies();
+                    }
+                }
             }, (error) => {
                 console.error('Firebase error:', error);
-                updateStatus(false, 'Lỗi kết nối Firebase');
+                showToast('Lỗi kết nối Firebase', 'error');
             });
         }
-
-        function updateStatus(connected, message) {
-            const banner = document.getElementById('status-banner');
-            const text = document.getElementById('status-text');
+        
+        // Migrate old single-level categories to new 2-level structure
+        async function migrateOldData() {
+            showToast('Đang migrate dữ liệu...', 'info');
             
-            if (connected) {
-                banner.classList.remove('error');
-            } else {
-                banner.classList.add('error');
-            }
-            text.textContent = message;
-        }
-
-        function showSyncIndicator() {
-            const indicator = document.getElementById('sync-indicator');
-            indicator.classList.add('show');
-            setTimeout(() => indicator.classList.remove('show'), 1500);
-        }
-
-        // ============ CATEGORY MANAGEMENT ============
-        function renderCategories() {
-            const list = document.getElementById('category-list');
-            const categoryIds = Object.keys(categories);
+            const oldSnapshot = await database.ref('categories').once('value');
+            const oldCategories = oldSnapshot.val();
             
-            if (categoryIds.length === 0) {
-                list.innerHTML = '<li style="color: var(--text-secondary); font-size: 0.85rem; padding: 0.5rem;">Chưa có category</li>';
+            if (!oldCategories) {
+                // No old data, create default parent
+                await database.ref('parentCategories').push({
+                    name: 'Default',
+                    children: {}
+                });
+                showToast('Đã tạo nhóm Default', 'success');
                 return;
             }
             
-            list.innerHTML = categoryIds.map(id => {
-                const cat = categories[id];
-                const vocabCount = Object.keys(cat.vocabularies || {}).length;
-                return `
-                    <li class="category-item ${id === currentCategoryId ? 'active' : ''}" onclick="selectCategory('${id}')">
-                        <span class="name">${escapeHtml(cat.name)}</span>
-                        <span class="count">${vocabCount}</span>
-                        <div class="category-actions" onclick="event.stopPropagation()">
-                            <button onclick="editCategory('${id}')" title="Sửa"><i class="fas fa-pen"></i></button>
-                            <button class="delete" onclick="deleteCategory('${id}')" title="Xóa"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </li>
-                `;
-            }).join('');
+            // Create Default parent with all old categories as children
+            const defaultParent = {
+                name: 'Default',
+                children: {}
+            };
+            
+            Object.entries(oldCategories).forEach(([id, cat]) => {
+                defaultParent.children[id] = {
+                    name: cat.name,
+                    vocabularies: cat.vocabularies || {}
+                };
+            });
+            
+            // Save to new structure
+            await database.ref('parentCategories').push(defaultParent);
+            
+            // Remove old structure (optional - keep for safety)
+            // await database.ref('categories').remove();
+            
+            showToast(`Đã migrate ${Object.keys(oldCategories).length} categories vào Default!`, 'success');
         }
-
-        function addCategory() {
-            const input = document.getElementById('new-category-input');
+        
+        // Render 2-level categories
+        function renderCategories() {
+            const list = document.getElementById('categoryList');
+            list.innerHTML = '';
+            
+            Object.entries(parentCategories).forEach(([parentId, parent]) => {
+                const children = parent.children || {};
+                const childCount = Object.keys(children).length;
+                const totalVocabs = Object.values(children).reduce((sum, child) => {
+                    return sum + (child.vocabularies ? Object.keys(child.vocabularies).length : 0);
+                }, 0);
+                
+                const isExpanded = currentParentId === parentId;
+                
+                const parentDiv = document.createElement('div');
+                parentDiv.className = `parent-category ${isExpanded ? 'expanded' : ''}`;
+                parentDiv.innerHTML = `
+                    <div class="parent-header" onclick="toggleParent('${parentId}')">
+                        <i class="fas fa-chevron-right parent-expand"></i>
+                        <span class="parent-name">${parent.name}</span>
+                        <span class="parent-count">${childCount} | ${totalVocabs} từ</span>
+                        <div class="parent-actions">
+                            <button onclick="event.stopPropagation(); addChildToParent('${parentId}')" title="Thêm category" style="color: var(--accent-success);">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); editParent('${parentId}')" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteParent('${parentId}')" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="children-list">
+                        ${Object.entries(children).map(([childId, child]) => {
+                            const vocabCount = child.vocabularies ? Object.keys(child.vocabularies).length : 0;
+                            const isActive = currentParentId === parentId && currentChildId === childId;
+                            return `
+                                <div class="child-item ${isActive ? 'active' : ''}" onclick="selectChild('${parentId}', '${childId}')">
+                                    <span class="child-name">${child.name}</span>
+                                    <span class="child-count">${vocabCount}</span>
+                                    <div class="child-actions">
+                                        <button onclick="event.stopPropagation(); editChild('${parentId}', '${childId}')" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="event.stopPropagation(); deleteChild('${parentId}', '${childId}')" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                list.appendChild(parentDiv);
+            });
+        }
+        
+        function toggleParent(parentId) {
+            if (currentParentId === parentId) {
+                currentParentId = null;
+            } else {
+                currentParentId = parentId;
+            }
+            renderCategories();
+        }
+        
+        function selectChild(parentId, childId) {
+            currentParentId = parentId;
+            currentChildId = childId;
+            currentPage = 1;
+            
+            const parent = parentCategories[parentId];
+            const child = parent.children[childId];
+            
+            document.getElementById('breadcrumb').innerHTML = `<span>${parent.name}</span> / ${child.name}`;
+            document.getElementById('currentCategoryTitle').textContent = child.name;
+            document.getElementById('autoReader').classList.add('show');
+            
+            renderCategories();
+            renderVocabularies();
+            closeMobileSidebar();
+        }
+        
+        // Parent CRUD
+        function addParentCategory() {
+            const input = document.getElementById('newParentName');
             const name = input.value.trim();
             if (!name) return;
             
-            const newRef = database.ref('categories').push();
-            newRef.set({
-                name: name,
-                vocabularies: {}
-            }).then(() => {
-                input.value = '';
-                showToast('Đã tạo: ' + name, 'success');
-                showSyncIndicator();
-            }).catch(err => {
-                showToast('Lỗi: ' + err.message, 'error');
-            });
+            database.ref('parentCategories').push({ name, children: {} })
+                .then(() => {
+                    input.value = '';
+                    showToast('Đã tạo nhóm!', 'success');
+                })
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
         }
-
-        function selectCategory(id) {
-            currentCategoryId = id;
-            currentPage = 1; // Reset to first page
-            const category = categories[id];
-            
-            if (category) {
-                document.getElementById('current-category-title').textContent = category.name;
-                const vocabCount = Object.keys(category.vocabularies || {}).length;
-                document.getElementById('vocab-count').textContent = `${vocabCount} từ`;
-                document.getElementById('voice-section').style.display = 'block';
-                document.getElementById('auto-reader').classList.add('visible');
-                renderVocabularies(category.vocabularies || {});
+        
+        function editParent(id) {
+            const newName = prompt('Nhập tên mới:', parentCategories[id].name);
+            if (newName && newName.trim()) {
+                database.ref(`parentCategories/${id}/name`).set(newName.trim())
+                    .then(() => showToast('Đã cập nhật!', 'success'))
+                    .catch(err => showToast('Lỗi: ' + err.message, 'error'));
             }
-            renderCategories();
-            closeMobileSidebar(); // Auto close on mobile
         }
-
-        function editCategory(id) {
-            const category = categories[id];
-            if (!category) return;
+        
+        function deleteParent(id) {
+            const parent = parentCategories[id];
+            const childCount = Object.keys(parent.children || {}).length;
+            const totalVocabs = Object.values(parent.children || {}).reduce((sum, child) => {
+                return sum + (child.vocabularies ? Object.keys(child.vocabularies).length : 0);
+            }, 0);
             
-            const newName = prompt('Tên mới:', category.name);
-            if (!newName || !newName.trim() || newName.trim() === category.name) return;
+            const msg = `⚠️ XÁC NHẬN XÓA NHÓM\n\n` +
+                `Tên nhóm: "${parent.name}"\n` +
+                `Số category: ${childCount}\n` +
+                `Tổng số từ vựng: ${totalVocabs}\n\n` +
+                `Bạn có chắc chắn muốn xóa?\nHành động này KHÔNG THỂ hoàn tác!`;
             
-            database.ref(`categories/${id}/name`).set(newName.trim())
+            if (!confirm(msg)) return;
+            
+            database.ref(`parentCategories/${id}`).remove()
                 .then(() => {
-                    if (currentCategoryId === id) {
-                        document.getElementById('current-category-title').textContent = newName.trim();
+                    if (currentParentId === id) {
+                        currentParentId = null;
+                        currentChildId = null;
+                        document.getElementById('vocabList').innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>Chọn một category</p></div>';
+                        document.getElementById('autoReader').classList.remove('show');
+                        document.getElementById('breadcrumb').innerHTML = '';
+                        document.getElementById('currentCategoryTitle').textContent = 'Chọn category';
                     }
-                    showToast('Đã đổi tên', 'success');
-                    showSyncIndicator();
-                });
+                    showToast('Đã xóa!', 'success');
+                })
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
         }
-
-        function deleteCategory(id) {
-            if (!confirm('Xóa category này?')) return;
+        
+        // Child CRUD
+        function addChildToParent(parentId) {
+            const parent = parentCategories[parentId];
+            const name = prompt(`Thêm category mới vào nhóm "${parent.name}":\n\nNhập tên category:`);
             
-            database.ref(`categories/${id}`).remove()
+            if (!name || !name.trim()) return;
+            
+            database.ref(`parentCategories/${parentId}/children`).push({ 
+                name: name.trim(), 
+                vocabularies: {} 
+            })
                 .then(() => {
-                    if (currentCategoryId === id) {
-                        currentCategoryId = null;
-                        stopAutoRead();
-                        document.getElementById('current-category-title').textContent = 'Chọn category';
-                        document.getElementById('vocab-count').textContent = '';
-                        document.getElementById('voice-section').style.display = 'none';
-                        document.getElementById('auto-reader').classList.remove('visible');
-                        document.getElementById('vocabulary-list').innerHTML = `
-                            <li class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <h3>Chọn category để bắt đầu</h3>
-                            </li>
-                        `;
-                    }
-                    showToast('Đã xóa', 'success');
-                    showSyncIndicator();
-                });
+                    showToast('Đã tạo category!', 'success');
+                    // Auto expand parent
+                    currentParentId = parentId;
+                    renderCategories();
+                })
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
         }
-
-        // ============ VOCABULARY MANAGEMENT ============
-        function renderVocabularies(vocabularies) {
-            const list = document.getElementById('vocabulary-list');
-            let vocabEntries = Object.entries(vocabularies || {});
+        
+        function editChild(parentId, childId) {
+            const child = parentCategories[parentId].children[childId];
+            const newName = prompt('Nhập tên mới:', child.name);
+            if (newName && newName.trim()) {
+                database.ref(`parentCategories/${parentId}/children/${childId}/name`).set(newName.trim())
+                    .then(() => showToast('Đã cập nhật!', 'success'))
+                    .catch(err => showToast('Lỗi: ' + err.message, 'error'));
+            }
+        }
+        
+        function deleteChild(parentId, childId) {
+            const parent = parentCategories[parentId];
+            const child = parent.children[childId];
+            const vocabCount = child.vocabularies ? Object.keys(child.vocabularies).length : 0;
             
-            if (vocabEntries.length === 0) {
-                list.innerHTML = `
-                    <li class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>Chưa có từ</h3>
-                        <p>Thêm từ mới bằng giọng nói hoặc gõ</p>
-                    </li>
-                `;
+            const msg = `⚠️ XÁC NHẬN XÓA CATEGORY\n\n` +
+                `Nhóm: "${parent.name}"\n` +
+                `Category: "${child.name}"\n` +
+                `Số từ vựng: ${vocabCount}\n\n` +
+                `Bạn có chắc chắn muốn xóa?\nHành động này KHÔNG THỂ hoàn tác!`;
+            
+            if (!confirm(msg)) return;
+            
+            database.ref(`parentCategories/${parentId}/children/${childId}`).remove()
+                .then(() => {
+                    if (currentParentId === parentId && currentChildId === childId) {
+                        currentChildId = null;
+                        document.getElementById('vocabList').innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>Chọn một category</p></div>';
+                        document.getElementById('autoReader').classList.remove('show');
+                    }
+                    showToast('Đã xóa!', 'success');
+                })
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
+        }
+        
+        // Get current vocabularies path
+        function getVocabPath() {
+            return `parentCategories/${currentParentId}/children/${currentChildId}/vocabularies`;
+        }
+        
+        function getCurrentVocabularies() {
+            if (!currentParentId || !currentChildId) return {};
+            const parent = parentCategories[currentParentId];
+            if (!parent || !parent.children || !parent.children[currentChildId]) return {};
+            return parent.children[currentChildId].vocabularies || {};
+        }
+        
+        // Vocabularies
+        function renderVocabularies() {
+            const vocabs = getCurrentVocabularies();
+            const vocabArray = Object.entries(vocabs).map(([id, v]) => ({ id, ...v }));
+            
+            vocabArray.sort((a, b) => {
+                if (a.learned && !b.learned) return 1;
+                if (!a.learned && b.learned) return -1;
+                return 0;
+            });
+            
+            const totalPages = Math.ceil(vocabArray.length / ITEMS_PER_PAGE);
+            const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+            const pageItems = vocabArray.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+            
+            const list = document.getElementById('vocabList');
+            
+            if (vocabArray.length === 0) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Chưa có từ vựng nào</p></div>';
+                document.getElementById('pagination').style.display = 'none';
                 return;
             }
             
-            // Sort: từ chưa học lên trước, đã học xuống sau
-            vocabEntries.sort((a, b) => {
-                const learnedA = a[1].learned ? 1 : 0;
-                const learnedB = b[1].learned ? 1 : 0;
-                return learnedA - learnedB;
-            });
-            
-            // Pagination
-            const totalPages = Math.ceil(vocabEntries.length / ITEMS_PER_PAGE);
-            if (currentPage > totalPages) currentPage = totalPages;
-            if (currentPage < 1) currentPage = 1;
-            
-            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-            const endIndex = startIndex + ITEMS_PER_PAGE;
-            const pageEntries = vocabEntries.slice(startIndex, endIndex);
-            
-            let html = pageEntries.map(([id, vocab], index) => `
-                <li class="vocabulary-item ${vocab.learned ? 'learned' : ''}" id="vocab-${id}">
-                    <div class="vocab-compact" onclick="toggleVocabDetails('${id}')">
-                        <div class="vocab-compact-left">
-                            <input type="checkbox" class="vocab-checkbox" 
-                                ${vocab.learned ? 'checked' : ''} 
-                                onclick="event.stopPropagation(); toggleLearned('${id}', this.checked)"
-                                title="Đánh dấu đã học">
-                            <span class="vocab-index">${startIndex + index + 1}</span>
-                            <span class="vocab-word">${escapeHtml(vocab.word)}</span>
-                            <span class="vocab-phonetic">${escapeHtml(vocab.phonetic || '')}</span>
-                            ${vocab.partOfSpeech ? `<span class="vocab-pos">${escapeHtml(vocab.partOfSpeech)}</span>` : ''}
-                            <span class="vocab-meaning-vi">${escapeHtml(vocab.meaningVi || '')}</span>
-                        </div>
-                        <div class="vocab-compact-right">
-                            ${vocab.audio ? `
-                                <button class="vocab-audio-btn" onclick="event.stopPropagation(); playAudio('${escapeHtml(vocab.audio)}')">
-                                    <i class="fas fa-volume-up"></i>
-                                </button>
-                            ` : ''}
-                            <i class="fas fa-chevron-down vocab-expand-icon"></i>
-                        </div>
+            list.innerHTML = pageItems.map((v, idx) => `
+                <div class="vocab-item ${v.learned ? 'learned' : ''}" id="vocab-${v.id}">
+                    <div class="vocab-header" onclick="toggleVocabExpand('${v.id}')">
+                        <input type="checkbox" class="vocab-checkbox" 
+                            ${v.learned ? 'checked' : ''} 
+                            onclick="event.stopPropagation(); toggleLearned('${v.id}', this.checked)">
+                        <span class="vocab-number">${startIdx + idx + 1}.</span>
+                        <span class="vocab-word">${v.word}</span>
+                        <span class="vocab-phonetic">${v.phonetic || ''}</span>
+                        <span class="vocab-pos">${v.partOfSpeech || ''}</span>
+                        <span class="vocab-meaning-vi">${v.meaningVi || ''}</span>
+                        <button class="vocab-audio-btn" onclick="event.stopPropagation(); playWord('${v.word}', '${v.audio || ''}')">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <i class="fas fa-chevron-down vocab-expand"></i>
                     </div>
                     <div class="vocab-details">
-                        <div class="vocab-details-inner">
-                            ${vocab.definition ? `
-                                <div class="vocab-detail-row">
-                                    <div class="vocab-detail-label">Definition</div>
-                                    <div class="vocab-detail-content">${escapeHtml(vocab.definition)}</div>
-                                </div>
-                            ` : ''}
-                            ${vocab.meaningVi ? `
-                                <div class="vocab-detail-row">
-                                    <div class="vocab-detail-label">Tiếng Việt</div>
-                                    <div class="vocab-detail-content" style="color: var(--accent-warning)">${escapeHtml(vocab.meaningVi)}</div>
-                                </div>
-                            ` : ''}
-                            ${vocab.example ? `
-                                <div class="vocab-detail-row">
-                                    <div class="vocab-detail-label">Example</div>
-                                    <div class="vocab-example-box">"${escapeHtml(vocab.example)}"</div>
-                                </div>
-                            ` : ''}
-                            <div class="vocab-actions">
-                                <button class="sync" onclick="event.stopPropagation(); syncVocabPhonetic('${id}')"><i class="fas fa-font"></i> Phonetic</button>
-                                <button class="sync" onclick="event.stopPropagation(); syncVocabAudio('${id}')"><i class="fas fa-volume-up"></i> Audio</button>
-                                <button onclick="event.stopPropagation(); editVocabulary('${id}')"><i class="fas fa-edit"></i> Sửa</button>
-                                <button class="delete" onclick="event.stopPropagation(); deleteVocabulary('${id}')"><i class="fas fa-trash"></i> Xóa</button>
-                            </div>
+                        <p><strong>Nghĩa:</strong> ${v.meaningVi || '-'}</p>
+                        <p class="vocab-definition"><strong>Definition:</strong> ${v.definition || '-'}</p>
+                        ${v.example ? `<div class="vocab-example">"${v.example}"</div>` : ''}
+                        <div class="vocab-actions">
+                            <button class="edit" onclick="openEditModal('${v.id}')"><i class="fas fa-edit"></i> Sửa</button>
+                            <button class="delete" onclick="deleteVocabulary('${v.id}')"><i class="fas fa-trash"></i> Xóa</button>
+                            <button class="sync" onclick="syncVocabAudio('${v.id}', this)"><i class="fas fa-music"></i> Sync Audio</button>
+                            <button class="sync" onclick="syncVocabPhonetic('${v.id}', this)"><i class="fas fa-font"></i> Sync Phonetic</button>
                         </div>
                     </div>
-                </li>
+                </div>
             `).join('');
             
-            // Add pagination controls if more than 1 page
+            const pagDiv = document.getElementById('pagination');
             if (totalPages > 1) {
-                html += `
-                    <li class="pagination">
-                        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>
-                            <i class="fas fa-angle-double-left"></i>
-                        </button>
-                        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-                            <i class="fas fa-angle-left"></i>
-                        </button>
-                        <span class="page-info">${currentPage} / ${totalPages}</span>
-                        <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-                            <i class="fas fa-angle-right"></i>
-                        </button>
-                        <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>
-                            <i class="fas fa-angle-double-right"></i>
-                        </button>
-                    </li>
+                pagDiv.style.display = 'flex';
+                pagDiv.innerHTML = `
+                    <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span>Trang ${currentPage} / ${totalPages}</span>
+                    <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 `;
+            } else {
+                pagDiv.style.display = 'none';
             }
-            
-            list.innerHTML = html;
         }
         
         function goToPage(page) {
             currentPage = page;
-            if (currentCategoryId && categories[currentCategoryId]) {
-                renderVocabularies(categories[currentCategoryId].vocabularies);
-            }
+            renderVocabularies();
+            document.querySelector('.vocab-container').scrollTop = 0;
         }
-
-        // ============ AUTO READER ============
-        let isReading = false;
-        let isPaused = false;
-        let readingIndex = 0;
-        let readingList = [];
-        let readingTimeout = null;
-        let currentAudio = null;
-
-        // Update delay display
-        document.getElementById('read-delay').addEventListener('input', function() {
-            document.getElementById('delay-value').textContent = this.value + 's';
-        });
-
-        function getReadingList() {
-            const mode = document.getElementById('reader-mode').value;
-            let list = [];
-
-            if (mode === 'current') {
-                // Only current category
-                if (currentCategoryId && categories[currentCategoryId]) {
-                    const vocabs = categories[currentCategoryId].vocabularies || {};
-                    list = Object.entries(vocabs).map(([id, v]) => ({...v, id, categoryName: categories[currentCategoryId].name}));
-                }
-            } else if (mode === 'all') {
-                // All categories
-                Object.entries(categories).forEach(([catId, cat]) => {
-                    const vocabs = cat.vocabularies || {};
-                    Object.entries(vocabs).forEach(([id, v]) => {
-                        list.push({...v, id, categoryName: cat.name});
-                    });
-                });
-            } else if (mode === 'unlearned') {
-                // Only unlearned words
-                if (currentCategoryId && categories[currentCategoryId]) {
-                    const vocabs = categories[currentCategoryId].vocabularies || {};
-                    Object.entries(vocabs).forEach(([id, v]) => {
-                        if (!v.learned) {
-                            list.push({...v, id, categoryName: categories[currentCategoryId].name});
-                        }
-                    });
-                }
-            }
-
-            return list;
+        
+        function toggleVocabExpand(id) {
+            document.getElementById(`vocab-${id}`).classList.toggle('expanded');
         }
-
-        function toggleAutoRead() {
-            if (!isReading) {
-                startAutoRead();
-            } else if (isPaused) {
-                resumeAutoRead();
-            } else {
-                pauseAutoRead();
-            }
+        
+        function toggleLearned(id, learned) {
+            database.ref(`${getVocabPath()}/${id}/learned`).set(learned)
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
         }
-
-        function startAutoRead() {
-            readingList = getReadingList();
-            
-            if (readingList.length === 0) {
-                showToast('Không có từ vựng để đọc', 'error');
+        
+        // Fetch and Review
+        async function fetchAndReview() {
+            const word = document.getElementById('wordInput').value.trim().toLowerCase();
+            if (!word) {
+                showToast('Nhập từ vựng trước!', 'error');
                 return;
             }
-
+            
+            if (!currentParentId || !currentChildId) {
+                showToast('Chọn category trước!', 'error');
+                return;
+            }
+            
+            document.getElementById('reviewModal').classList.add('show');
+            document.getElementById('reviewContent').innerHTML = `
+                <div class="review-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>Đang tìm kiếm thông tin cho "${word}"...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                
+                if (!response.ok) throw new Error('Không tìm thấy từ này');
+                
+                const data = await response.json();
+                reviewData = [];
+                
+                for (const entry of data) {
+                    const phonetic = entry.phonetic || entry.phonetics?.find(p => p.text)?.text || '';
+                    const audio = entry.phonetics?.find(p => p.audio)?.audio || '';
+                    
+                    for (const meaning of entry.meanings) {
+                        const pos = shortenPartOfSpeech(meaning.partOfSpeech);
+                        
+                        let bestDef = null;
+                        let bestExample = '';
+                        
+                        for (const def of meaning.definitions) {
+                            if (def.example) {
+                                bestDef = def.definition;
+                                bestExample = def.example;
+                                break;
+                            }
+                        }
+                        
+                        if (!bestDef && meaning.definitions.length > 0) {
+                            bestDef = meaning.definitions[0].definition;
+                            for (const def of meaning.definitions) {
+                                if (def.example) {
+                                    bestExample = def.example;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const meaningVi = await translateToVietnamese(word, pos, bestDef);
+                        
+                        reviewData.push({
+                            word,
+                            phonetic,
+                            audio,
+                            partOfSpeech: pos,
+                            definition: bestDef || '',
+                            example: bestExample,
+                            meaningVi,
+                            selected: true
+                        });
+                    }
+                }
+                
+                reviewData = reviewData.filter((item, index, self) =>
+                    index === self.findIndex(t => t.partOfSpeech === item.partOfSpeech)
+                );
+                
+                if (reviewData.length === 0) throw new Error('Không tìm thấy nghĩa nào');
+                
+                renderReviewList();
+                
+            } catch (error) {
+                document.getElementById('reviewContent').innerHTML = `
+                    <div class="review-loading">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--accent-danger); animation: none;"></i>
+                        <p>${error.message}</p>
+                        <button onclick="addManualWord('${word}')" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: var(--accent); color: var(--bg-primary); border: none; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-plus"></i> Thêm thủ công
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderReviewList() {
+            const content = document.getElementById('reviewContent');
+            
+            content.innerHTML = `
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> Tick chọn những nghĩa muốn thêm. Có thể sửa nghĩa tiếng Việt nếu cần:
+                </p>
+                <div class="review-list">
+                    ${reviewData.map((item, idx) => `
+                        <div class="review-item">
+                            <div class="review-item-header">
+                                <input type="checkbox" id="review-${idx}" ${item.selected ? 'checked' : ''} 
+                                    onchange="reviewData[${idx}].selected = this.checked">
+                                <span class="review-word">${item.word}</span>
+                                <span class="review-pos">${item.partOfSpeech}</span>
+                                <span class="review-phonetic">${item.phonetic}</span>
+                                <button onclick="playWord('${item.word}', '${item.audio}')" style="background: var(--bg-secondary); border: none; color: var(--accent); padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; margin-left: auto;">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                            </div>
+                            <div class="review-info">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <strong style="color: var(--text-primary);">Nghĩa VN:</strong>
+                                    <input type="text" value="${item.meaningVi || ''}" 
+                                        onchange="reviewData[${idx}].meaningVi = this.value"
+                                        placeholder="Nhập nghĩa tiếng Việt..."
+                                        style="flex: 1; padding: 0.4rem 0.6rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; color: var(--accent-success); font-size: 0.9rem;">
+                                </div>
+                                <p><strong>Definition:</strong> ${item.definition || '(không có)'}</p>
+                                ${item.example ? `<div class="review-example">"${item.example}"</div>` : '<p style="color: var(--accent-warning);"><i class="fas fa-exclamation-triangle"></i> Không tìm thấy example</p>'}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        async function confirmAddSelected() {
+            const selected = reviewData.filter(item => item.selected);
+            
+            if (selected.length === 0) {
+                showToast('Chọn ít nhất một nghĩa!', 'error');
+                return;
+            }
+            
+            let added = 0;
+            for (const item of selected) {
+                try {
+                    await database.ref(getVocabPath()).push({
+                        word: item.word,
+                        phonetic: item.phonetic,
+                        audio: item.audio,
+                        partOfSpeech: item.partOfSpeech,
+                        definition: item.definition,
+                        example: item.example,
+                        meaningVi: item.meaningVi,
+                        learned: false
+                    });
+                    added++;
+                } catch (err) {
+                    console.error('Error adding:', err);
+                }
+            }
+            
+            closeReviewModal();
+            document.getElementById('wordInput').value = '';
+            showToast(`Đã thêm ${added} từ!`, 'success');
+        }
+        
+        function addManualWord(word) {
+            database.ref(getVocabPath()).push({
+                word,
+                phonetic: generatePhonetic(word),
+                audio: '',
+                partOfSpeech: 'n',
+                definition: '',
+                example: '',
+                meaningVi: '',
+                learned: false
+            }).then(() => {
+                closeReviewModal();
+                document.getElementById('wordInput').value = '';
+                showToast('Đã thêm! Hãy chỉnh sửa thông tin.', 'info');
+            }).catch(err => showToast('Lỗi: ' + err.message, 'error'));
+        }
+        
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.remove('show');
+            reviewData = [];
+        }
+        
+        // Translation
+        async function translateToVietnamese(word, pos, definition = '') {
+            let result = '';
+            let query = word;
+            if (pos === 'v') query = `to ${word}`;
+            else if (pos === 'n') query = `a ${word}`;
+            
+            try {
+                result = await googleTranslate(query);
+                if (result) {
+                    result = cleanTranslation(result, pos);
+                    if (result && result.toLowerCase() !== word.toLowerCase()) return result;
+                }
+            } catch (err) {}
+            
+            try {
+                result = await myMemoryTranslate(query);
+                if (result) {
+                    result = cleanTranslation(result, pos);
+                    if (result) return result;
+                }
+            } catch (err) {}
+            
+            return '';
+        }
+        
+        function cleanTranslation(text, pos) {
+            if (!text) return '';
+            let cleaned = text.trim();
+            
+            if (pos === 'v') {
+                cleaned = cleaned.replace(/^để\s+/i, '');
+                cleaned = cleaned.replace(/^(một |bài |cái |sự |việc |cuộc )/i, '');
+            } else if (pos === 'n') {
+                cleaned = cleaned.replace(/^một\s+/i, '');
+            } else if (pos === 'adj' || pos === 'adv') {
+                cleaned = cleaned.replace(/^(một |bài |cái |sự )/i, '');
+            }
+            
+            cleaned = cleaned.replace(/\s*\(.*?\)\s*/g, '').trim();
+            return cleaned;
+        }
+        
+        async function googleTranslate(text) {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(text)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data && data[0] && data[0][0] && data[0][0][0]) return data[0][0][0].trim();
+            return null;
+        }
+        
+        async function myMemoryTranslate(text) {
+            const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|vi`);
+            const data = await response.json();
+            if (data.responseStatus === 200) return data.responseData.translatedText.trim();
+            return null;
+        }
+        
+        function shortenPartOfSpeech(pos) {
+            const map = {
+                'noun': 'n', 'verb': 'v', 'adjective': 'adj', 'adverb': 'adv',
+                'preposition': 'prep', 'conjunction': 'conj', 'interjection': 'interj', 'pronoun': 'pron'
+            };
+            return map[pos.toLowerCase()] || pos;
+        }
+        
+        // Edit vocabulary
+        function openEditModal(id) {
+            const vocab = getCurrentVocabularies()[id];
+            document.getElementById('editVocabId').value = id;
+            document.getElementById('editWord').value = vocab.word || '';
+            document.getElementById('editPhonetic').value = vocab.phonetic || '';
+            document.getElementById('editPos').value = vocab.partOfSpeech || 'n';
+            document.getElementById('editMeaningVi').value = vocab.meaningVi || '';
+            document.getElementById('editDefinition').value = vocab.definition || '';
+            document.getElementById('editExample').value = vocab.example || '';
+            document.getElementById('editAudio').value = vocab.audio || '';
+            document.getElementById('editModal').classList.add('show');
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+        
+        function saveEditVocab() {
+            const id = document.getElementById('editVocabId').value;
+            const data = {
+                word: document.getElementById('editWord').value,
+                phonetic: document.getElementById('editPhonetic').value,
+                partOfSpeech: document.getElementById('editPos').value,
+                meaningVi: document.getElementById('editMeaningVi').value,
+                definition: document.getElementById('editDefinition').value,
+                example: document.getElementById('editExample').value,
+                audio: document.getElementById('editAudio').value
+            };
+            
+            database.ref(`${getVocabPath()}/${id}`).update(data)
+                .then(() => {
+                    closeEditModal();
+                    showToast('Đã cập nhật!', 'success');
+                })
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
+        }
+        
+        function deleteVocabulary(id) {
+            const vocab = getCurrentVocabularies()[id];
+            const msg = `Xóa từ "${vocab.word}" (${vocab.partOfSpeech})?\n\nHành động này không thể hoàn tác!`;
+            
+            if (!confirm(msg)) return;
+            database.ref(`${getVocabPath()}/${id}`).remove()
+                .then(() => showToast('Đã xóa!', 'success'))
+                .catch(err => showToast('Lỗi: ' + err.message, 'error'));
+        }
+        
+        // Audio playback
+        let sharedAudio = null;
+        
+        function getSharedAudio() {
+            if (!sharedAudio) sharedAudio = new Audio();
+            return sharedAudio;
+        }
+        
+        function playWord(word, audioUrl) {
+            speakWord(word, audioUrl);
+        }
+        
+        function speakWord(word, audioUrl, callback) {
+            const audio = getSharedAudio();
+            const urls = [];
+            if (audioUrl && !audioUrl.startsWith('tts:')) urls.push(audioUrl);
+            urls.push(
+                `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${word}--_us_1.mp3`,
+                `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${word}--_gb_1.mp3`
+            );
+            
+            let tried = 0;
+            
+            function tryNext() {
+                if (tried >= urls.length) {
+                    speakWithTTS(word, callback);
+                    return;
+                }
+                
+                audio.src = urls[tried];
+                tried++;
+                
+                audio.oncanplaythrough = () => audio.play().catch(() => tryNext());
+                audio.onerror = () => tryNext();
+                audio.onended = () => { if (callback) callback(); };
+                audio.load();
+            }
+            
+            tryNext();
+        }
+        
+        function speakWithTTS(word, callback) {
+            if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+                const timeout = setTimeout(() => { if (callback) callback(); }, 4000);
+                responsiveVoice.speak(word, "US English Female", {
+                    rate: 0.9,
+                    onend: () => { clearTimeout(timeout); if (callback) callback(); },
+                    onerror: () => { clearTimeout(timeout); speakWithNativeTTS(word, callback); }
+                });
+            } else {
+                speakWithNativeTTS(word, callback);
+            }
+        }
+        
+        function speakWithNativeTTS(word, callback) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                
+                const timeout = setTimeout(() => { if (callback) callback(); }, 3000);
+                utterance.onend = () => { clearTimeout(timeout); if (callback) callback(); };
+                utterance.onerror = () => { clearTimeout(timeout); if (callback) callback(); };
+                speechSynthesis.speak(utterance);
+            } else if (callback) {
+                callback();
+            }
+        }
+        
+        // Auto Read
+        function startAutoRead() {
+            const mode = document.getElementById('readerMode').value;
+            readingList = [];
+            
+            if (mode === 'all') {
+                Object.values(parentCategories).forEach(parent => {
+                    Object.values(parent.children || {}).forEach(child => {
+                        if (child.vocabularies) {
+                            Object.entries(child.vocabularies).forEach(([id, v]) => {
+                                readingList.push({ id, ...v });
+                            });
+                        }
+                    });
+                });
+            } else {
+                const vocabs = getCurrentVocabularies();
+                Object.entries(vocabs).forEach(([id, v]) => {
+                    if (mode === 'unlearned' && v.learned) return;
+                    readingList.push({ id, ...v });
+                });
+            }
+            
+            if (readingList.length === 0) {
+                showToast('Không có từ nào để đọc!', 'error');
+                return;
+            }
+            
             isReading = true;
             isPaused = false;
             readingIndex = 0;
-
-            const playBtn = document.getElementById('reader-play-btn');
-            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            playBtn.classList.remove('play');
-            playBtn.classList.add('pause');
-            document.getElementById('reader-stop-btn').style.display = 'flex';
-            document.getElementById('reader-current-word').classList.add('visible');
-
-            // IMPORTANT: Read first word immediately in user gesture context
-            // This unlocks audio/TTS for subsequent automatic plays
-            readFirstWord();
+            updateReaderUI();
+            readCurrentWord();
         }
-
-        // Read first word in user gesture context
-        function readFirstWord() {
-            if (readingList.length === 0) return;
-            
-            const vocab = readingList[0];
-            updateReaderUI(vocab, 0);
-            
-            const delay = parseFloat(document.getElementById('read-delay').value) * 1000;
-            
-            const goToNext = () => {
-                readingTimeout = setTimeout(() => {
-                    readingIndex = 1;
-                    readNextWord();
-                }, delay);
-            };
-            
-            // Use speakWord which handles ResponsiveVoice
-            speakWord(vocab.word, goToNext);
-        }
-
-        function updateReaderUI(vocab, index) {
-            const progress = ((index + 1) / readingList.length) * 100;
-            
-            document.getElementById('reader-progress-fill').style.width = progress + '%';
-            document.getElementById('reader-status').textContent = 
-                `${index + 1}/${readingList.length} - ${vocab.categoryName || 'Category'}`;
-
-            const wordDisplay = document.getElementById('reader-current-word');
-            wordDisplay.querySelector('.word-text').textContent = vocab.word;
-            wordDisplay.querySelector('.word-phonetic').textContent = vocab.phonetic || '';
-            wordDisplay.querySelector('.word-meaning').textContent = vocab.meaningVi || '';
-
-            // Highlight current word in list
-            document.querySelectorAll('.vocabulary-item').forEach(el => el.classList.remove('reading'));
-            const currentEl = document.getElementById(`vocab-${vocab.id}`);
-            if (currentEl) {
-                currentEl.classList.add('reading');
-                currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        function readCurrentWord() {
+            if (!isReading || isPaused || readingIndex >= readingList.length) {
+                if (readingIndex >= readingList.length) {
+                    stopAutoRead();
+                    showToast('Đã đọc xong!', 'success');
+                }
+                return;
             }
+            
+            const vocab = readingList[readingIndex];
+            document.querySelectorAll('.vocab-item').forEach(el => el.classList.remove('reading'));
+            const el = document.getElementById(`vocab-${vocab.id}`);
+            if (el) {
+                el.classList.add('reading');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            document.getElementById('readerCurrentWord').textContent = vocab.word;
+            document.getElementById('readerStatus').textContent = `${readingIndex + 1} / ${readingList.length}`;
+            
+            speakWord(vocab.word, vocab.audio, () => {
+                const delay = parseInt(document.getElementById('readerDelay').value);
+                readingTimeout = setTimeout(() => {
+                    readingIndex++;
+                    readCurrentWord();
+                }, delay);
+            });
         }
-
+        
         function pauseAutoRead() {
             isPaused = true;
-            if (readingTimeout) {
-                clearTimeout(readingTimeout);
-                readingTimeout = null;
-            }
-            if (currentAudio) {
-                currentAudio.pause();
-            }
-            // Cancel TTS
-            if (typeof responsiveVoice !== 'undefined') {
-                responsiveVoice.cancel();
-            }
-            if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-            }
-
-            const playBtn = document.getElementById('reader-play-btn');
-            playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            playBtn.classList.remove('pause');
-            playBtn.classList.add('play');
-            
-            document.getElementById('reader-status').textContent = 'Đã tạm dừng';
+            clearTimeout(readingTimeout);
+            if (typeof responsiveVoice !== 'undefined') responsiveVoice.cancel();
+            speechSynthesis.cancel();
+            updateReaderUI();
         }
-
+        
         function resumeAutoRead() {
             isPaused = false;
-            
-            const playBtn = document.getElementById('reader-play-btn');
-            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            playBtn.classList.remove('play');
-            playBtn.classList.add('pause');
-
-            // Resume with current word
-            if (readingIndex < readingList.length) {
-                const vocab = readingList[readingIndex];
-                updateReaderUI(vocab, readingIndex);
-                
-                const delay = parseFloat(document.getElementById('read-delay').value) * 1000;
-                
-                const goToNext = () => {
-                    readingTimeout = setTimeout(() => {
-                        readingIndex++;
-                        readNextWord();
-                    }, delay);
-                };
-                
-                speakWord(vocab.word, goToNext);
-            }
+            updateReaderUI();
+            readCurrentWord();
         }
-
+        
         function stopAutoRead() {
             isReading = false;
             isPaused = false;
             readingIndex = 0;
+            clearTimeout(readingTimeout);
+            if (typeof responsiveVoice !== 'undefined') responsiveVoice.cancel();
+            speechSynthesis.cancel();
             
-            if (readingTimeout) {
-                clearTimeout(readingTimeout);
-                readingTimeout = null;
-            }
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-            // Cancel TTS
-            if (typeof responsiveVoice !== 'undefined') {
-                responsiveVoice.cancel();
-            }
-            if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-            }
-
-            const playBtn = document.getElementById('reader-play-btn');
-            playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            playBtn.classList.remove('pause');
-            playBtn.classList.add('play');
-            document.getElementById('reader-stop-btn').style.display = 'none';
-            document.getElementById('reader-current-word').classList.remove('visible');
-            document.getElementById('reader-progress-fill').style.width = '0%';
-            document.getElementById('reader-status').textContent = 'Nhấn Play để bắt đầu';
-        }
-
-        function readNextWord() {
-            if (!isReading || isPaused) return;
-
-            if (readingIndex >= readingList.length) {
-                // Finished reading all words
-                stopAutoRead();
-                showToast('Đã đọc xong tất cả từ vựng!', 'success');
-                return;
-            }
-
-            const vocab = readingList[readingIndex];
-            
-            // Update UI
-            updateReaderUI(vocab, readingIndex);
-
-            // Play audio
-            const delay = parseFloat(document.getElementById('read-delay').value) * 1000;
-            
-            const goToNext = () => {
-                readingTimeout = setTimeout(() => {
-                    readingIndex++;
-                    readNextWord();
-                }, delay);
-            };
-
-            // Always use TTS for reliability on GitHub Pages
-            speakWord(vocab.word, goToNext);
-        }
-
-        // Text-to-Speech function
-        function speakWord(word, callback) {
-            let callbackCalled = false;
-            
-            const safeCallback = () => {
-                if (!callbackCalled) {
-                    callbackCalled = true;
-                    if (callback) callback();
-                }
-            };
-
-            // Timeout backup
-            const timeoutId = setTimeout(() => {
-                console.log('TTS timeout for:', word);
-                safeCallback();
-            }, 4000);
-
-            // Try ResponsiveVoice first (works better on most browsers)
-            if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
-                console.log('Using ResponsiveVoice for:', word);
-                responsiveVoice.speak(word, "US English Female", {
-                    rate: 0.9,
-                    onend: () => {
-                        clearTimeout(timeoutId);
-                        safeCallback();
-                    },
-                    onerror: () => {
-                        clearTimeout(timeoutId);
-                        // Fallback to native TTS
-                        speakWithNativeTTS(word, safeCallback);
-                    }
-                });
-            } 
-            // Fallback to native speechSynthesis
-            else if ('speechSynthesis' in window) {
-                clearTimeout(timeoutId);
-                speakWithNativeTTS(word, safeCallback);
-            } 
-            else {
-                clearTimeout(timeoutId);
-                safeCallback();
-            }
-        }
-
-        function speakWithNativeTTS(word, callback) {
-            const timeoutId = setTimeout(callback, 3000);
-            
-            try {
-                const utterance = new SpeechSynthesisUtterance(word);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.85;
-                utterance.volume = 1;
-                
-                const voices = speechSynthesis.getVoices();
-                const englishVoice = voices.find(v => v.lang.startsWith('en'));
-                if (englishVoice) utterance.voice = englishVoice;
-                
-                utterance.onend = () => {
-                    clearTimeout(timeoutId);
-                    callback();
-                };
-                utterance.onerror = () => {
-                    clearTimeout(timeoutId);
-                    callback();
-                };
-                
-                speechSynthesis.speak(utterance);
-                console.log('Native TTS for:', word);
-            } catch (e) {
-                clearTimeout(timeoutId);
-                callback();
-            }
-        }
-
-        // Preload voices
-        if ('speechSynthesis' in window) {
-            speechSynthesis.getVoices();
-            speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
-        }
-
-        // Mobile sidebar toggle
-        function toggleMobileSidebar() {
-            const toggle = document.getElementById('mobile-category-toggle');
-            const sidebar = document.getElementById('sidebar');
-            
-            toggle.classList.toggle('active');
-            sidebar.classList.toggle('show');
-        }
-
-        // Auto-close sidebar when selecting category on mobile
-        function closeMobileSidebar() {
-            if (window.innerWidth <= 600) {
-                const toggle = document.getElementById('mobile-category-toggle');
-                const sidebar = document.getElementById('sidebar');
-                toggle.classList.remove('active');
-                sidebar.classList.remove('show');
-            }
-        }
-
-        // Update audio for all words in current category
-        async function updateAllAudio() {
-            if (!currentCategoryId || !categories[currentCategoryId]) {
-                showToast('Chọn category trước', 'error');
-                return;
-            }
-
-            const vocabs = categories[currentCategoryId].vocabularies || {};
-            const entries = Object.entries(vocabs);
-            
-            if (entries.length === 0) {
-                showToast('Không có từ nào', 'error');
-                return;
-            }
-
-            const btn = document.querySelector('.update-audio-btn');
-            const icon = btn.querySelector('.fa-sync');
-            btn.disabled = true;
-            icon.classList.add('spinning');
-
-            let updated = 0;
-            let ttsCount = 0;
-            let total = entries.length;
-
-            showToast(`Đang cập nhật ${total} từ từ nhiều nguồn...`, 'info');
-
-            for (const [id, vocab] of entries) {
-                try {
-                    const result = await fetchAudioFromSources(vocab.word);
-                    
-                    if (result && result.audio) {
-                        await database.ref(`categories/${currentCategoryId}/vocabularies/${id}`).update({
-                            phonetic: result.phonetic || vocab.phonetic || '',
-                            audio: result.audio
-                        });
-                        
-                        if (result.audio.startsWith('tts:')) {
-                            ttsCount++;
-                        } else {
-                            updated++;
-                        }
-                    }
-                } catch (e) {
-                    console.log('Error updating:', vocab.word, e);
-                }
-                
-                // Small delay to avoid rate limiting
-                await new Promise(r => setTimeout(r, 150));
-            }
-
-            btn.disabled = false;
-            icon.classList.remove('spinning');
-            
-            let msg = `✓ Audio: ${updated}`;
-            if (ttsCount > 0) msg += `, TTS: ${ttsCount}`;
-            msg += ` / ${total} từ`;
-            
-            showToast(msg, 'success');
-            showSyncIndicator();
+            document.querySelectorAll('.vocab-item').forEach(el => el.classList.remove('reading'));
+            document.getElementById('readerCurrentWord').textContent = '';
+            document.getElementById('readerStatus').textContent = 'Sẵn sàng';
+            updateReaderUI();
         }
         
-        function toggleLearned(id, learned) {
-            if (!currentCategoryId) return;
+        function updateReaderUI() {
+            const playBtn = document.querySelector('.reader-btn.play');
+            const pauseBtn = document.querySelector('.reader-btn.pause');
             
-            database.ref(`categories/${currentCategoryId}/vocabularies/${id}/learned`).set(learned)
-                .then(() => {
-                    showToast(learned ? '✓ Đã đánh dấu học xong' : 'Đã bỏ đánh dấu', 'success');
-                    showSyncIndicator();
-                });
+            if (isReading && !isPaused) {
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-flex';
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                pauseBtn.onclick = pauseAutoRead;
+            } else if (isReading && isPaused) {
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-flex';
+                pauseBtn.innerHTML = '<i class="fas fa-play"></i> Resume';
+                pauseBtn.onclick = resumeAutoRead;
+            } else {
+                playBtn.style.display = 'inline-flex';
+                pauseBtn.style.display = 'none';
+            }
         }
-
-        function toggleVocabDetails(id) {
-            document.getElementById(`vocab-${id}`).classList.toggle('expanded');
-        }
-
-        function playAudio(url) {
-            if (!url) return;
+        
+        // Sync functions
+        async function syncVocabAudio(id, btn) {
+            const vocab = getCurrentVocabularies()[id];
+            btn.classList.add('spinning');
             
-            // Check if TTS marker
-            if (url.startsWith('tts:')) {
-                const word = url.replace('tts:', '');
-                speakWord(word);
-                return;
+            try {
+                const audio = await fetchAudioFromSources(vocab.word);
+                if (audio) {
+                    await database.ref(`${getVocabPath()}/${id}/audio`).set(audio);
+                    showToast('Đã cập nhật audio!', 'success');
+                } else {
+                    showToast('Không tìm thấy audio', 'error');
+                }
+            } catch (err) {
+                showToast('Lỗi: ' + err.message, 'error');
             }
             
-            new Audio(url).play().catch(() => {
-                // Fallback to TTS if audio fails
-                const word = url.split('/').pop()?.replace('.mp3', '').replace('.ogg', '');
-                if (word) speakWord(word);
+            btn.classList.remove('spinning');
+        }
+        
+        async function syncVocabPhonetic(id, btn) {
+            const vocab = getCurrentVocabularies()[id];
+            btn.classList.add('spinning');
+            
+            try {
+                let phonetic = await fetchPhoneticFromSources(vocab.word);
+                if (!phonetic) phonetic = generatePhonetic(vocab.word);
+                
+                await database.ref(`${getVocabPath()}/${id}/phonetic`).set(phonetic);
+                showToast('Đã cập nhật phonetic!', 'success');
+            } catch (err) {
+                showToast('Lỗi: ' + err.message, 'error');
+            }
+            
+            btn.classList.remove('spinning');
+        }
+        
+        async function fetchAudioFromSources(word) {
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const audio = data[0]?.phonetics?.find(p => p.audio)?.audio;
+                    if (audio) return audio;
+                }
+            } catch (e) {}
+            return null;
+        }
+        
+        async function fetchPhoneticFromSources(word) {
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const phonetic = data[0]?.phonetic || data[0]?.phonetics?.find(p => p.text)?.text;
+                    if (phonetic) return phonetic;
+                }
+            } catch (e) {}
+            
+            try {
+                const res = await fetch(`https://api.datamuse.com/words?sp=${word}&md=r&max=1`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data[0]?.tags) {
+                        const ipaTag = data[0].tags.find(t => t.startsWith('ipa_pron:'));
+                        if (ipaTag) return '/' + ipaTag.replace('ipa_pron:', '') + '/';
+                    }
+                }
+            } catch (e) {}
+            
+            return null;
+        }
+        
+        function generatePhonetic(word) {
+            const rules = [
+                [/ph/gi, 'f'], [/tion/gi, 'ʃən'], [/sion/gi, 'ʒən'],
+                [/ck/gi, 'k'], [/ch/gi, 'tʃ'], [/sh/gi, 'ʃ'],
+                [/th/gi, 'θ'], [/ng/gi, 'ŋ'], [/qu/gi, 'kw'],
+                [/ee/gi, 'iː'], [/ea/gi, 'iː'], [/oo/gi, 'uː'],
+                [/ou/gi, 'aʊ'], [/ow/gi, 'aʊ'], [/oi/gi, 'ɔɪ'],
+                [/oy/gi, 'ɔɪ'], [/ai/gi, 'eɪ'], [/ay/gi, 'eɪ'],
+                [/y$/gi, 'i'], [/e$/gi, '']
+            ];
+            
+            let result = word.toLowerCase();
+            rules.forEach(([pattern, replacement]) => {
+                result = result.replace(pattern, replacement);
             });
+            
+            return `/${result}/`;
         }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ============ VOICE INPUT ============
-        let recognition = null;
-        let isRecording = false;
-
+        
+        // Speech recognition
         function initSpeechRecognition() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 recognition.lang = 'en-US';
+                recognition.continuous = false;
                 recognition.interimResults = false;
                 
-                recognition.onresult = (e) => {
-                    document.getElementById('voice-result-input').value = e.results[0][0].transcript.toLowerCase().trim();
-                    stopRecording();
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('wordInput').value = transcript;
+                    stopVoiceInput();
                 };
                 
-                recognition.onerror = (e) => {
-                    if (e.error !== 'aborted') showToast('Lỗi: ' + e.error, 'error');
-                    stopRecording();
-                };
-                
-                recognition.onend = () => stopRecording();
+                recognition.onerror = () => stopVoiceInput();
+                recognition.onend = () => stopVoiceInput();
             }
         }
-
+        
         function toggleVoiceInput() {
-            isRecording ? stopRecording() : startRecording();
+            if (isRecording) stopVoiceInput();
+            else startVoiceInput();
         }
-
-        function startRecording() {
-            if (!recognition) initSpeechRecognition();
-            if (recognition) {
-                try {
-                    recognition.start();
-                    isRecording = true;
-                    document.getElementById('voice-btn').classList.add('recording');
-                } catch (e) {}
+        
+        function startVoiceInput() {
+            if (!recognition) {
+                showToast('Trình duyệt không hỗ trợ voice input', 'error');
+                return;
             }
+            isRecording = true;
+            document.getElementById('voiceBtn').classList.add('recording');
+            recognition.start();
         }
-
-        function stopRecording() {
-            if (recognition && isRecording) try { recognition.stop(); } catch (e) {}
+        
+        function stopVoiceInput() {
             isRecording = false;
-            document.getElementById('voice-btn').classList.remove('recording');
+            document.getElementById('voiceBtn').classList.remove('recording');
+            if (recognition) recognition.stop();
         }
-
-        // ============ DICTIONARY & TRANSLATE API ============
-        async function fetchWordInfo(word) {
-            try {
-                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-                if (!response.ok) return null;
-                return (await response.json())[0];
-            } catch (e) {
-                return null;
-            }
+        
+        // Mobile sidebar
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
         }
-
-        async function translateToVietnamese(text) {
-            if (!text) return '';
-            try {
-                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|vi`);
-                if (!response.ok) return '';
-                const data = await response.json();
-                return data.responseData?.translatedText || '';
-            } catch (e) {
-                return '';
-            }
+        
+        function closeMobileSidebar() {
+            document.querySelector('.sidebar').classList.remove('show');
+            document.querySelector('.sidebar-overlay').classList.remove('show');
         }
-
-        async function confirmAndFetchWord() {
-            const input = document.getElementById('voice-result-input');
-            const word = input.value.trim().toLowerCase();
-            
-            if (!word) return showToast('Nhập từ', 'error');
-            if (!currentCategoryId) return showToast('Chọn category', 'error');
-
-            const btn = document.getElementById('confirm-btn');
-            const spinner = document.getElementById('loading-spinner');
-            btn.disabled = true;
-            spinner.classList.add('show');
-
-            try {
-                const [wordInfo, meaningVi] = await Promise.all([
-                    fetchWordInfo(word),
-                    translateToVietnamese(word)
-                ]);
-                
-                // Get common phonetic and audio
-                let phonetic = '';
-                let audio = '';
-                
-                if (wordInfo) {
-                    phonetic = wordInfo.phonetic || wordInfo.phonetics?.find(p => p.text)?.text || '';
-                    const audioObj = wordInfo.phonetics?.find(p => p.audio && p.audio.includes('-us')) || wordInfo.phonetics?.find(p => p.audio);
-                    audio = audioObj?.audio || '';
-                }
-                
-                // Create entries for each part of speech
-                const vocabsToAdd = [];
-                
-                if (wordInfo && wordInfo.meanings && wordInfo.meanings.length > 0) {
-                    // Track unique parts of speech to avoid duplicates
-                    const addedPOS = new Set();
-                    
-                    for (const meaning of wordInfo.meanings) {
-                        const pos = meaning.partOfSpeech || '';
-                        
-                        // Skip if we already added this part of speech
-                        if (addedPOS.has(pos)) continue;
-                        addedPOS.add(pos);
-                        
-                        // Find best definition (prefer one with example)
-                        let bestDef = meaning.definitions?.find(d => d.example) || meaning.definitions?.[0];
-                        
-                        // Translate with context based on part of speech
-                        // verb: "to shower" → "tắm", noun: "shower" → "vòi hoa sen"
-                        let translateQuery = word;
-                        if (pos === 'verb') {
-                            translateQuery = `to ${word}`;
-                        } else if (pos === 'adjective') {
-                            translateQuery = `${word} (adj)`;
-                        } else if (pos === 'adverb') {
-                            translateQuery = `${word} (adv)`;
-                        }
-                        const viMeaning = await translateToVietnamese(translateQuery);
-                        
-                        vocabsToAdd.push({
-                            word,
-                            phonetic,
-                            audio,
-                            partOfSpeech: pos,
-                            definition: bestDef?.definition || '',
-                            meaningVi: viMeaning || meaningVi || '',
-                            example: bestDef?.example || ''
-                        });
-                    }
-                } else {
-                    // No API data, add single entry
-                    vocabsToAdd.push({
-                        word,
-                        phonetic: '',
-                        audio: '',
-                        partOfSpeech: '',
-                        definition: '',
-                        meaningVi: meaningVi || '',
-                        example: ''
-                    });
-                }
-
-                // Save all entries to Firebase
-                const vocabRef = database.ref(`categories/${currentCategoryId}/vocabularies`);
-                for (const vocab of vocabsToAdd) {
-                    await vocabRef.push().set(vocab);
-                }
-                
-                input.value = '';
-                const posCount = vocabsToAdd.length;
-                if (posCount > 1) {
-                    showToast(`Đã thêm: ${word} (${posCount} loại từ)`, 'success');
-                } else {
-                    showToast('Đã thêm: ' + word + (meaningVi ? ' → ' + meaningVi : ''), 'success');
-                }
-                showSyncIndicator();
-            } catch (error) {
-                showToast('Lỗi: ' + error.message, 'error');
-            } finally {
-                btn.disabled = false;
-                spinner.classList.remove('show');
-            }
-        }
-
-        // ============ PHONETIC SOURCES ============
-        const phoneticSources = [
-            {
-                name: 'Free Dictionary API',
-                fetch: async (word) => {
-                    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-                    if (!response.ok) return null;
-                    const data = await response.json();
-                    const wordInfo = data[0];
-                    if (!wordInfo) return null;
-                    
-                    return wordInfo.phonetic || wordInfo.phonetics?.find(p => p.text)?.text || null;
-                }
-            },
-            {
-                name: 'Datamuse IPA',
-                fetch: async (word) => {
-                    const response = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(word)}&md=r&max=1`);
-                    if (!response.ok) return null;
-                    const data = await response.json();
-                    if (!data[0]) return null;
-                    
-                    const ipaTag = data[0].tags?.find(t => t.startsWith('ipa_pron:'));
-                    return ipaTag ? `/${ipaTag.replace('ipa_pron:', '')}/` : null;
-                }
-            },
-            {
-                name: 'Words API Pronunciation',
-                fetch: async (word) => {
-                    // Try to construct phonetic from pronunciation patterns
-                    const response = await fetch(`https://api.datamuse.com/words?sl=${encodeURIComponent(word)}&md=r&max=1`);
-                    if (!response.ok) return null;
-                    const data = await response.json();
-                    if (!data[0]) return null;
-                    
-                    const ipaTag = data[0].tags?.find(t => t.startsWith('ipa_pron:'));
-                    return ipaTag ? `/${ipaTag.replace('ipa_pron:', '')}/` : null;
-                }
-            }
-        ];
-
-        async function fetchPhoneticFromSources(word) {
-            for (const source of phoneticSources) {
-                try {
-                    const result = await source.fetch(word);
-                    if (result) {
-                        return { phonetic: result, source: source.name };
-                    }
-                } catch (e) {
-                    console.log(`${source.name} phonetic failed:`, e.message);
-                }
-            }
-            
-            // Fallback: Generate approximate phonetic
-            const generated = generatePhonetic(word);
-            if (generated) {
-                return { phonetic: generated, source: 'Auto-generated' };
-            }
-            
-            return null;
-        }
-
-        // Generate approximate IPA phonetic for English words
-        function generatePhonetic(word) {
-            if (!word) return null;
-            
-            word = word.toLowerCase().trim();
-            let phonetic = word;
-            
-            // Common English phonetic patterns (order matters!)
-            const patterns = [
-                // Silent letters
-                [/\bkn/g, 'n'],           // know -> no
-                [/\bwr/g, 'r'],           // write -> rite
-                [/\bgn\b/g, 'n'],         // sign -> sin
-                [/mb\b/g, 'm'],           // lamb -> lam
-                [/\bps/g, 's'],           // psychology -> sychology
-                
-                // Vowel combinations
-                [/ough/g, 'ɔː'],          // thought
-                [/tion/g, 'ʃən'],         // nation
-                [/sion/g, 'ʒən'],         // vision
-                [/ious/g, 'iəs'],         // curious
-                [/eous/g, 'iəs'],         // gorgeous
-                [/eau/g, 'oʊ'],           // beautiful
-                [/oo/g, 'uː'],            // food
-                [/ee/g, 'iː'],            // see
-                [/ea/g, 'iː'],            // eat
-                [/ai/g, 'eɪ'],            // rain
-                [/ay/g, 'eɪ'],            // day
-                [/oa/g, 'oʊ'],            // boat
-                [/ow/g, 'aʊ'],            // cow
-                [/ou/g, 'aʊ'],            // out
-                [/oi/g, 'ɔɪ'],            // coin
-                [/oy/g, 'ɔɪ'],            // boy
-                [/au/g, 'ɔː'],            // cause
-                [/aw/g, 'ɔː'],            // law
-                [/ie/g, 'iː'],            // piece
-                [/ei/g, 'eɪ'],            // eight
-                [/ey/g, 'eɪ'],            // they
-                
-                // Consonant combinations
-                [/tch/g, 'tʃ'],           // watch
-                [/ch/g, 'tʃ'],            // church
-                [/sh/g, 'ʃ'],             // ship
-                [/th/g, 'θ'],             // think (simplified)
-                [/ph/g, 'f'],             // phone
-                [/wh/g, 'w'],             // what
-                [/ck/g, 'k'],             // back
-                [/ng/g, 'ŋ'],             // sing
-                [/qu/g, 'kw'],            // queen
-                [/x/g, 'ks'],             // box
-                
-                // Endings
-                [/ble\b/g, 'bəl'],        // table
-                [/tle\b/g, 'təl'],        // little
-                [/dle\b/g, 'dəl'],        // middle
-                [/ple\b/g, 'pəl'],        // apple
-                [/cle\b/g, 'kəl'],        // uncle
-                [/gle\b/g, 'gəl'],        // single
-                [/le\b/g, 'əl'],          // simple
-                [/ed\b/g, 'd'],           // played
-                [/ing\b/g, 'ɪŋ'],         // playing
-                [/ly\b/g, 'li'],          // quickly
-                [/ness\b/g, 'nəs'],       // happiness
-                [/ment\b/g, 'mənt'],      // movement
-                [/ful\b/g, 'fəl'],        // beautiful
-                [/less\b/g, 'ləs'],       // careless
-                [/er\b/g, 'ər'],          // teacher
-                [/or\b/g, 'ər'],          // actor
-                [/ar\b/g, 'ər'],          // similar
-                [/ure\b/g, 'ər'],         // nature
-                [/age\b/g, 'ɪdʒ'],        // message
-                [/ive\b/g, 'ɪv'],         // active
-                [/ize\b/g, 'aɪz'],        // realize
-                [/ise\b/g, 'aɪz'],        // realise
-                
-                // Single vowels (basic)
-                [/a/g, 'æ'],              // cat
-                [/e/g, 'ɛ'],              // bed
-                [/i/g, 'ɪ'],              // sit
-                [/o/g, 'ɒ'],              // hot
-                [/u/g, 'ʌ'],              // cup
-                [/y\b/g, 'i'],            // happy
-                
-                // Clean up
-                [/c(?=[eiy])/g, 's'],     // ce, ci, cy -> s
-                [/c/g, 'k'],              // c -> k
-                [/g(?=[eiy])/g, 'dʒ'],    // ge, gi, gy -> dʒ
-            ];
-            
-            for (const [pattern, replacement] of patterns) {
-                phonetic = phonetic.replace(pattern, replacement);
-            }
-            
-            return `/${phonetic}/`;
-        }
-
-        // Sync single vocab phonetic
-        async function syncVocabPhonetic(id) {
-            if (!currentCategoryId) return;
-            
-            const vocab = categories[currentCategoryId]?.vocabularies?.[id];
-            if (!vocab) return;
-
-            const btn = document.querySelector(`#vocab-${id} .vocab-actions button.sync`);
-            const icon = btn?.querySelector('.fa-font');
-            if (btn) btn.disabled = true;
-            if (icon) icon.classList.add('fa-spin');
-
-            try {
-                const result = await fetchPhoneticFromSources(vocab.word);
-                
-                if (result && result.phonetic) {
-                    await database.ref(`categories/${currentCategoryId}/vocabularies/${id}`).update({
-                        phonetic: result.phonetic
-                    });
-                    showToast(`✓ Phiên âm từ ${result.source}`, 'success');
-                    showSyncIndicator();
-                } else {
-                    showToast('Không tìm thấy phiên âm', 'error');
-                }
-            } catch (e) {
-                showToast('Lỗi: ' + e.message, 'error');
-            }
-
-            if (btn) btn.disabled = false;
-            if (icon) icon.classList.remove('fa-spin');
-        }
-
-        // Update all phonetics in category
-        async function updateAllPhonetic() {
-            if (!currentCategoryId || !categories[currentCategoryId]) {
-                showToast('Chọn category trước', 'error');
-                return;
-            }
-
-            const vocabs = categories[currentCategoryId].vocabularies || {};
-            const entries = Object.entries(vocabs);
-            
-            if (entries.length === 0) {
-                showToast('Không có từ nào', 'error');
-                return;
-            }
-
-            const btns = document.querySelectorAll('.update-audio-btn');
-            btns.forEach(btn => {
-                btn.disabled = true;
-                const icon = btn.querySelector('.fa-font');
-                if (icon) icon.classList.add('fa-spin');
-            });
-
-            let updated = 0;
-            let total = entries.length;
-
-            showToast(`Đang cập nhật phiên âm ${total} từ...`, 'info');
-
-            for (const [id, vocab] of entries) {
-                try {
-                    const result = await fetchPhoneticFromSources(vocab.word);
-                    
-                    if (result && result.phonetic) {
-                        await database.ref(`categories/${currentCategoryId}/vocabularies/${id}`).update({
-                            phonetic: result.phonetic
-                        });
-                        updated++;
-                    }
-                } catch (e) {
-                    console.log('Error updating phonetic:', vocab.word, e);
-                }
-                
-                await new Promise(r => setTimeout(r, 150));
-            }
-
-            btns.forEach(btn => {
-                btn.disabled = false;
-                const icon = btn.querySelector('.fa-font');
-                if (icon) icon.classList.remove('fa-spin');
-            });
-            
-            showToast(`✓ Đã cập nhật ${updated}/${total} phiên âm`, 'success');
-            showSyncIndicator();
-        }
-
-        // ============ AUDIO SOURCES ============
-        const audioSources = [
-            {
-                name: 'Free Dictionary API',
-                fetch: async (word) => {
-                    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-                    if (!response.ok) return null;
-                    const data = await response.json();
-                    const wordInfo = data[0];
-                    if (!wordInfo) return null;
-                    
-                    const phonetic = wordInfo.phonetic || wordInfo.phonetics?.find(p => p.text)?.text || '';
-                    const audioObj = wordInfo.phonetics?.find(p => p.audio && p.audio.includes('-us')) 
-                        || wordInfo.phonetics?.find(p => p.audio && p.audio.length > 0);
-                    const audio = audioObj?.audio || '';
-                    
-                    return audio ? { audio, phonetic } : null;
-                }
-            },
-            {
-                name: 'Lingua Robot',
-                fetch: async (word) => {
-                    const response = await fetch(`https://lingua-robot.p.rapidapi.com/language/v1/entries/en/${encodeURIComponent(word)}`, {
-                        headers: {
-                            'X-RapidAPI-Key': 'free', // Some endpoints work without key
-                            'X-RapidAPI-Host': 'lingua-robot.p.rapidapi.com'
-                        }
-                    });
-                    if (!response.ok) return null;
-                    const data = await response.json();
-                    const entry = data.entries?.[0];
-                    if (!entry) return null;
-                    
-                    const pronunciation = entry.pronunciations?.find(p => p.audio?.url);
-                    return pronunciation ? { 
-                        audio: pronunciation.audio.url, 
-                        phonetic: pronunciation.transcriptions?.[0]?.transcription || '' 
-                    } : null;
-                }
-            },
-            {
-                name: 'Datamuse + Speak',
-                fetch: async (word) => {
-                    // Datamuse for phonetic, use browser TTS marker for audio
-                    const response = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(word)}&md=r&max=1`);
-                    if (!response.ok) return null;
-                    const data = await response.json();
-                    
-                    // Return TTS marker - we'll use browser speech synthesis
-                    return { 
-                        audio: `tts:${word}`, 
-                        phonetic: data[0]?.tags?.find(t => t.startsWith('ipa_pron:'))?.replace('ipa_pron:', '') || ''
-                    };
-                }
-            }
-        ];
-
-        async function fetchAudioFromSources(word) {
-            for (const source of audioSources) {
-                try {
-                    const result = await source.fetch(word);
-                    if (result && result.audio) {
-                        return { ...result, source: source.name };
-                    }
-                } catch (e) {
-                    console.log(`${source.name} failed:`, e.message);
-                }
-            }
-            return null;
-        }
-
-        // ============ SYNC SINGLE VOCAB AUDIO ============
-        async function syncVocabAudio(id) {
-            if (!currentCategoryId) return;
-            
-            const vocab = categories[currentCategoryId]?.vocabularies?.[id];
-            if (!vocab) return;
-
-            // Find button and add spinning
-            const btn = document.querySelector(`#vocab-${id} .vocab-actions button.sync`);
-            const icon = btn?.querySelector('.fa-sync');
-            if (btn) btn.disabled = true;
-            if (icon) icon.classList.add('spinning');
-
-            try {
-                const result = await fetchAudioFromSources(vocab.word);
-                
-                if (result && result.audio) {
-                    await database.ref(`categories/${currentCategoryId}/vocabularies/${id}`).update({
-                        phonetic: result.phonetic || vocab.phonetic || '',
-                        audio: result.audio
-                    });
-                    showToast(`✓ Audio từ ${result.source}`, 'success');
-                    showSyncIndicator();
-                    
-                    // Play the audio to confirm
-                    if (result.audio.startsWith('tts:')) {
-                        speakWord(vocab.word);
-                    } else {
-                        new Audio(result.audio).play().catch(() => speakWord(vocab.word));
-                    }
-                } else {
-                    showToast('Không tìm thấy audio, dùng TTS', 'info');
-                    // Save TTS marker
-                    await database.ref(`categories/${currentCategoryId}/vocabularies/${id}`).update({
-                        audio: `tts:${vocab.word}`
-                    });
-                    speakWord(vocab.word);
-                }
-            } catch (e) {
-                showToast('Lỗi: ' + e.message, 'error');
-            }
-
-            if (btn) btn.disabled = false;
-            if (icon) icon.classList.remove('spinning');
-        }
-
-        // ============ EDIT VOCABULARY ============
-        let editingVocabId = null;
-
-        function editVocabulary(id) {
-            if (!currentCategoryId) return;
-            
-            const vocab = categories[currentCategoryId]?.vocabularies?.[id];
-            if (!vocab) return;
-            
-            editingVocabId = id;
-            
-            document.getElementById('edit-word').value = vocab.word || '';
-            document.getElementById('edit-phonetic').value = vocab.phonetic || '';
-            document.getElementById('edit-audio').value = vocab.audio || '';
-            document.getElementById('edit-pos').value = vocab.partOfSpeech || '';
-            document.getElementById('edit-definition').value = vocab.definition || '';
-            document.getElementById('edit-meaning-vi').value = vocab.meaningVi || '';
-            document.getElementById('edit-example').value = vocab.example || '';
-            
-            document.getElementById('edit-modal').classList.add('show');
-        }
-
-        function closeEditModal() {
-            document.getElementById('edit-modal').classList.remove('show');
-            editingVocabId = null;
-        }
-
-        document.getElementById('edit-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            if (!editingVocabId || !currentCategoryId) return;
-            
-            const updatedVocab = {
-                word: document.getElementById('edit-word').value.trim(),
-                phonetic: document.getElementById('edit-phonetic').value.trim(),
-                audio: document.getElementById('edit-audio').value.trim(),
-                partOfSpeech: document.getElementById('edit-pos').value.trim(),
-                definition: document.getElementById('edit-definition').value.trim(),
-                meaningVi: document.getElementById('edit-meaning-vi').value.trim(),
-                example: document.getElementById('edit-example').value.trim()
-            };
-            
-            await database.ref(`categories/${currentCategoryId}/vocabularies/${editingVocabId}`).set(updatedVocab);
-            
-            closeEditModal();
-            showToast('Đã cập nhật', 'success');
-            showSyncIndicator();
-        });
-
-        function deleteVocabulary(id) {
-            if (!confirm('Xóa từ này?')) return;
-            if (!currentCategoryId) return;
-            
-            database.ref(`categories/${currentCategoryId}/vocabularies/${id}`).remove()
-                .then(() => {
-                    showToast('Đã xóa', 'success');
-                    showSyncIndicator();
-                });
-        }
-
-        // ============ TOAST ============
-        function showToast(message, type = 'success') {
+        
+        // Toast
+        function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.className = 'toast ' + type + ' show';
+            toast.className = `toast ${type} show`;
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
-
-        // ============ EVENT LISTENERS ============
-        document.getElementById('new-category-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addCategory();
+        
+        // Enter key
+        document.getElementById('wordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchAndReview();
         });
-
-        document.getElementById('voice-result-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') confirmAndFetchWord();
+        
+        document.getElementById('newParentName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addParentCategory();
         });
-
-        document.getElementById('edit-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeEditModal();
-        });
-
-        // ============ INIT ============
-        initFirebaseListeners();
-        initSpeechRecognition();
+        
     </script>
 </body>
 </html>
