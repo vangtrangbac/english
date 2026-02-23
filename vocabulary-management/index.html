@@ -300,6 +300,15 @@
             white-space: nowrap;
         }
         
+        .btn-mode {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        .btn-mode.vi-mode {
+            background: var(--accent-success);
+        }
+        
         .btn-voice {
             background: var(--accent-warning);
             color: var(--bg-primary);
@@ -909,14 +918,17 @@
                 <div class="breadcrumb" id="breadcrumb"></div>
                 <h2 id="currentCategoryTitle">Chọn category</h2>
                 <div class="voice-input-section">
-                    <input type="text" id="wordInput" placeholder="Nhập từ vựng hoặc dùng voice...">
+                    <input type="text" id="wordInput" placeholder="Nhập từ tiếng Anh...">
                 </div>
                 <div class="action-buttons">
+                    <button class="btn-mode" id="searchModeBtn" onclick="toggleSearchMode()">
+                        <i class="fas fa-exchange-alt"></i> EN→VI
+                    </button>
                     <button class="btn-voice" id="voiceBtn" onclick="toggleVoiceInput()">
                         <i class="fas fa-microphone"></i> Voice
                     </button>
                     <button class="btn-add" onclick="fetchAndReview()">
-                        <i class="fas fa-search"></i> Tìm & Review
+                        <i class="fas fa-search"></i> Tìm
                     </button>
                     <button class="toggle-practice" id="practiceToggle" onclick="togglePracticeMode()">
                         <i class="fas fa-eye-slash"></i> Ẩn nghĩa
@@ -1093,6 +1105,9 @@
         
         // Review data
         let reviewData = [];
+        
+        // Search mode: 'en' (English to Vietnamese) or 'vi' (Vietnamese to English)
+        let searchMode = 'en';
         
         // Init
         document.addEventListener('DOMContentLoaded', () => {
@@ -1456,8 +1471,8 @@
         
         // Fetch and Review
         async function fetchAndReview() {
-            const word = document.getElementById('wordInput').value.trim().toLowerCase();
-            if (!word) {
+            let inputWord = document.getElementById('wordInput').value.trim();
+            if (!inputWord) {
                 showToast('Nhập từ vựng trước!', 'error');
                 return;
             }
@@ -1468,12 +1483,56 @@
             }
             
             document.getElementById('reviewModal').classList.add('show');
-            document.getElementById('reviewContent').innerHTML = `
-                <div class="review-loading">
-                    <i class="fas fa-spinner"></i>
-                    <p>Đang tìm kiếm thông tin cho "${word}"...</p>
-                </div>
-            `;
+            
+            let word = inputWord.toLowerCase();
+            let originalVietnamese = '';
+            
+            // If in Vietnamese mode, translate to English first
+            if (searchMode === 'vi') {
+                document.getElementById('reviewContent').innerHTML = `
+                    <div class="review-loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Đang dịch "${inputWord}" sang tiếng Anh...</p>
+                    </div>
+                `;
+                
+                try {
+                    originalVietnamese = inputWord;
+                    let translated = await googleTranslate(inputWord, 'vi', 'en');
+                    if (translated) {
+                        // Clean up: remove "to " prefix and take first word if multiple
+                        translated = translated.replace(/^to\s+/i, '').trim();
+                        // If result has multiple words, take the first significant word
+                        const words = translated.split(/\s+/);
+                        word = words[0].toLowerCase().replace(/[^a-z]/g, '');
+                        
+                        document.getElementById('reviewContent').innerHTML = `
+                            <div class="review-loading">
+                                <i class="fas fa-spinner"></i>
+                                <p>"${inputWord}" → <strong>${word}</strong></p>
+                                <p>Đang tìm kiếm thông tin...</p>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error('Không thể dịch từ này');
+                    }
+                } catch (err) {
+                    document.getElementById('reviewContent').innerHTML = `
+                        <div class="review-loading">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--accent-danger); animation: none;"></i>
+                            <p>Không thể dịch "${inputWord}"</p>
+                        </div>
+                    `;
+                    return;
+                }
+            } else {
+                document.getElementById('reviewContent').innerHTML = `
+                    <div class="review-loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Đang tìm kiếm thông tin cho "${word}"...</p>
+                    </div>
+                `;
+            }
             
             try {
                 const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
@@ -1511,7 +1570,8 @@
                             }
                         }
                         
-                        const meaningVi = await translateToVietnamese(word, pos, bestDef);
+                        // Use original Vietnamese if in VI mode, otherwise translate
+                        const meaningVi = originalVietnamese || await translateToVietnamese(word, pos, bestDef);
                         
                         reviewData.push({
                             word,
@@ -1535,12 +1595,19 @@
                 renderReviewList();
                 
             } catch (error) {
+                const viModeInfo = originalVietnamese ? `
+                    <p style="margin-bottom: 0.5rem; color: var(--text-secondary);">
+                        <i class="fas fa-language"></i> "${originalVietnamese}" → <strong>${word}</strong>
+                    </p>
+                ` : '';
+                
                 document.getElementById('reviewContent').innerHTML = `
                     <div class="review-loading">
                         <i class="fas fa-exclamation-triangle" style="color: var(--accent-danger); animation: none;"></i>
+                        ${viModeInfo}
                         <p>${error.message}</p>
                         <button onclick="addManualWord('${word}')" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: var(--accent); color: var(--bg-primary); border: none; border-radius: 6px; cursor: pointer;">
-                            <i class="fas fa-plus"></i> Thêm thủ công
+                            <i class="fas fa-plus"></i> Thêm "${word}" thủ công
                         </button>
                     </div>
                 `;
@@ -1681,8 +1748,8 @@
             return cleaned;
         }
         
-        async function googleTranslate(text) {
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(text)}`;
+        async function googleTranslate(text, sourceLang = 'en', targetLang = 'vi') {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
             const response = await fetch(url);
             const data = await response.json();
             if (data && data[0] && data[0][0] && data[0][0][0]) return data[0][0][0].trim();
@@ -2081,6 +2148,25 @@
         function closeMobileSidebar() {
             document.querySelector('.sidebar').classList.remove('show');
             document.querySelector('.sidebar-overlay').classList.remove('show');
+        }
+        
+        // Search mode toggle (EN→VI or VI→EN)
+        function toggleSearchMode() {
+            searchMode = searchMode === 'en' ? 'vi' : 'en';
+            const btn = document.getElementById('searchModeBtn');
+            const input = document.getElementById('wordInput');
+            
+            if (searchMode === 'vi') {
+                btn.innerHTML = '<i class="fas fa-exchange-alt"></i> VI→EN';
+                btn.classList.add('vi-mode');
+                input.placeholder = 'Nhập từ tiếng Việt...';
+                showToast('Chế độ: Tìm từ tiếng Anh từ tiếng Việt', 'info');
+            } else {
+                btn.innerHTML = '<i class="fas fa-exchange-alt"></i> EN→VI';
+                btn.classList.remove('vi-mode');
+                input.placeholder = 'Nhập từ tiếng Anh...';
+                showToast('Chế độ: Tìm từ tiếng Anh', 'info');
+            }
         }
         
         // Practice mode toggle
