@@ -979,7 +979,7 @@
                 <div class="reader-options">
                     <label>
                         Chế độ:
-                        <select id="readerMode">
+                        <select id="readerMode" onchange="saveReaderSettings()">
                             <option value="current">Category hiện tại</option>
                             <option value="unlearned">Chỉ chưa học</option>
                             <option value="all">Tất cả</option>
@@ -987,12 +987,20 @@
                     </label>
                     <label>
                         Delay:
-                        <select id="readerDelay">
+                        <select id="readerDelay" onchange="saveReaderSettings()">
                             <option value="1000">1s</option>
                             <option value="2000" selected>2s</option>
                             <option value="3000">3s</option>
                             <option value="5000">5s</option>
                             <option value="10000">10s</option>
+                        </select>
+                    </label>
+                    <label>
+                        Lặp:
+                        <select id="readerRepeat" onchange="saveReaderSettings()">
+                            <option value="1" selected>1x</option>
+                            <option value="2">2x</option>
+                            <option value="3">3x</option>
                         </select>
                     </label>
                     <label class="checkbox-label">
@@ -2019,6 +2027,8 @@
             readCurrentWord();
         }
         
+        let currentRepeatCount = 0;
+        
         function readCurrentWord() {
             if (!isReading || isPaused || readingIndex >= readingList.length) {
                 if (readingIndex >= readingList.length) {
@@ -2029,6 +2039,8 @@
             }
             
             const vocab = readingList[readingIndex];
+            const repeatTimes = parseInt(document.getElementById('readerRepeat').value) || 1;
+            
             document.querySelectorAll('.vocab-item').forEach(el => el.classList.remove('reading'));
             const el = document.getElementById(`vocab-${vocab.id}`);
             if (el) {
@@ -2042,7 +2054,10 @@
             const example = vocab.example || '';
             const readExampleEnabled = document.getElementById('readExample').checked;
             
-            let displayHtml = `<strong>${vocab.word}</strong> <span style="color: var(--text-secondary);">${phonetic}</span> ` +
+            // Show repeat indicator
+            const repeatInfo = repeatTimes > 1 ? ` <span style="color: var(--accent-warning);">[${currentRepeatCount + 1}/${repeatTimes}]</span>` : '';
+            
+            let displayHtml = `<strong>${vocab.word}</strong>${repeatInfo} <span style="color: var(--text-secondary);">${phonetic}</span> ` +
                 `<span style="color: var(--accent-success); font-weight: 600;">${meaningVi}</span> ` +
                 `<span style="background: var(--accent); color: var(--bg-primary); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.8rem;">${pos}</span>`;
             if (readExampleEnabled && example) {
@@ -2052,8 +2067,22 @@
             document.getElementById('readerStatus').textContent = `${readingIndex + 1} / ${readingList.length}`;
             
             speakWord(vocab.word, vocab.audio, () => {
+                currentRepeatCount++;
+                
+                // Check if need more repeats
+                if (currentRepeatCount < repeatTimes) {
+                    // Repeat the word after a short pause
+                    readingTimeout = setTimeout(() => {
+                        readCurrentWord();
+                    }, 800);
+                    return;
+                }
+                
+                // Reset repeat counter
+                currentRepeatCount = 0;
+                
                 if (readExampleEnabled && example && !isPaused) {
-                    // Read example after the word
+                    // Read example after all repeats
                     setTimeout(() => {
                         if (!isPaused && isReading) {
                             speakText(example, () => {
@@ -2093,12 +2122,30 @@
         
         function saveReaderSettings() {
             localStorage.setItem('readerReadExample', document.getElementById('readExample').checked);
+            localStorage.setItem('readerRepeat', document.getElementById('readerRepeat').value);
+            localStorage.setItem('readerDelay', document.getElementById('readerDelay').value);
+            localStorage.setItem('readerMode', document.getElementById('readerMode').value);
         }
         
         function loadReaderSettings() {
             const readExample = localStorage.getItem('readerReadExample');
             if (readExample !== null) {
                 document.getElementById('readExample').checked = readExample === 'true';
+            }
+            
+            const repeat = localStorage.getItem('readerRepeat');
+            if (repeat) {
+                document.getElementById('readerRepeat').value = repeat;
+            }
+            
+            const delay = localStorage.getItem('readerDelay');
+            if (delay) {
+                document.getElementById('readerDelay').value = delay;
+            }
+            
+            const mode = localStorage.getItem('readerMode');
+            if (mode) {
+                document.getElementById('readerMode').value = mode;
             }
         }
         
@@ -2120,6 +2167,7 @@
             isReading = false;
             isPaused = false;
             readingIndex = 0;
+            currentRepeatCount = 0;
             clearTimeout(readingTimeout);
             if (typeof responsiveVoice !== 'undefined') responsiveVoice.cancel();
             speechSynthesis.cancel();
