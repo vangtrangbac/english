@@ -394,6 +394,17 @@
             color: var(--text-primary);
         }
         
+        .reader-options .checkbox-label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .reader-options .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+        
         .reader-progress {
             display: flex;
             align-items: center;
@@ -964,6 +975,10 @@
                             <option value="10000">10s</option>
                         </select>
                     </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="readExample" onchange="saveReaderSettings()">
+                        <span>Đọc example</span>
+                    </label>
                 </div>
                 <div class="reader-progress">
                     <span class="reader-status" id="readerStatus">Sẵn sàng</span>
@@ -1114,6 +1129,7 @@
             initFirebaseListeners();
             initSpeechRecognition();
             initPracticeMode();
+            loadReaderSettings();
         });
         
         function initFirebaseListeners() {
@@ -1943,19 +1959,67 @@
             const phonetic = vocab.phonetic || '';
             const meaningVi = vocab.meaningVi || '';
             const pos = vocab.partOfSpeech || '';
-            document.getElementById('readerCurrentWord').innerHTML = 
-                `<strong>${vocab.word}</strong> <span style="color: var(--text-secondary);">${phonetic}</span> ` +
+            const example = vocab.example || '';
+            const readExampleEnabled = document.getElementById('readExample').checked;
+            
+            let displayHtml = `<strong>${vocab.word}</strong> <span style="color: var(--text-secondary);">${phonetic}</span> ` +
                 `<span style="color: var(--accent-success); font-weight: 600;">${meaningVi}</span> ` +
                 `<span style="background: var(--accent); color: var(--bg-primary); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.8rem;">${pos}</span>`;
+            if (readExampleEnabled && example) {
+                displayHtml += `<br><span style="color: var(--text-secondary); font-style: italic; font-size: 0.9rem; margin-top: 0.3rem; display: block;">📝 ${example}</span>`;
+            }
+            document.getElementById('readerCurrentWord').innerHTML = displayHtml;
             document.getElementById('readerStatus').textContent = `${readingIndex + 1} / ${readingList.length}`;
             
             speakWord(vocab.word, vocab.audio, () => {
-                const delay = parseInt(document.getElementById('readerDelay').value);
-                readingTimeout = setTimeout(() => {
-                    readingIndex++;
-                    readCurrentWord();
-                }, delay);
+                if (readExampleEnabled && example && !isPaused) {
+                    // Read example after the word
+                    setTimeout(() => {
+                        if (!isPaused && isReading) {
+                            speakText(example, () => {
+                                const delay = parseInt(document.getElementById('readerDelay').value);
+                                readingTimeout = setTimeout(() => {
+                                    readingIndex++;
+                                    readCurrentWord();
+                                }, delay);
+                            });
+                        }
+                    }, 500);
+                } else {
+                    const delay = parseInt(document.getElementById('readerDelay').value);
+                    readingTimeout = setTimeout(() => {
+                        readingIndex++;
+                        readCurrentWord();
+                    }, delay);
+                }
             });
+        }
+        
+        function speakText(text, callback) {
+            if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+                responsiveVoice.speak(text, "UK English Female", {
+                    rate: 0.9,
+                    onend: callback
+                });
+            } else {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.onend = callback;
+                utterance.onerror = callback;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function saveReaderSettings() {
+            localStorage.setItem('readerReadExample', document.getElementById('readExample').checked);
+        }
+        
+        function loadReaderSettings() {
+            const readExample = localStorage.getItem('readerReadExample');
+            if (readExample !== null) {
+                document.getElementById('readExample').checked = readExample === 'true';
+            }
         }
         
         function pauseAutoRead() {

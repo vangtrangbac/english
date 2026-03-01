@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import 2000 Verbs</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; padding: 2rem; }
+        h1 { margin-bottom: 1rem; color: #00d9ff; }
+        .info { background: #16213e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .progress { background: #16213e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .progress-bar { background: #0f3460; height: 30px; border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+        .progress-fill { background: linear-gradient(90deg, #00d9ff, #00ff88); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1a1a2e; }
+        button { padding: 1rem 2rem; font-size: 1.1rem; background: #00d9ff; color: #1a1a2e; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 0.5rem; }
+        button:hover { background: #00ff88; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .log { background: #0f0f1a; padding: 1rem; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; }
+        .log p { margin: 0.2rem 0; }
+        .success { color: #00ff88; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        .categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .cat-card { background: #16213e; padding: 1rem; border-radius: 8px; }
+        .cat-card h3 { color: #00d9ff; margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .cat-card p { color: #aaa; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Import 2000 Common Verbs</h1>
+    
+    <div class="info">
+        <p><strong>Tổng số:</strong> 2000 động từ thông dụng</p>
+        <p><strong>Chia theo:</strong> 12 chủ đề</p>
+        <p><strong>Parent Category:</strong> Common Verbs</p>
+        <p style="color: #00ff88; margin-top: 0.5rem;"><strong>✓ Tự động lấy:</strong> Phiên âm IPA, Audio, Definition, Example từ Dictionary API</p>
+        <p style="color: #ffd93d;"><strong>⏱ Thời gian:</strong> Khoảng 15-20 phút (do lấy dữ liệu từ API)</p>
+    </div>
+    
+    <div class="categories" id="categoriesPreview"></div>
+    
+    <div class="progress">
+        <p id="statusText">Sẵn sàng import...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill">0%</div>
+        </div>
+    </div>
+    
+    <div style="margin: 1rem 0;">
+        <button onclick="startImport()" id="importBtn">🚀 Bắt đầu Import</button>
+        <button onclick="window.location.href='index.html'">← Quay lại App</button>
+    </div>
+    
+    <div class="log" id="log"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpwi1P4QuwmBi6ytnH13LZfNY4ECQI0nQ",
+            authDomain: "vocabulary-manager-cd26d.firebaseapp.com",
+            databaseURL: "https://vocabulary-manager-cd26d-default-rtdb.firebaseio.com",
+            projectId: "vocabulary-manager-cd26d",
+            storageBucket: "vocabulary-manager-cd26d.firebasestorage.app",
+            messagingSenderId: "888267782177",
+            appId: "1:888267782177:web:257d782a51575d80064b60"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 2000 verbs organized by 12 themes
+        const verbCategories = {
+            "Movement & Travel": [
+                "walk", "run", "jump", "go", "come", "arrive", "leave", "travel", "move", "return",
+                "fly", "swim", "climb", "crawl", "dance", "skip", "hop", "leap", "sprint", "jog",
+                "march", "stroll", "wander", "roam", "rush", "hurry", "dash", "race", "chase", "flee",
+                "escape", "enter", "exit", "pass", "cross", "approach", "reach", "land", "sail", "drive",
+                "ride", "cycle", "skate", "slide", "glide", "float", "drift", "sink", "dive", "plunge",
+                "soar", "hover", "descend", "ascend", "rise", "fall", "drop", "stumble", "trip", "slip",
+                "roll", "spin", "turn", "twist", "bend", "stretch", "lean", "kneel", "crouch", "squat",
+                "stand", "sit", "lie", "rest", "pause", "stop", "halt", "freeze", "proceed", "continue",
+                "advance", "retreat", "withdraw", "depart", "emigrate", "immigrate", "migrate", "relocate", "transfer", "transport",
+                "deliver", "fetch", "bring", "take", "carry", "lead", "follow", "accompany", "escort", "guide",
+                "navigate", "explore", "venture", "trek", "hike", "camp", "tour", "visit", "commute", "shuttle",
+                "detour", "bypass", "shortcut", "zigzag", "meander", "circle", "orbit", "revolve", "rotate", "pivot",
+                "sway", "swing", "rock", "bounce", "vibrate", "shake", "tremble", "quiver", "shiver", "wobble",
+                "tiptoe", "sneak", "creep", "prowl", "lurk", "pounce", "lunge", "charge", "storm", "invade",
+                "penetrate", "pierce", "breakthrough", "burst", "erupt", "surge", "flow", "stream", "pour", "gush",
+                "trickle", "drip", "leak", "seep", "ooze", "spread", "scatter", "disperse", "gather", "assemble"
+            ],
+            "Communication": [
+                "say", "tell", "speak", "talk", "ask", "answer", "reply", "respond", "explain", "describe",
+                "discuss", "argue", "debate", "negotiate", "convince", "persuade", "suggest", "recommend", "advise", "warn",
+                "inform", "notify", "announce", "declare", "state", "mention", "remark", "comment", "note", "observe",
+                "report", "narrate", "relate", "recount", "summarize", "conclude", "introduce", "present", "demonstrate", "illustrate",
+                "clarify", "elaborate", "specify", "emphasize", "stress", "highlight", "underline", "repeat", "rephrase", "paraphrase",
+                "translate", "interpret", "define", "mean", "signify", "imply", "hint", "indicate", "express", "convey",
+                "communicate", "transmit", "broadcast", "publish", "post", "share", "spread", "circulate", "distribute", "disseminate",
+                "whisper", "murmur", "mumble", "mutter", "shout", "yell", "scream", "cry", "call", "exclaim",
+                "greet", "welcome", "bid", "farewell", "congratulate", "compliment", "praise", "flatter", "thank", "apologize",
+                "excuse", "forgive", "blame", "accuse", "criticize", "condemn", "denounce", "protest", "complain", "object",
+                "reject", "refuse", "deny", "decline", "dismiss", "ignore", "acknowledge", "admit", "confess", "reveal",
+                "disclose", "expose", "betray", "gossip", "rumor", "lie", "deceive", "mislead", "exaggerate", "understate",
+                "promise", "vow", "swear", "pledge", "guarantee", "assure", "confirm", "verify", "certify", "testify",
+                "witness", "quote", "cite", "reference", "attribute", "credit", "interview", "question", "interrogate", "quiz",
+                "challenge", "confront", "address", "appeal", "plead", "beg", "request", "demand", "command", "order",
+                "instruct", "direct", "guide", "coach", "mentor", "teach", "lecture", "preach", "sermon", "advocate"
+            ],
+            "Mental & Cognitive": [
+                "think", "know", "believe", "understand", "realize", "recognize", "remember", "forget", "learn", "study",
+                "memorize", "recall", "recollect", "remind", "consider", "contemplate", "reflect", "ponder", "meditate", "wonder",
+                "imagine", "visualize", "picture", "envision", "dream", "fantasize", "suppose", "assume", "presume", "guess",
+                "estimate", "calculate", "compute", "figure", "reason", "analyze", "evaluate", "assess", "judge", "conclude",
+                "deduce", "infer", "derive", "determine", "decide", "resolve", "choose", "select", "prefer", "favor",
+                "doubt", "question", "suspect", "distrust", "trust", "believe", "accept", "reject", "deny", "confirm",
+                "verify", "prove", "demonstrate", "justify", "rationalize", "explain", "interpret", "comprehend", "grasp", "perceive",
+                "conceive", "conceptualize", "theorize", "hypothesize", "speculate", "predict", "forecast", "anticipate", "expect", "foresee",
+                "plan", "scheme", "plot", "design", "devise", "invent", "create", "innovate", "discover", "find",
+                "solve", "resolve", "figure", "puzzle", "confuse", "perplex", "bewilder", "mystify", "clarify", "enlighten",
+                "educate", "inform", "instruct", "train", "condition", "program", "brainwash", "indoctrinate", "influence", "persuade",
+                "convince", "motivate", "inspire", "encourage", "discourage", "deter", "dissuade", "mislead", "deceive", "trick",
+                "focus", "concentrate", "attend", "notice", "observe", "examine", "inspect", "scrutinize", "investigate", "research",
+                "explore", "probe", "inquire", "query", "seek", "search", "hunt", "pursue", "track", "trace",
+                "identify", "classify", "categorize", "organize", "arrange", "sort", "rank", "prioritize", "compare", "contrast",
+                "distinguish", "differentiate", "discriminate", "associate", "connect", "relate", "link", "correlate", "integrate", "synthesize"
+            ],
+            "Sensory & Perception": [
+                "see", "look", "watch", "view", "observe", "notice", "spot", "glimpse", "glance", "stare",
+                "gaze", "peer", "peek", "squint", "blink", "wink", "scan", "survey", "examine", "inspect",
+                "scrutinize", "study", "read", "browse", "skim", "review", "preview", "witness", "behold", "perceive",
+                "hear", "listen", "overhear", "eavesdrop", "detect", "sense", "feel", "touch", "handle", "grasp",
+                "grip", "hold", "squeeze", "press", "stroke", "caress", "pat", "tap", "poke", "prod",
+                "tickle", "scratch", "rub", "massage", "knead", "pinch", "slap", "punch", "hit", "strike",
+                "smell", "sniff", "inhale", "breathe", "exhale", "taste", "savor", "sample", "sip", "lick",
+                "bite", "chew", "swallow", "gulp", "devour", "experience", "undergo", "endure", "suffer", "enjoy",
+                "appreciate", "admire", "marvel", "wonder", "awe", "frighten", "scare", "terrify", "horrify", "shock",
+                "startle", "surprise", "amaze", "astonish", "astound", "stun", "daze", "dazzle", "blind", "deafen",
+                "numb", "paralyze", "freeze", "thaw", "warm", "cool", "heat", "chill", "burn", "scald",
+                "sting", "prick", "pierce", "penetrate", "cut", "slice", "stab", "wound", "hurt", "pain",
+                "ache", "throb", "pulse", "beat", "pound", "vibrate", "tingle", "itch", "irritate", "annoy",
+                "bother", "disturb", "distract", "attract", "repel", "disgust", "revolt", "nauseate", "sicken", "heal",
+                "cure", "treat", "remedy", "relieve", "soothe", "calm", "comfort", "please", "satisfy", "delight",
+                "thrill", "excite", "stimulate", "arouse", "awaken", "alert", "alarm", "warn", "signal", "indicate"
+            ],
+            "Physical Actions": [
+                "make", "do", "create", "build", "construct", "assemble", "manufacture", "produce", "fabricate", "craft",
+                "design", "form", "shape", "mold", "sculpt", "carve", "engrave", "etch", "draw", "paint",
+                "sketch", "trace", "outline", "draft", "write", "type", "print", "copy", "duplicate", "reproduce",
+                "break", "destroy", "demolish", "wreck", "ruin", "damage", "harm", "injure", "wound", "hurt",
+                "tear", "rip", "shred", "crush", "smash", "crash", "shatter", "crack", "split", "divide",
+                "cut", "slice", "chop", "dice", "mince", "carve", "trim", "prune", "clip", "snip",
+                "saw", "drill", "hammer", "nail", "screw", "bolt", "weld", "solder", "glue", "paste",
+                "tape", "staple", "pin", "attach", "fasten", "secure", "tie", "bind", "wrap", "unwrap",
+                "open", "close", "shut", "lock", "unlock", "seal", "unseal", "cover", "uncover", "expose",
+                "hide", "conceal", "bury", "dig", "excavate", "unearth", "plant", "sow", "cultivate", "harvest",
+                "pick", "pluck", "gather", "collect", "accumulate", "pile", "stack", "arrange", "organize", "sort",
+                "mix", "blend", "combine", "merge", "separate", "divide", "split", "partition", "distribute", "allocate",
+                "load", "unload", "pack", "unpack", "fill", "empty", "pour", "spill", "dump", "dispose",
+                "throw", "toss", "hurl", "fling", "launch", "shoot", "fire", "aim", "target", "hit",
+                "catch", "grab", "snatch", "seize", "capture", "trap", "release", "free", "liberate", "rescue",
+                "lift", "raise", "lower", "drop", "pick", "place", "put", "set", "position", "adjust"
+            ],
+            "Daily Life": [
+                "eat", "drink", "cook", "bake", "fry", "boil", "steam", "grill", "roast", "toast",
+                "prepare", "serve", "feed", "dine", "breakfast", "lunch", "dinner", "snack", "feast", "starve",
+                "sleep", "wake", "nap", "rest", "relax", "dream", "snore", "yawn", "stretch", "arise",
+                "wash", "bathe", "shower", "scrub", "rinse", "dry", "wipe", "clean", "dust", "sweep",
+                "mop", "vacuum", "polish", "shine", "iron", "fold", "hang", "store", "organize", "tidy",
+                "dress", "undress", "wear", "put", "take", "change", "button", "zip", "tie", "untie",
+                "brush", "comb", "style", "cut", "trim", "shave", "groom", "makeup", "accessorize", "decorate",
+                "shop", "buy", "purchase", "sell", "trade", "exchange", "bargain", "negotiate", "pay", "spend",
+                "save", "budget", "invest", "earn", "profit", "lose", "waste", "conserve", "recycle", "reuse",
+                "drive", "park", "commute", "travel", "navigate", "map", "locate", "find", "search", "browse",
+                "call", "text", "email", "message", "chat", "surf", "scroll", "click", "tap", "swipe",
+                "charge", "plug", "unplug", "connect", "disconnect", "install", "uninstall", "update", "upgrade", "download",
+                "upload", "backup", "restore", "delete", "save", "print", "scan", "copy", "paste", "share",
+                "exercise", "workout", "jog", "stretch", "meditate", "breathe", "relax", "unwind", "destress", "recover",
+                "garden", "plant", "water", "fertilize", "prune", "mow", "rake", "weed", "harvest", "compost",
+                "pet", "walk", "feed", "groom", "train", "play", "cuddle", "adopt", "rescue", "foster"
+            ],
+            "Emotions & Feelings": [
+                "love", "hate", "like", "dislike", "prefer", "favor", "adore", "cherish", "treasure", "value",
+                "appreciate", "admire", "respect", "honor", "worship", "idolize", "glorify", "praise", "compliment", "flatter",
+                "enjoy", "delight", "please", "satisfy", "content", "fulfill", "gratify", "thrill", "excite", "stimulate",
+                "amuse", "entertain", "fascinate", "captivate", "charm", "enchant", "bewitch", "mesmerize", "hypnotize", "spellbind",
+                "attract", "appeal", "interest", "intrigue", "curious", "wonder", "marvel", "awe", "amaze", "astonish",
+                "surprise", "shock", "stun", "startle", "alarm", "frighten", "scare", "terrify", "horrify", "petrify",
+                "worry", "concern", "trouble", "bother", "disturb", "upset", "distress", "agonize", "torment", "torture",
+                "suffer", "hurt", "pain", "ache", "grieve", "mourn", "lament", "weep", "cry", "sob",
+                "laugh", "giggle", "chuckle", "snicker", "grin", "smile", "beam", "glow", "radiate", "shine",
+                "hope", "wish", "desire", "want", "need", "crave", "yearn", "long", "pine", "ache",
+                "fear", "dread", "panic", "anxiety", "stress", "tense", "nervous", "jittery", "fidget", "squirm",
+                "calm", "soothe", "comfort", "console", "reassure", "encourage", "inspire", "motivate", "empower", "strengthen",
+                "anger", "rage", "fury", "irritate", "annoy", "frustrate", "aggravate", "provoke", "infuriate", "enrage",
+                "resent", "begrudge", "envy", "jealous", "covet", "grudge", "spite", "revenge", "retaliate", "avenge",
+                "forgive", "pardon", "excuse", "absolve", "reconcile", "accept", "tolerate", "endure", "bear", "withstand",
+                "embarrass", "shame", "humiliate", "mortify", "disgrace", "dishonor", "guilty", "regret", "remorse", "repent"
+            ],
+            "Work & Professional": [
+                "work", "labor", "toil", "strive", "endeavor", "effort", "exert", "apply", "dedicate", "commit",
+                "manage", "supervise", "oversee", "direct", "lead", "guide", "mentor", "coach", "train", "develop",
+                "hire", "recruit", "employ", "engage", "contract", "assign", "delegate", "allocate", "distribute", "dispatch",
+                "fire", "dismiss", "terminate", "layoff", "downsize", "restructure", "reorganize", "reform", "transform", "revolutionize",
+                "plan", "strategize", "scheme", "plot", "design", "blueprint", "outline", "draft", "propose", "pitch",
+                "budget", "finance", "fund", "invest", "sponsor", "subsidize", "grant", "loan", "borrow", "lend",
+                "earn", "profit", "gain", "benefit", "yield", "return", "dividend", "revenue", "income", "salary",
+                "negotiate", "bargain", "deal", "trade", "exchange", "barter", "buy", "sell", "purchase", "acquire",
+                "market", "advertise", "promote", "brand", "campaign", "launch", "release", "debut", "premiere", "introduce",
+                "compete", "rival", "contest", "challenge", "outperform", "surpass", "exceed", "beat", "win", "lose",
+                "cooperate", "collaborate", "partner", "ally", "unite", "merge", "acquire", "takeover", "buyout", "consolidate",
+                "network", "connect", "link", "associate", "affiliate", "join", "belong", "participate", "contribute", "volunteer",
+                "schedule", "calendar", "book", "reserve", "confirm", "cancel", "postpone", "reschedule", "delay", "expedite",
+                "meet", "conference", "consult", "discuss", "brainstorm", "ideate", "innovate", "create", "invent", "patent",
+                "audit", "review", "evaluate", "assess", "appraise", "rate", "rank", "score", "grade", "benchmark",
+                "report", "document", "record", "file", "archive", "store", "retrieve", "access", "process", "analyze"
+            ],
+            "Social & Relationship": [
+                "meet", "greet", "welcome", "introduce", "acquaint", "know", "recognize", "remember", "forget", "ignore",
+                "befriend", "bond", "connect", "relate", "associate", "mingle", "socialize", "network", "interact", "engage",
+                "date", "court", "romance", "flirt", "seduce", "attract", "charm", "impress", "woo", "propose",
+                "marry", "wed", "unite", "join", "bond", "commit", "vow", "promise", "pledge", "devote",
+                "divorce", "separate", "split", "break", "leave", "abandon", "desert", "forsake", "betray", "cheat",
+                "love", "care", "cherish", "treasure", "value", "appreciate", "respect", "honor", "admire", "adore",
+                "support", "help", "assist", "aid", "serve", "cater", "accommodate", "provide", "supply", "furnish",
+                "share", "give", "donate", "contribute", "offer", "present", "gift", "reward", "treat", "spoil",
+                "trust", "rely", "depend", "count", "believe", "confide", "entrust", "delegate", "assign", "empower",
+                "communicate", "talk", "discuss", "converse", "chat", "gossip", "confess", "admit", "reveal", "disclose",
+                "argue", "disagree", "dispute", "quarrel", "fight", "clash", "conflict", "confront", "challenge", "oppose",
+                "reconcile", "resolve", "settle", "compromise", "negotiate", "mediate", "arbitrate", "judge", "decide", "rule",
+                "apologize", "forgive", "pardon", "excuse", "accept", "tolerate", "endure", "bear", "suffer", "sacrifice",
+                "celebrate", "commemorate", "honor", "toast", "congratulate", "praise", "compliment", "thank", "appreciate", "acknowledge",
+                "invite", "host", "entertain", "welcome", "accommodate", "visit", "attend", "participate", "join", "belong",
+                "exclude", "reject", "shun", "ostracize", "isolate", "alienate", "discriminate", "prejudice", "stereotype", "judge"
+            ],
+            "Change & State": [
+                "become", "grow", "develop", "evolve", "mature", "age", "ripen", "bloom", "flourish", "thrive",
+                "change", "alter", "modify", "adjust", "adapt", "transform", "convert", "transition", "shift", "switch",
+                "improve", "enhance", "upgrade", "advance", "progress", "develop", "refine", "perfect", "optimize", "maximize",
+                "worsen", "deteriorate", "decline", "degrade", "decay", "rot", "spoil", "corrupt", "damage", "harm",
+                "increase", "grow", "expand", "extend", "enlarge", "magnify", "amplify", "intensify", "strengthen", "boost",
+                "decrease", "reduce", "shrink", "contract", "compress", "condense", "minimize", "diminish", "weaken", "fade",
+                "start", "begin", "commence", "initiate", "launch", "inaugurate", "introduce", "establish", "found", "create",
+                "stop", "end", "finish", "complete", "conclude", "terminate", "cease", "halt", "pause", "suspend",
+                "continue", "persist", "persevere", "endure", "last", "remain", "stay", "maintain", "sustain", "preserve",
+                "appear", "emerge", "arise", "surface", "materialize", "manifest", "show", "reveal", "expose", "display",
+                "disappear", "vanish", "fade", "dissolve", "evaporate", "melt", "thaw", "freeze", "solidify", "harden",
+                "soften", "loosen", "tighten", "stretch", "compress", "expand", "contract", "bend", "straighten", "curl",
+                "open", "close", "widen", "narrow", "lengthen", "shorten", "heighten", "lower", "raise", "drop",
+                "speed", "accelerate", "hasten", "quicken", "rush", "slow", "decelerate", "delay", "retard", "hinder",
+                "stabilize", "balance", "steady", "secure", "anchor", "fix", "settle", "establish", "set", "determine",
+                "fluctuate", "vary", "oscillate", "alternate", "rotate", "cycle", "repeat", "recur", "return", "revert"
+            ],
+            "Possession & Transfer": [
+                "have", "own", "possess", "hold", "keep", "retain", "maintain", "preserve", "conserve", "save",
+                "get", "obtain", "acquire", "gain", "earn", "win", "receive", "accept", "take", "grab",
+                "give", "offer", "provide", "supply", "furnish", "deliver", "distribute", "allocate", "assign", "grant",
+                "share", "divide", "split", "separate", "partition", "portion", "ration", "allot", "apportion", "dispense",
+                "lend", "loan", "advance", "credit", "finance", "fund", "sponsor", "subsidize", "support", "back",
+                "borrow", "owe", "debt", "repay", "reimburse", "refund", "return", "restore", "recover", "reclaim",
+                "buy", "purchase", "acquire", "procure", "obtain", "order", "reserve", "book", "hire", "rent",
+                "sell", "vend", "market", "retail", "wholesale", "export", "import", "trade", "exchange", "barter",
+                "steal", "rob", "burglarize", "pilfer", "shoplift", "embezzle", "defraud", "swindle", "cheat", "scam",
+                "lose", "misplace", "mislay", "forfeit", "sacrifice", "surrender", "relinquish", "abandon", "discard", "dispose",
+                "find", "discover", "locate", "spot", "detect", "uncover", "unearth", "retrieve", "recover", "reclaim",
+                "collect", "gather", "accumulate", "amass", "hoard", "stockpile", "store", "warehouse", "inventory", "catalog",
+                "donate", "contribute", "gift", "present", "bestow", "award", "reward", "prize", "bonus", "tip",
+                "inherit", "bequeath", "will", "endow", "legacy", "heritage", "estate", "property", "asset", "wealth",
+                "rent", "lease", "hire", "charter", "license", "permit", "authorize", "sanction", "approve", "allow",
+                "confiscate", "seize", "impound", "appropriate", "expropriate", "nationalize", "privatize", "monopolize", "corner", "dominate"
+            ],
+            "Existence & Being": [
+                "be", "exist", "live", "survive", "subsist", "persist", "endure", "last", "remain", "stay",
+                "die", "perish", "expire", "decease", "pass", "depart", "succumb", "yield", "fall", "collapse",
+                "born", "birth", "originate", "emerge", "arise", "spring", "stem", "derive", "descend", "evolve",
+                "happen", "occur", "take", "transpire", "unfold", "develop", "progress", "proceed", "advance", "continue",
+                "cause", "create", "produce", "generate", "bring", "induce", "trigger", "spark", "ignite", "kindle",
+                "result", "follow", "ensue", "stem", "arise", "derive", "originate", "emanate", "proceed", "flow",
+                "depend", "rely", "hinge", "rest", "base", "ground", "found", "root", "anchor", "establish",
+                "consist", "comprise", "contain", "include", "involve", "entail", "encompass", "embrace", "cover", "span",
+                "belong", "pertain", "relate", "concern", "regard", "apply", "affect", "influence", "impact", "touch",
+                "equal", "match", "parallel", "correspond", "correlate", "resemble", "mirror", "reflect", "echo", "replicate",
+                "differ", "vary", "diverge", "deviate", "contrast", "clash", "conflict", "contradict", "oppose", "counter",
+                "seem", "appear", "look", "sound", "feel", "taste", "smell", "suggest", "indicate", "imply",
+                "prove", "demonstrate", "show", "reveal", "expose", "manifest", "display", "exhibit", "present", "represent",
+                "symbolize", "signify", "denote", "connote", "mean", "express", "convey", "communicate", "transmit", "relay",
+                "occupy", "inhabit", "dwell", "reside", "live", "settle", "populate", "colonize", "migrate", "relocate",
+                "locate", "situate", "position", "place", "set", "put", "lay", "arrange", "organize", "order"
+            ]
+        };
+
+        // Vietnamese translations for each verb (simplified)
+        const vietnameseTranslations = {
+            // Movement & Travel
+            "walk": "đi bộ", "run": "chạy", "jump": "nhảy", "go": "đi", "come": "đến",
+            "arrive": "đến nơi", "leave": "rời đi", "travel": "du lịch", "move": "di chuyển", "return": "trở về",
+            "fly": "bay", "swim": "bơi", "climb": "leo", "crawl": "bò", "dance": "nhảy múa",
+            "skip": "nhảy lò cò", "hop": "nhảy", "leap": "nhảy vọt", "sprint": "chạy nước rút", "jog": "chạy bộ",
+            "march": "diễu hành", "stroll": "đi dạo", "wander": "lang thang", "roam": "đi rong", "rush": "vội vã",
+            "hurry": "vội vàng", "dash": "lao đi", "race": "đua", "chase": "đuổi theo", "flee": "chạy trốn",
+            "escape": "thoát", "enter": "vào", "exit": "ra", "pass": "đi qua", "cross": "băng qua",
+            "approach": "tiếp cận", "reach": "đến", "land": "hạ cánh", "sail": "đi thuyền", "drive": "lái xe",
+            "ride": "đi xe", "cycle": "đạp xe", "skate": "trượt băng", "slide": "trượt", "glide": "lướt",
+            "float": "nổi", "drift": "trôi dạt", "sink": "chìm", "dive": "lặn", "plunge": "lao xuống",
+            "soar": "bay cao", "hover": "lơ lửng", "descend": "đi xuống", "ascend": "đi lên", "rise": "dậy",
+            "fall": "ngã", "drop": "rơi", "stumble": "vấp", "trip": "vấp ngã", "slip": "trượt chân",
+            "roll": "lăn", "spin": "quay", "turn": "quay", "twist": "xoắn", "bend": "cong",
+            "stretch": "duỗi", "lean": "nghiêng", "kneel": "quỳ", "crouch": "ngồi xổm", "squat": "ngồi xổm",
+            "stand": "đứng", "sit": "ngồi", "lie": "nằm", "rest": "nghỉ ngơi", "pause": "tạm dừng",
+            "stop": "dừng", "halt": "ngừng", "freeze": "đông cứng", "proceed": "tiến hành", "continue": "tiếp tục",
+            "advance": "tiến lên", "retreat": "rút lui", "withdraw": "rút lui", "depart": "khởi hành", "emigrate": "di cư",
+            "immigrate": "nhập cư", "migrate": "di cư", "relocate": "chuyển chỗ", "transfer": "chuyển", "transport": "vận chuyển",
+            "deliver": "giao hàng", "fetch": "lấy", "bring": "mang", "take": "lấy", "carry": "mang",
+            "lead": "dẫn dắt", "follow": "theo", "accompany": "đi cùng", "escort": "hộ tống", "guide": "hướng dẫn",
+            "navigate": "điều hướng", "explore": "khám phá", "venture": "mạo hiểm", "trek": "đi bộ đường dài", "hike": "leo núi",
+            "camp": "cắm trại", "tour": "tham quan", "visit": "thăm", "commute": "đi làm", "shuttle": "đưa đón",
+            "detour": "đi vòng", "bypass": "đi tắt", "shortcut": "đi tắt", "zigzag": "đi ngoằn ngoèo", "meander": "quanh co",
+            "circle": "vòng quanh", "orbit": "quay quanh", "revolve": "xoay", "rotate": "quay", "pivot": "xoay",
+            "sway": "lắc lư", "swing": "đung đưa", "rock": "lay", "bounce": "nảy", "vibrate": "rung",
+            "shake": "lắc", "tremble": "run rẩy", "quiver": "run", "shiver": "rùng mình", "wobble": "chao đảo",
+            "tiptoe": "đi nhón chân", "sneak": "lẻn", "creep": "bò", "prowl": "rình rập", "lurk": "ẩn nấp",
+            "pounce": "nhảy chồm", "lunge": "lao tới", "charge": "xông lên", "storm": "tấn công", "invade": "xâm lược",
+            "penetrate": "xâm nhập", "pierce": "đâm xuyên", "breakthrough": "đột phá", "burst": "bùng nổ", "erupt": "phun trào",
+            "surge": "dâng trào", "flow": "chảy", "stream": "tuôn chảy", "pour": "đổ", "gush": "phun ra",
+            "trickle": "nhỏ giọt", "drip": "nhỏ giọt", "leak": "rò rỉ", "seep": "thấm", "ooze": "rỉ ra",
+            "spread": "lan rộng", "scatter": "phân tán", "disperse": "tan ra", "gather": "tập hợp", "assemble": "lắp ráp",
+            
+            // Communication
+            "say": "nói", "tell": "kể", "speak": "nói chuyện", "talk": "nói chuyện", "ask": "hỏi",
+            "answer": "trả lời", "reply": "đáp", "respond": "phản hồi", "explain": "giải thích", "describe": "mô tả",
+            "discuss": "thảo luận", "argue": "tranh luận", "debate": "tranh cãi", "negotiate": "đàm phán", "convince": "thuyết phục",
+            "persuade": "thuyết phục", "suggest": "gợi ý", "recommend": "đề xuất", "advise": "khuyên", "warn": "cảnh báo",
+            "inform": "thông báo", "notify": "báo tin", "announce": "công bố", "declare": "tuyên bố", "state": "phát biểu",
+            "mention": "đề cập", "remark": "nhận xét", "comment": "bình luận", "note": "ghi chú", "observe": "quan sát",
+            "report": "báo cáo", "narrate": "kể chuyện", "relate": "liên hệ", "recount": "kể lại", "summarize": "tóm tắt",
+            "conclude": "kết luận", "introduce": "giới thiệu", "present": "trình bày", "demonstrate": "trình diễn", "illustrate": "minh họa",
+            "clarify": "làm rõ", "elaborate": "giải thích rõ", "specify": "chỉ rõ", "emphasize": "nhấn mạnh", "stress": "nhấn mạnh",
+            "highlight": "nêu bật", "underline": "gạch dưới", "repeat": "lặp lại", "rephrase": "diễn đạt lại", "paraphrase": "diễn giải",
+            "translate": "dịch", "interpret": "thông dịch", "define": "định nghĩa", "mean": "có nghĩa", "signify": "biểu thị",
+            "imply": "ngụ ý", "hint": "gợi ý", "indicate": "chỉ ra", "express": "bày tỏ", "convey": "truyền đạt",
+            "communicate": "giao tiếp", "transmit": "truyền", "broadcast": "phát sóng", "publish": "xuất bản", "post": "đăng",
+            "share": "chia sẻ", "circulate": "lưu hành", "distribute": "phân phối", "disseminate": "phổ biến",
+            "whisper": "thì thầm", "murmur": "lẩm bẩm", "mumble": "lầm bầm", "mutter": "lẩm nhẩm", "shout": "hét",
+            "yell": "la hét", "scream": "la hét", "cry": "khóc", "call": "gọi", "exclaim": "thốt lên",
+            "greet": "chào", "welcome": "chào đón", "bid": "chào", "farewell": "tạm biệt", "congratulate": "chúc mừng",
+            "compliment": "khen", "praise": "ca ngợi", "flatter": "nịnh", "thank": "cảm ơn", "apologize": "xin lỗi",
+            "excuse": "xin lỗi", "forgive": "tha thứ", "blame": "đổ lỗi", "accuse": "buộc tội", "criticize": "chỉ trích",
+            "condemn": "lên án", "denounce": "tố cáo", "protest": "phản đối", "complain": "phàn nàn", "object": "phản đối",
+            "reject": "từ chối", "refuse": "từ chối", "deny": "phủ nhận", "decline": "từ chối", "dismiss": "bác bỏ",
+            "ignore": "bỏ qua", "acknowledge": "thừa nhận", "admit": "thú nhận", "confess": "thú tội", "reveal": "tiết lộ",
+            "disclose": "tiết lộ", "expose": "vạch trần", "betray": "phản bội", "gossip": "ngồi lê đôi mách", "rumor": "đồn đại",
+            "lie": "nói dối", "deceive": "lừa dối", "mislead": "đánh lừa", "exaggerate": "phóng đại", "understate": "nói giảm",
+            "promise": "hứa", "vow": "thề", "swear": "thề", "pledge": "cam kết", "guarantee": "bảo đảm",
+            "assure": "đảm bảo", "confirm": "xác nhận", "verify": "xác minh", "certify": "chứng nhận", "testify": "làm chứng",
+            "witness": "chứng kiến", "quote": "trích dẫn", "cite": "trích dẫn", "reference": "tham khảo", "attribute": "quy cho",
+            "credit": "ghi nhận", "interview": "phỏng vấn", "question": "hỏi", "interrogate": "thẩm vấn", "quiz": "kiểm tra",
+            "challenge": "thách thức", "confront": "đối mặt", "address": "đề cập", "appeal": "kêu gọi", "plead": "cầu xin",
+            "beg": "van xin", "request": "yêu cầu", "demand": "đòi hỏi", "command": "ra lệnh", "order": "ra lệnh",
+            "instruct": "hướng dẫn", "direct": "chỉ đạo", "coach": "huấn luyện", "mentor": "cố vấn", "teach": "dạy",
+            "lecture": "giảng bài", "preach": "thuyết giáo", "sermon": "thuyết giáo", "advocate": "ủng hộ",
+            
+            // Mental & Cognitive
+            "think": "nghĩ", "know": "biết", "believe": "tin", "understand": "hiểu", "realize": "nhận ra",
+            "recognize": "nhận ra", "remember": "nhớ", "forget": "quên", "learn": "học", "study": "học",
+            "memorize": "ghi nhớ", "recall": "nhớ lại", "recollect": "hồi tưởng", "remind": "nhắc nhở", "consider": "cân nhắc",
+            "contemplate": "suy ngẫm", "reflect": "suy nghĩ", "ponder": "suy tư", "meditate": "thiền", "wonder": "thắc mắc",
+            "imagine": "tưởng tượng", "visualize": "hình dung", "picture": "hình dung", "envision": "hình dung", "dream": "mơ",
+            "fantasize": "mơ tưởng", "suppose": "giả sử", "assume": "giả định", "presume": "cho rằng", "guess": "đoán",
+            "estimate": "ước tính", "calculate": "tính toán", "compute": "tính", "figure": "tính ra", "reason": "lý luận",
+            "analyze": "phân tích", "evaluate": "đánh giá", "assess": "đánh giá", "judge": "phán xét", "deduce": "suy luận",
+            "infer": "suy ra", "derive": "suy ra", "determine": "xác định", "decide": "quyết định", "resolve": "giải quyết",
+            "choose": "chọn", "select": "chọn lọc", "prefer": "thích hơn", "favor": "ưa thích", "doubt": "nghi ngờ",
+            "suspect": "nghi ngờ", "distrust": "không tin", "accept": "chấp nhận", "deny": "phủ nhận", "prove": "chứng minh",
+            "justify": "biện minh", "rationalize": "hợp lý hóa", "comprehend": "hiểu", "grasp": "nắm bắt", "perceive": "nhận thức",
+            "conceive": "quan niệm", "conceptualize": "khái niệm hóa", "theorize": "lý thuyết hóa", "hypothesize": "giả thuyết", "speculate": "suy đoán",
+            "predict": "dự đoán", "forecast": "dự báo", "anticipate": "dự đoán", "expect": "mong đợi", "foresee": "thấy trước",
+            "plan": "lên kế hoạch", "scheme": "âm mưu", "plot": "âm mưu", "design": "thiết kế", "devise": "nghĩ ra",
+            "invent": "phát minh", "create": "tạo ra", "innovate": "đổi mới", "discover": "phát hiện", "find": "tìm",
+            "solve": "giải quyết", "puzzle": "đố", "confuse": "làm rối", "perplex": "làm bối rối", "bewilder": "làm hoang mang",
+            "mystify": "làm bí ẩn", "enlighten": "khai sáng", "educate": "giáo dục", "condition": "điều kiện", "program": "lập trình",
+            "brainwash": "tẩy não", "indoctrinate": "nhồi sọ", "influence": "ảnh hưởng", "motivate": "động viên", "inspire": "truyền cảm hứng",
+            "encourage": "khuyến khích", "discourage": "nản lòng", "deter": "ngăn cản", "dissuade": "khuyên can", "trick": "lừa",
+            "focus": "tập trung", "concentrate": "tập trung", "attend": "chú ý", "notice": "nhận thấy", "examine": "kiểm tra",
+            "inspect": "kiểm tra", "scrutinize": "xem xét kỹ", "investigate": "điều tra", "research": "nghiên cứu", "probe": "thăm dò",
+            "inquire": "hỏi", "query": "truy vấn", "seek": "tìm kiếm", "search": "tìm kiếm", "hunt": "săn",
+            "pursue": "theo đuổi", "track": "theo dõi", "trace": "truy tìm", "identify": "xác định", "classify": "phân loại",
+            "categorize": "phân loại", "organize": "tổ chức", "arrange": "sắp xếp", "sort": "sắp xếp", "rank": "xếp hạng",
+            "prioritize": "ưu tiên", "compare": "so sánh", "contrast": "đối chiếu", "distinguish": "phân biệt", "differentiate": "phân biệt",
+            "discriminate": "phân biệt", "associate": "liên kết", "connect": "kết nối", "relate": "liên hệ", "link": "liên kết",
+            "correlate": "tương quan", "integrate": "tích hợp", "synthesize": "tổng hợp",
+            
+            // Sensory & Perception
+            "see": "thấy", "look": "nhìn", "watch": "xem", "view": "xem", "spot": "phát hiện",
+            "glimpse": "thoáng thấy", "glance": "liếc", "stare": "nhìn chằm chằm", "gaze": "nhìn chăm chú", "peer": "nhìn kỹ",
+            "peek": "nhìn trộm", "squint": "nheo mắt", "blink": "chớp mắt", "wink": "nháy mắt", "scan": "quét",
+            "survey": "khảo sát", "review": "xem lại", "preview": "xem trước", "behold": "chiêm ngưỡng",
+            "hear": "nghe", "listen": "lắng nghe", "overhear": "nghe lỏm", "eavesdrop": "nghe trộm", "detect": "phát hiện",
+            "sense": "cảm nhận", "feel": "cảm thấy", "touch": "chạm", "handle": "cầm", "grip": "nắm",
+            "hold": "giữ", "squeeze": "bóp", "press": "ấn", "stroke": "vuốt", "caress": "vuốt ve",
+            "pat": "vỗ nhẹ", "tap": "gõ", "poke": "chọc", "prod": "thúc", "tickle": "cù",
+            "scratch": "gãi", "rub": "chà", "massage": "xoa bóp", "knead": "nhào", "pinch": "véo",
+            "slap": "tát", "punch": "đấm", "hit": "đánh", "strike": "đánh", "smell": "ngửi",
+            "sniff": "hít", "inhale": "hít vào", "breathe": "thở", "exhale": "thở ra", "taste": "nếm",
+            "savor": "thưởng thức", "sample": "nếm thử", "sip": "nhấp", "lick": "liếm", "bite": "cắn",
+            "chew": "nhai", "swallow": "nuốt", "gulp": "nuốt chửng", "devour": "ngấu nghiến", "experience": "trải nghiệm",
+            "undergo": "trải qua", "endure": "chịu đựng", "suffer": "chịu đau", "enjoy": "thưởng thức", "appreciate": "đánh giá cao",
+            "admire": "ngưỡng mộ", "marvel": "kinh ngạc", "awe": "kính sợ", "frighten": "làm sợ", "scare": "dọa",
+            "terrify": "khiếp sợ", "horrify": "kinh hoàng", "shock": "sốc", "startle": "giật mình", "surprise": "ngạc nhiên",
+            "amaze": "kinh ngạc", "astonish": "sửng sốt", "astound": "làm sửng sốt", "stun": "làm choáng", "daze": "làm choáng váng",
+            "dazzle": "làm chói mắt", "blind": "làm mù", "deafen": "làm điếc", "numb": "làm tê", "paralyze": "làm tê liệt",
+            "thaw": "tan băng", "warm": "làm ấm", "cool": "làm mát", "heat": "làm nóng", "chill": "làm lạnh",
+            "burn": "đốt cháy", "scald": "bỏng", "sting": "châm", "prick": "chích", "cut": "cắt",
+            "slice": "cắt lát", "stab": "đâm", "wound": "làm bị thương", "hurt": "làm đau", "pain": "đau",
+            "ache": "nhức", "throb": "nhói", "pulse": "mạch đập", "beat": "đập", "pound": "đập mạnh",
+            "tingle": "râm ran", "itch": "ngứa", "irritate": "kích thích", "annoy": "làm phiền", "bother": "làm phiền",
+            "disturb": "quấy rầy", "distract": "làm xao nhãng", "attract": "thu hút", "repel": "đẩy lùi", "disgust": "ghê tởm",
+            "revolt": "nổi loạn", "nauseate": "buồn nôn", "sicken": "làm ốm", "heal": "chữa lành", "cure": "chữa khỏi",
+            "treat": "điều trị", "remedy": "chữa trị", "relieve": "giảm nhẹ", "soothe": "xoa dịu", "calm": "làm dịu",
+            "comfort": "an ủi", "please": "làm hài lòng", "satisfy": "thỏa mãn", "delight": "làm vui",
+            "thrill": "hồi hộp", "excite": "kích thích", "stimulate": "kích thích", "arouse": "khơi dậy", "awaken": "đánh thức",
+            "alert": "cảnh báo", "alarm": "báo động", "signal": "báo hiệu",
+            
+            // Physical Actions
+            "make": "làm", "do": "làm", "build": "xây dựng", "construct": "xây dựng", "manufacture": "sản xuất",
+            "produce": "sản xuất", "fabricate": "chế tạo", "craft": "chế tác", "form": "tạo hình", "shape": "định hình",
+            "mold": "đúc khuôn", "sculpt": "điêu khắc", "carve": "khắc", "engrave": "khắc", "etch": "khắc axit",
+            "draw": "vẽ", "paint": "sơn", "sketch": "phác họa", "trace": "vẽ theo", "outline": "phác thảo",
+            "draft": "phác thảo", "write": "viết", "type": "đánh máy", "print": "in", "copy": "sao chép",
+            "duplicate": "nhân đôi", "reproduce": "tái tạo", "break": "vỡ", "destroy": "phá hủy", "demolish": "phá dỡ",
+            "wreck": "đắm", "ruin": "hủy hoại", "damage": "làm hỏng", "harm": "gây hại", "injure": "làm bị thương",
+            "tear": "xé", "rip": "xé toạc", "shred": "cắt vụn", "crush": "nghiền nát", "smash": "đập vỡ",
+            "crash": "đâm", "shatter": "vỡ tan", "crack": "nứt", "split": "tách", "divide": "chia",
+            "chop": "chặt", "dice": "cắt hạt lựu", "mince": "băm nhỏ", "trim": "cắt tỉa", "prune": "tỉa",
+            "clip": "cắt", "snip": "cắt nhỏ", "saw": "cưa", "drill": "khoan", "hammer": "đóng búa",
+            "nail": "đóng đinh", "screw": "vặn vít", "bolt": "bắt bu lông", "weld": "hàn", "solder": "hàn thiếc",
+            "glue": "dán keo", "paste": "dán", "tape": "dán băng keo", "staple": "ghim", "pin": "ghim",
+            "attach": "đính kèm", "fasten": "buộc chặt", "secure": "bảo vệ", "tie": "buộc", "bind": "trói",
+            "wrap": "gói", "unwrap": "mở gói", "open": "mở", "close": "đóng", "shut": "đóng",
+            "lock": "khóa", "unlock": "mở khóa", "seal": "niêm phong", "unseal": "mở niêm phong", "cover": "che",
+            "uncover": "mở ra", "hide": "giấu", "conceal": "che giấu", "bury": "chôn", "dig": "đào",
+            "excavate": "khai quật", "unearth": "đào lên", "plant": "trồng", "sow": "gieo", "cultivate": "canh tác",
+            "harvest": "thu hoạch", "pick": "hái", "pluck": "nhổ", "collect": "thu thập", "accumulate": "tích lũy",
+            "pile": "chất đống", "stack": "xếp chồng", "mix": "trộn", "blend": "pha trộn", "combine": "kết hợp",
+            "merge": "sáp nhập", "separate": "tách", "partition": "phân chia", "allocate": "phân bổ",
+            "load": "chất", "unload": "dỡ", "pack": "đóng gói", "unpack": "mở gói", "fill": "đổ đầy",
+            "empty": "đổ ra", "spill": "đổ", "dump": "đổ bỏ", "dispose": "vứt bỏ", "throw": "ném",
+            "toss": "tung", "hurl": "ném mạnh", "fling": "quăng", "launch": "phóng", "shoot": "bắn",
+            "fire": "bắn", "aim": "nhắm", "target": "nhắm mục tiêu", "catch": "bắt", "grab": "chộp",
+            "snatch": "giật", "seize": "nắm giữ", "capture": "bắt giữ", "trap": "bẫy", "release": "thả",
+            "free": "giải phóng", "liberate": "giải phóng", "rescue": "cứu", "lift": "nâng", "raise": "nâng lên",
+            "lower": "hạ xuống", "place": "đặt", "put": "đặt", "set": "đặt", "position": "định vị",
+            "adjust": "điều chỉnh",
+            
+            // Daily Life
+            "eat": "ăn", "drink": "uống", "cook": "nấu", "bake": "nướng", "fry": "chiên",
+            "boil": "luộc", "steam": "hấp", "grill": "nướng", "roast": "quay", "toast": "nướng bánh mì",
+            "prepare": "chuẩn bị", "serve": "phục vụ", "feed": "cho ăn", "dine": "ăn tối", "breakfast": "ăn sáng",
+            "lunch": "ăn trưa", "dinner": "ăn tối", "snack": "ăn nhẹ", "feast": "tiệc", "starve": "đói",
+            "sleep": "ngủ", "wake": "thức dậy", "nap": "ngủ trưa", "relax": "thư giãn", "snore": "ngáy",
+            "yawn": "ngáp", "arise": "dậy", "bathe": "tắm", "shower": "tắm vòi sen", "scrub": "chà",
+            "rinse": "xả", "dry": "làm khô", "wipe": "lau", "clean": "dọn dẹp", "dust": "phủi bụi",
+            "mop": "lau nhà", "vacuum": "hút bụi", "polish": "đánh bóng", "shine": "làm sáng", "iron": "ủi",
+            "fold": "gấp", "hang": "treo", "store": "cất", "tidy": "dọn dẹp",
+            "undress": "cởi đồ", "wear": "mặc", "change": "thay đổi", "button": "cài nút", "zip": "kéo khóa",
+            "untie": "cởi", "brush": "chải", "comb": "chải", "style": "tạo kiểu", "shave": "cạo",
+            "groom": "chải chuốt", "makeup": "trang điểm", "accessorize": "đeo phụ kiện", "decorate": "trang trí",
+            "shop": "mua sắm", "buy": "mua", "purchase": "mua", "sell": "bán", "trade": "buôn bán",
+            "exchange": "trao đổi", "bargain": "mặc cả", "pay": "trả tiền", "spend": "tiêu",
+            "save": "tiết kiệm", "budget": "lập ngân sách", "invest": "đầu tư", "earn": "kiếm", "profit": "lãi",
+            "lose": "mất", "waste": "lãng phí", "conserve": "bảo tồn", "recycle": "tái chế", "reuse": "tái sử dụng",
+            "park": "đậu xe", "map": "vẽ bản đồ", "locate": "xác định vị trí", "browse": "duyệt",
+            "text": "nhắn tin", "email": "gửi email", "message": "nhắn", "chat": "trò chuyện", "surf": "lướt web",
+            "scroll": "cuộn", "click": "nhấp", "swipe": "vuốt", "charge": "sạc", "plug": "cắm",
+            "unplug": "rút", "disconnect": "ngắt kết nối", "install": "cài đặt", "uninstall": "gỡ cài đặt", "update": "cập nhật",
+            "upgrade": "nâng cấp", "download": "tải xuống", "upload": "tải lên", "backup": "sao lưu", "restore": "khôi phục",
+            "delete": "xóa", "workout": "tập luyện", "meditate": "thiền", "unwind": "thư giãn", "destress": "giảm căng thẳng",
+            "recover": "phục hồi", "garden": "làm vườn", "water": "tưới nước", "fertilize": "bón phân", "mow": "cắt cỏ",
+            "rake": "cào", "weed": "nhổ cỏ", "compost": "ủ phân", "pet": "vuốt ve", "cuddle": "ôm ấp",
+            "adopt": "nhận nuôi", "foster": "nuôi dưỡng",
+            
+            // Emotions & Feelings
+            "love": "yêu", "hate": "ghét", "like": "thích", "dislike": "không thích", "adore": "tôn thờ",
+            "cherish": "trân trọng", "treasure": "quý trọng", "value": "đánh giá", "honor": "tôn vinh", "worship": "thờ phụng",
+            "idolize": "thần tượng", "glorify": "tôn vinh", "content": "hài lòng", "fulfill": "hoàn thành", "gratify": "làm hài lòng",
+            "amuse": "giải trí", "entertain": "giải trí", "fascinate": "mê hoặc", "captivate": "quyến rũ", "charm": "quyến rũ",
+            "enchant": "mê hoặc", "bewitch": "mê hoặc", "mesmerize": "thôi miên", "hypnotize": "thôi miên", "spellbind": "mê hoặc",
+            "appeal": "hấp dẫn", "interest": "quan tâm", "intrigue": "tò mò", "curious": "tò mò",
+            "petrify": "hóa đá", "worry": "lo lắng", "concern": "quan tâm", "trouble": "gây rắc rối", "upset": "buồn",
+            "distress": "đau khổ", "agonize": "đau đớn", "torment": "hành hạ", "torture": "tra tấn", "grieve": "đau buồn",
+            "mourn": "để tang", "lament": "than khóc", "weep": "khóc", "sob": "nức nở", "laugh": "cười",
+            "giggle": "cười khúc khích", "chuckle": "cười khẽ", "snicker": "cười khẩy", "grin": "cười toe", "smile": "mỉm cười",
+            "beam": "rạng rỡ", "glow": "tỏa sáng", "radiate": "tỏa ra", "hope": "hy vọng", "wish": "mong muốn",
+            "desire": "khao khát", "want": "muốn", "need": "cần", "crave": "thèm muốn", "yearn": "khao khát",
+            "long": "mong mỏi", "pine": "nhớ nhung", "dread": "sợ hãi", "panic": "hoảng loạn", "anxiety": "lo âu",
+            "tense": "căng thẳng", "nervous": "lo lắng", "jittery": "bồn chồn", "fidget": "bồn chồn", "squirm": "quằn quại",
+            "console": "an ủi", "reassure": "trấn an", "empower": "trao quyền", "strengthen": "củng cố",
+            "anger": "tức giận", "rage": "giận dữ", "fury": "cuồng nộ", "aggravate": "làm trầm trọng", "provoke": "khiêu khích",
+            "infuriate": "làm tức giận", "enrage": "làm nổi giận", "resent": "oán giận", "begrudge": "ghen tị", "envy": "ghen tị",
+            "jealous": "ghen tuông", "covet": "thèm muốn", "grudge": "thù hận", "spite": "ác ý", "revenge": "trả thù",
+            "retaliate": "trả đũa", "avenge": "báo thù", "pardon": "tha thứ", "absolve": "xá tội", "tolerate": "chịu đựng",
+            "bear": "chịu đựng", "withstand": "chống chọi", "embarrass": "xấu hổ", "shame": "xấu hổ", "humiliate": "sỉ nhục",
+            "mortify": "làm nhục", "disgrace": "ô nhục", "dishonor": "làm mất danh dự", "guilty": "có tội", "regret": "hối hận",
+            "remorse": "hối hận", "repent": "ăn năn",
+            
+            // Work & Professional
+            "work": "làm việc", "labor": "lao động", "toil": "làm việc cực nhọc", "strive": "nỗ lực", "endeavor": "cố gắng",
+            "effort": "nỗ lực", "exert": "gắng sức", "apply": "áp dụng", "dedicate": "cống hiến", "supervise": "giám sát",
+            "oversee": "giám sát", "develop": "phát triển", "recruit": "tuyển dụng", "employ": "thuê", "engage": "tham gia",
+            "contract": "hợp đồng", "assign": "giao việc", "delegate": "ủy quyền", "dispatch": "cử đi",
+            "terminate": "chấm dứt", "layoff": "sa thải", "downsize": "thu nhỏ", "restructure": "tái cấu trúc", "reorganize": "tổ chức lại",
+            "reform": "cải cách", "transform": "biến đổi", "revolutionize": "cách mạng hóa", "strategize": "chiến lược", "blueprint": "thiết kế",
+            "propose": "đề xuất", "pitch": "thuyết trình", "finance": "tài trợ", "fund": "tài trợ", "sponsor": "tài trợ",
+            "subsidize": "trợ cấp", "grant": "cấp", "loan": "cho vay", "borrow": "vay", "lend": "cho vay",
+            "gain": "đạt được", "benefit": "lợi ích", "yield": "sinh lời", "dividend": "cổ tức", "revenue": "doanh thu",
+            "income": "thu nhập", "salary": "lương", "deal": "giao dịch", "barter": "đổi chác", "procure": "mua sắm",
+            "acquire": "mua lại", "market": "tiếp thị", "advertise": "quảng cáo", "promote": "quảng bá", "brand": "thương hiệu",
+            "campaign": "chiến dịch", "debut": "ra mắt", "premiere": "công chiếu",
+            "rival": "đối thủ", "contest": "thi đấu", "outperform": "vượt trội", "surpass": "vượt qua", "exceed": "vượt quá",
+            "cooperate": "hợp tác", "collaborate": "cộng tác", "partner": "đối tác", "ally": "đồng minh", "takeover": "tiếp quản",
+            "buyout": "mua lại", "consolidate": "củng cố", "affiliate": "liên kết", "participate": "tham gia", "volunteer": "tình nguyện",
+            "calendar": "lịch", "book": "đặt chỗ", "reserve": "đặt trước", "postpone": "hoãn", "reschedule": "đổi lịch",
+            "expedite": "đẩy nhanh", "conference": "hội nghị", "consult": "tư vấn", "brainstorm": "động não", "ideate": "sáng tạo",
+            "patent": "bằng sáng chế", "audit": "kiểm toán", "appraise": "thẩm định", "rate": "đánh giá", "score": "chấm điểm",
+            "grade": "phân loại", "benchmark": "tiêu chuẩn", "document": "tài liệu", "record": "ghi chép", "file": "lưu trữ",
+            "archive": "lưu trữ", "warehouse": "kho", "inventory": "kiểm kê", "catalog": "danh mục", "retrieve": "truy xuất",
+            "access": "truy cập", "process": "xử lý",
+            
+            // Social & Relationship
+            "meet": "gặp", "acquaint": "làm quen", "befriend": "kết bạn", "bond": "gắn kết", "mingle": "giao lưu",
+            "socialize": "giao tiếp xã hội", "interact": "tương tác", "date": "hẹn hò", "court": "tán tỉnh", "romance": "lãng mạn",
+            "flirt": "tán tỉnh", "seduce": "quyến rũ", "impress": "gây ấn tượng", "woo": "tán tỉnh", "wed": "kết hôn",
+            "unite": "đoàn kết", "join": "tham gia", "devote": "cống hiến", "cheat": "lừa dối",
+            "care": "quan tâm", "support": "hỗ trợ", "assist": "hỗ trợ", "aid": "trợ giúp", "cater": "phục vụ",
+            "accommodate": "đáp ứng", "furnish": "cung cấp", "present": "tặng", "gift": "tặng quà", "reward": "thưởng",
+            "treat": "đãi", "spoil": "nuông chiều", "count": "đếm", "entrust": "giao phó",
+            "converse": "trò chuyện", "disagree": "không đồng ý", "dispute": "tranh chấp", "quarrel": "cãi nhau", "clash": "xung đột",
+            "confront": "đối đầu", "oppose": "phản đối", "settle": "giải quyết", "mediate": "hòa giải", "arbitrate": "trọng tài",
+            "rule": "cai trị", "sacrifice": "hy sinh", "commemorate": "kỷ niệm", "host": "chủ nhà", "shun": "né tránh",
+            "ostracize": "tẩy chay", "isolate": "cô lập", "alienate": "xa lánh", "prejudice": "định kiến", "stereotype": "khuôn mẫu",
+            
+            // Change & State
+            "become": "trở thành", "evolve": "tiến hóa", "mature": "trưởng thành", "age": "già đi", "ripen": "chín",
+            "bloom": "nở hoa", "flourish": "phát triển", "thrive": "phát triển mạnh", "alter": "thay đổi", "transition": "chuyển đổi",
+            "shift": "dịch chuyển", "switch": "chuyển đổi", "enhance": "nâng cao", "refine": "tinh chỉnh", "perfect": "hoàn thiện",
+            "optimize": "tối ưu hóa", "maximize": "tối đa hóa", "worsen": "xấu đi", "deteriorate": "xuống cấp", "degrade": "suy thoái",
+            "decay": "phân hủy", "rot": "thối rữa", "spoil": "hỏng", "corrupt": "hư hỏng", "enlarge": "phóng to",
+            "magnify": "phóng đại", "amplify": "khuếch đại", "intensify": "tăng cường", "boost": "tăng cường", "contract": "co lại",
+            "compress": "nén", "condense": "cô đọng", "minimize": "giảm thiểu", "diminish": "giảm bớt", "weaken": "yếu đi",
+            "commence": "bắt đầu", "initiate": "khởi xướng", "inaugurate": "khai trương", "found": "thành lập",
+            "terminate": "chấm dứt", "cease": "ngừng", "suspend": "đình chỉ", "persist": "kiên trì", "persevere": "kiên trì",
+            "materialize": "hiện thực hóa", "manifest": "biểu hiện", "vanish": "biến mất", "dissolve": "tan ra", "evaporate": "bốc hơi",
+            "melt": "tan chảy", "solidify": "đông đặc", "harden": "cứng lại", "loosen": "nới lỏng", "tighten": "siết chặt",
+            "straighten": "làm thẳng", "curl": "uốn cong", "widen": "mở rộng", "narrow": "thu hẹp", "lengthen": "kéo dài",
+            "shorten": "rút ngắn", "heighten": "nâng cao", "accelerate": "tăng tốc", "hasten": "vội vàng", "quicken": "nhanh lên",
+            "decelerate": "giảm tốc", "retard": "làm chậm", "stabilize": "ổn định", "balance": "cân bằng", "steady": "ổn định",
+            "anchor": "neo", "fluctuate": "dao động", "oscillate": "dao động", "alternate": "xen kẽ", "recur": "tái diễn",
+            "revert": "quay lại",
+            
+            // Possession & Transfer
+            "have": "có", "own": "sở hữu", "possess": "sở hữu", "retain": "giữ lại", "maintain": "duy trì",
+            "preserve": "bảo quản", "obtain": "đạt được", "win": "thắng", "receive": "nhận", "offer": "đề nghị",
+            "furnish": "cung cấp", "supply": "cung cấp", "share": "chia sẻ", "portion": "phần", "ration": "khẩu phần",
+            "allot": "phân bổ", "apportion": "phân chia", "dispense": "phân phát", "advance": "ứng trước", "credit": "ghi có",
+            "owe": "nợ", "debt": "nợ", "repay": "trả nợ", "reimburse": "hoàn trả", "refund": "hoàn tiền",
+            "reclaim": "đòi lại", "order": "đặt hàng", "hire": "thuê", "rent": "thuê", "vend": "bán",
+            "retail": "bán lẻ", "wholesale": "bán buôn", "export": "xuất khẩu", "import": "nhập khẩu",
+            "steal": "ăn cắp", "rob": "cướp", "burglarize": "đột nhập", "pilfer": "ăn vặt", "shoplift": "ăn cắp vặt",
+            "embezzle": "biển thủ", "defraud": "lừa đảo", "swindle": "lừa đảo", "scam": "lừa đảo",
+            "misplace": "để lạc", "mislay": "để nhầm chỗ", "forfeit": "mất", "relinquish": "từ bỏ", "discard": "vứt bỏ",
+            "uncover": "phát hiện", "amass": "tích lũy", "hoard": "tích trữ", "stockpile": "dự trữ",
+            "bestow": "ban tặng", "award": "trao giải", "prize": "giải thưởng", "bonus": "thưởng", "tip": "tiền boa",
+            "inherit": "thừa kế", "bequeath": "di tặng", "will": "di chúc", "endow": "hiến tặng", "legacy": "di sản",
+            "heritage": "di sản", "estate": "bất động sản", "property": "tài sản", "asset": "tài sản", "wealth": "giàu có",
+            "lease": "cho thuê", "charter": "thuê bao", "license": "cấp phép", "permit": "cho phép", "authorize": "ủy quyền",
+            "sanction": "phê chuẩn", "approve": "chấp thuận", "allow": "cho phép", "confiscate": "tịch thu", "impound": "tạm giữ",
+            "appropriate": "chiếm dụng", "expropriate": "trưng thu", "nationalize": "quốc hữu hóa", "privatize": "tư nhân hóa", "monopolize": "độc quyền",
+            "corner": "lũng đoạn", "dominate": "thống trị",
+            
+            // Existence & Being
+            "be": "là", "exist": "tồn tại", "live": "sống", "survive": "sống sót", "subsist": "tồn tại",
+            "last": "kéo dài", "remain": "còn lại", "stay": "ở lại", "perish": "chết", "expire": "hết hạn",
+            "decease": "qua đời", "succumb": "chịu thua", "born": "sinh ra", "birth": "sinh", "originate": "bắt nguồn",
+            "emerge": "nổi lên", "spring": "bật ra", "stem": "xuất phát", "occur": "xảy ra", "transpire": "xảy ra",
+            "unfold": "diễn ra", "cause": "gây ra", "generate": "tạo ra", "induce": "gây ra", "trigger": "kích hoạt",
+            "spark": "châm ngòi", "ignite": "đốt cháy", "kindle": "nhóm lửa", "ensue": "xảy ra sau", "emanate": "phát ra",
+            "hinge": "phụ thuộc", "ground": "nền tảng", "root": "bắt rễ", "comprise": "bao gồm", "contain": "chứa",
+            "include": "bao gồm", "involve": "liên quan", "entail": "đòi hỏi", "encompass": "bao gồm", "embrace": "ôm",
+            "span": "kéo dài", "pertain": "liên quan", "regard": "liên quan", "affect": "ảnh hưởng", "impact": "tác động",
+            "equal": "bằng", "match": "khớp", "parallel": "song song", "correspond": "tương ứng", "resemble": "giống",
+            "mirror": "phản chiếu", "echo": "vọng lại", "replicate": "sao chép", "diverge": "phân kỳ", "deviate": "lệch",
+            "contradict": "mâu thuẫn", "counter": "phản bác", "suggest": "gợi ý", "express": "biểu đạt",
+            "symbolize": "tượng trưng", "denote": "biểu thị", "connote": "hàm ý", "transmit": "truyền", "relay": "chuyển tiếp",
+            "inhabit": "cư trú", "dwell": "cư ngụ", "reside": "cư trú", "populate": "định cư", "colonize": "thuộc địa hóa",
+            "situate": "đặt vị trí", "lay": "đặt"
+        };
+
+        // Display categories preview
+        function showCategoriesPreview() {
+            const preview = document.getElementById('categoriesPreview');
+            preview.innerHTML = Object.entries(verbCategories).map(([name, verbs]) => `
+                <div class="cat-card">
+                    <h3>${name}</h3>
+                    <p>${verbs.length} verbs</p>
+                </div>
+            `).join('');
+        }
+
+        function log(message, type = '') {
+            const logEl = document.getElementById('log');
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.appendChild(p);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateProgress(current, total, text) {
+            const percent = Math.round((current / total) * 100);
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressFill').textContent = percent + '%';
+            document.getElementById('statusText').textContent = text;
+        }
+
+        async function startImport() {
+            const btn = document.getElementById('importBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang import...';
+
+            try {
+                // Step 1: Create parent category
+                log('Tạo Parent Category "Common Verbs"...');
+                const parentRef = database.ref('parentCategories').push();
+                const parentId = parentRef.key;
+                await parentRef.set({
+                    name: 'Common Verbs',
+                    createdAt: Date.now()
+                });
+                log('✓ Đã tạo Parent Category', 'success');
+
+                // Step 2: Create child categories and add verbs
+                const categories = Object.entries(verbCategories);
+                let totalVerbs = 0;
+                let processedVerbs = 0;
+                
+                for (const [, verbs] of categories) {
+                    totalVerbs += verbs.length;
+                }
+
+                for (let i = 0; i < categories.length; i++) {
+                    const [categoryName, verbs] = categories[i];
+                    
+                    // Create child category
+                    log(`Tạo category "${categoryName}"...`);
+                    const childRef = database.ref(`parentCategories/${parentId}/children`).push();
+                    const childId = childRef.key;
+                    await childRef.set({
+                        name: categoryName,
+                        createdAt: Date.now()
+                    });
+                    
+                    // Add verbs one by one with phonetic fetch
+                    const vocabRef = database.ref(`parentCategories/${parentId}/children/${childId}/vocabularies`);
+                    
+                    for (let j = 0; j < verbs.length; j++) {
+                        const verb = verbs[j];
+                        processedVerbs++;
+                        
+                        // Fetch phonetic and audio from API
+                        let phonetic = '';
+                        let audio = '';
+                        let definition = '';
+                        let example = '';
+                        
+                        try {
+                            const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${verb}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data && data[0]) {
+                                    phonetic = data[0].phonetic || data[0].phonetics?.find(p => p.text)?.text || '';
+                                    audio = data[0].phonetics?.find(p => p.audio)?.audio || '';
+                                    
+                                    // Find verb definition
+                                    const verbMeaning = data[0].meanings?.find(m => m.partOfSpeech === 'verb');
+                                    if (verbMeaning && verbMeaning.definitions?.[0]) {
+                                        definition = verbMeaning.definitions[0].definition || '';
+                                        example = verbMeaning.definitions[0].example || '';
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // Continue without phonetic if API fails
+                        }
+                        
+                        const key = vocabRef.push().key;
+                        await vocabRef.child(key).set({
+                            word: verb,
+                            phonetic: phonetic,
+                            audio: audio,
+                            partOfSpeech: 'v',
+                            definition: definition,
+                            example: example,
+                            meaningVi: vietnameseTranslations[verb] || '',
+                            learned: false,
+                            createdAt: Date.now()
+                        });
+                        
+                        updateProgress(processedVerbs, totalVerbs, 
+                            `${categoryName}: ${j + 1}/${verbs.length} - "${verb}" ${phonetic ? '✓' : ''}`);
+                        
+                        // Small delay to avoid rate limiting (50ms)
+                        if (j % 10 === 9) {
+                            await new Promise(r => setTimeout(r, 100));
+                        }
+                    }
+                    
+                    log(`✓ Đã thêm ${verbs.length} verbs vào "${categoryName}"`, 'success');
+                }
+
+                log(`🎉 HOÀN THÀNH! Đã import ${totalVerbs} verbs vào 12 categories`, 'success');
+                updateProgress(totalVerbs, totalVerbs, `Hoàn thành! ${totalVerbs} verbs`);
+                
+                btn.textContent = '✅ Đã hoàn thành!';
+                
+            } catch (error) {
+                log('❌ Lỗi: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '🔄 Thử lại';
+            }
+        }
+
+        showCategoriesPreview();
+    </script>
+</body>
+</html>
