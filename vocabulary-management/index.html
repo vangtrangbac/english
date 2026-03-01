@@ -2293,24 +2293,173 @@
             btn.classList.add('spinning');
             
             try {
-                let example = await fetchExampleFromSources(vocab.word, vocab.partOfSpeech);
+                // Try to fetch example with retry
+                let example = null;
+                let source = '';
+                
+                // Single call that handles both strict and fallback internally
+                const result = await fetchExampleWithRetry(vocab.word, vocab.partOfSpeech);
+                example = result.example;
+                source = result.source;
+                
                 if (example) {
-                    // Translate example to Vietnamese
                     const exampleVi = await translateSentenceToVietnamese(example);
                     
                     await database.ref(`${getVocabPath()}/${id}`).update({
                         example: example,
                         exampleVi: exampleVi || ''
                     });
-                    showToast('Đã cập nhật example!', 'success');
+                    
+                    if (source === 'fallback') {
+                        showToast('Đã cập nhật (không khớp POS)', 'info');
+                    } else {
+                        showToast('Đã cập nhật example!', 'success');
+                    }
                 } else {
-                    showToast('Không tìm thấy example phù hợp', 'warning');
+                    showToast(`Không tìm thấy example cho ${vocab.word}`, 'warning');
                 }
             } catch (err) {
-                showToast('Lỗi sync example', 'error');
+                console.error('Sync example error:', err);
+                showToast('Lỗi sync: ' + (err.message || 'Network error'), 'error');
             }
             
             btn.classList.remove('spinning');
+        }
+        
+        async function fetchExampleWithRetry(word, partOfSpeech) {
+            // Try Cambridge directly with all proxies first (most reliable)
+            const example = await fetchFromCambridgeWithAllProxies(word, partOfSpeech);
+            if (example.text) {
+                return { example: example.text, source: example.posMatch ? 'match' : 'fallback' };
+            }
+            
+            // Fallback to Dictionary API
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const targetPos = expandPartOfSpeech(partOfSpeech);
+                    
+                    // Try matching POS first
+                    for (const entry of data) {
+                        for (const meaning of (entry.meanings || [])) {
+                            if (targetPos && meaning.partOfSpeech === targetPos) {
+                                for (const def of (meaning.definitions || [])) {
+                                    if (def.example) return { example: def.example, source: 'match' };
+                                }
+                            }
+                        }
+                    }
+                    // Then any example
+                    for (const entry of data) {
+                        for (const meaning of (entry.meanings || [])) {
+                            for (const def of (meaning.definitions || [])) {
+                                if (def.example) return { example: def.example, source: 'fallback' };
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Dictionary API failed:', e.message);
+            }
+            
+            return { example: null, source: '' };
+        }
+        
+        async function fetchFromCambridgeWithAllProxies(word, partOfSpeech) {
+            const targetPos = expandPartOfSpeech(partOfSpeech);
+            console.log('Cambridge fetch for:', word, 'targetPos:', targetPos);
+            
+            const proxyConfigs = [
+                { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`, name: 'codetabs' },
+                { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`, name: 'allorigins' },
+                { url: `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`, name: 'corsproxy' }
+            ];
+            
+            for (const proxy of proxyConfigs) {
+                try {
+                    console.log('Trying proxy:', proxy.name);
+                    const res = await fetch(proxy.url, { 
+                        headers: { 'Accept': 'text/html' },
+                        signal: AbortSignal.timeout(12000)
+                    });
+                    
+                    if (!res.ok) {
+                        console.log(proxy.name, 'returned status:', res.status);
+                        continue;
+                    }
+                    
+                    const html = await res.text();
+                    console.log(proxy.name, 'HTML length:', html.length);
+                    
+                    if (!html || html.length < 5000) {
+                        console.log(proxy.name, 'HTML too short, skipping');
+                        continue;
+                    }
+                    
+                    // Parse examples from HTML
+                    const result = parseExamplesFromCambridge(html, targetPos);
+                    if (result.text) {
+                        console.log('Found example via', proxy.name, ':', result.text.substring(0, 50));
+                        return result;
+                    }
+                    
+                    console.log(proxy.name, 'no examples found in HTML');
+                } catch (e) {
+                    console.log(proxy.name, 'failed:', e.message);
+                }
+            }
+            
+            return { text: null, posMatch: false };
+        }
+        
+        function parseExamplesFromCambridge(html, targetPos) {
+            const examplePatterns = [
+                /<span class="eg deg"[^>]*>([\s\S]*?)<\/span>/gi,
+                /<span class="eg"[^>]*>([\s\S]*?)<\/span>/gi,
+                /<div class="examp[^"]*"[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi
+            ];
+            
+            const posPatterns = [
+                /<span class="pos dpos"[^>]*>([^<]+)<\/span>/i,
+                /<span class="pos"[^>]*>([^<]+)<\/span>/i
+            ];
+            
+            // Split by entry blocks
+            const blocks = html.split(/(?=<div class="[^"]*entry-body)/i);
+            
+            let matchedExample = null;
+            let fallbackExample = null;
+            
+            for (const block of blocks) {
+                // Get POS for this block
+                let blockPos = '';
+                for (const pp of posPatterns) {
+                    const m = block.match(pp);
+                    if (m) { blockPos = m[1].trim().toLowerCase(); break; }
+                }
+                
+                // Find examples
+                for (const ep of examplePatterns) {
+                    const regex = new RegExp(ep.source, 'gi');
+                    let match;
+                    while ((match = regex.exec(block)) !== null) {
+                        const text = match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+                        if (text && text.length > 10 && text.length < 200) {
+                            if (targetPos && blockPos === targetPos && !matchedExample) {
+                                matchedExample = text;
+                            }
+                            if (!fallbackExample) {
+                                fallbackExample = text;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (matchedExample) return { text: matchedExample, posMatch: true };
+            if (fallbackExample) return { text: fallbackExample, posMatch: false };
+            return { text: null, posMatch: false };
         }
         
         async function translateSentenceToVietnamese(sentence) {
@@ -2327,73 +2476,6 @@
             return '';
         }
         
-        async function fetchExampleFromSources(word, partOfSpeech) {
-            // Source 1: Cambridge Dictionary (highest quality)
-            try {
-                const example = await fetchFromCambridge(word, partOfSpeech);
-                if (example) return example;
-            } catch (e) {}
-            
-            // Source 2: Dictionary API
-            try {
-                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const targetPos = expandPartOfSpeech(partOfSpeech);
-                    
-                    // Only find example matching the POS (no fallback to avoid wrong examples)
-                    for (const entry of data) {
-                        for (const meaning of (entry.meanings || [])) {
-                            // Skip if POS doesn't match
-                            if (targetPos && meaning.partOfSpeech !== targetPos) continue;
-                            for (const def of (meaning.definitions || [])) {
-                                if (def.example) {
-                                    return def.example;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Only fallback if no target POS specified
-                    if (!targetPos) {
-                        for (const entry of data) {
-                            for (const meaning of (entry.meanings || [])) {
-                                for (const def of (meaning.definitions || [])) {
-                                    if (def.example) {
-                                        return def.example;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-            
-            // Source 3: Tatoeba (sentence database)
-            try {
-                const res = await fetch(`https://tatoeba.org/en/api_v0/search?from=eng&query=${encodeURIComponent(word)}&limit=5`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.results && data.results.length > 0) {
-                        const sentences = data.results
-                            .filter(r => r.text && r.text.length < 150)
-                            .map(r => r.text);
-                        if (sentences.length > 0) {
-                            return sentences[0];
-                        }
-                    }
-                }
-            } catch (e) {}
-            
-            // Source 4: Use Google Translate round-trip
-            try {
-                const example = await generateExampleWithAI(word);
-                if (example) return example;
-            } catch (e) {}
-            
-            return null;
-        }
-        
         function expandPartOfSpeech(shortPos) {
             if (!shortPos) return '';
             
@@ -2408,64 +2490,9 @@
             return map[basePos] || basePos;
         }
         
-        async function fetchFromCambridge(word, partOfSpeech) {
-            const proxyUrls = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
-                `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
-            ];
-            
-            const targetPos = expandPartOfSpeech(partOfSpeech);
-            
-            for (const proxyUrl of proxyUrls) {
-                try {
-                    const res = await fetch(proxyUrl, { 
-                        headers: { 'Accept': 'text/html' },
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    
-                    if (res.ok) {
-                        const html = await res.text();
-                        
-                        // Split by POS blocks and find matching POS
-                        const posBlocks = html.split(/(?=<div class="pr entry-body__el)/i);
-                        
-                        let fallbackExample = null;
-                        
-                        for (const block of posBlocks) {
-                            if (!block.includes('entry-body__el')) continue;
-                            
-                            // Get POS from this block
-                            const posMatch = block.match(/<span class="pos dpos"[^>]*>([^<]+)<\/span>/i);
-                            const blockPos = posMatch ? posMatch[1].trim().toLowerCase() : '';
-                            
-                            // Find examples in this block
-                            const exMatch = block.match(/<span class="eg deg"[^>]*>([\s\S]*?)<\/span>/i);
-                            if (exMatch) {
-                                const example = exMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-                                if (example && example.length > 10 && example.length < 200) {
-                                    // If POS matches, return immediately
-                                    if (targetPos && blockPos === targetPos) {
-                                        return example;
-                                    }
-                                    // Save fallback only if no target POS specified
-                                    if (!targetPos && !fallbackExample) {
-                                        fallbackExample = example;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Only return fallback if no target POS was specified
-                        if (!targetPos && fallbackExample) return fallbackExample;
-                    }
-                } catch (e) {}
-            }
-            
-            return null;
-        }
-        
         async function fetchWordDataFromCambridge(word) {
             const proxyUrls = [
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
                 `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
             ];
@@ -2474,7 +2501,7 @@
                 try {
                     const res = await fetch(proxyUrl, { 
                         headers: { 'Accept': 'text/html' },
-                        signal: AbortSignal.timeout(8000)
+                        signal: AbortSignal.timeout(12000)
                     });
                     
                     if (res.ok) {
@@ -2678,6 +2705,7 @@
         
         async function fetchAudioFromCambridge(word) {
             const proxyUrls = [
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
                 `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
             ];
@@ -2686,7 +2714,7 @@
                 try {
                     const res = await fetch(proxyUrl, { 
                         headers: { 'Accept': 'text/html' },
-                        signal: AbortSignal.timeout(5000)
+                        signal: AbortSignal.timeout(10000)
                     });
                     
                     if (res.ok) {
@@ -2742,6 +2770,7 @@
         
         async function fetchPhoneticFromCambridge(word) {
             const proxyUrls = [
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
                 `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
             ];
@@ -2750,7 +2779,7 @@
                 try {
                     const res = await fetch(proxyUrl, { 
                         headers: { 'Accept': 'text/html' },
-                        signal: AbortSignal.timeout(5000)
+                        signal: AbortSignal.timeout(10000)
                     });
                     
                     if (res.ok) {
