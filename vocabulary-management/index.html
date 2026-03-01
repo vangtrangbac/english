@@ -2288,9 +2288,10 @@
                     const data = await res.json();
                     const targetPos = expandPartOfSpeech(partOfSpeech);
                     
-                    // First try to find example matching the POS
+                    // Only find example matching the POS (no fallback to avoid wrong examples)
                     for (const entry of data) {
                         for (const meaning of (entry.meanings || [])) {
+                            // Skip if POS doesn't match
                             if (targetPos && meaning.partOfSpeech !== targetPos) continue;
                             for (const def of (meaning.definitions || [])) {
                                 if (def.example) {
@@ -2300,12 +2301,14 @@
                         }
                     }
                     
-                    // Fallback: any example if POS not matched
-                    for (const entry of data) {
-                        for (const meaning of (entry.meanings || [])) {
-                            for (const def of (meaning.definitions || [])) {
-                                if (def.example) {
-                                    return def.example;
+                    // Only fallback if no target POS specified
+                    if (!targetPos) {
+                        for (const entry of data) {
+                            for (const meaning of (entry.meanings || [])) {
+                                for (const def of (meaning.definitions || [])) {
+                                    if (def.example) {
+                                        return def.example;
+                                    }
                                 }
                             }
                         }
@@ -2339,12 +2342,17 @@
         }
         
         function expandPartOfSpeech(shortPos) {
+            if (!shortPos) return '';
+            
+            // Extract base POS from labels like "v (MOVE FORWARD)" -> "v"
+            let basePos = shortPos.toLowerCase().split(/\s*\(/)[0].trim();
+            
             const map = {
                 'n': 'noun', 'v': 'verb', 'adj': 'adjective', 'adv': 'adverb',
                 'prep': 'preposition', 'conj': 'conjunction', 'pron': 'pronoun',
                 'interj': 'interjection', 'det': 'determiner', 'num': 'numeral'
             };
-            return map[(shortPos || '').toLowerCase()] || shortPos;
+            return map[basePos] || basePos;
         }
         
         async function fetchFromCambridge(word, partOfSpeech) {
@@ -2386,16 +2394,16 @@
                                     if (targetPos && blockPos === targetPos) {
                                         return example;
                                     }
-                                    // Otherwise save as fallback
-                                    if (!fallbackExample) {
+                                    // Save fallback only if no target POS specified
+                                    if (!targetPos && !fallbackExample) {
                                         fallbackExample = example;
                                     }
                                 }
                             }
                         }
                         
-                        // Return fallback if no exact POS match
-                        if (fallbackExample) return fallbackExample;
+                        // Only return fallback if no target POS was specified
+                        if (!targetPos && fallbackExample) return fallbackExample;
                     }
                 } catch (e) {}
             }
