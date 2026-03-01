@@ -2081,8 +2081,37 @@
                 // Reset repeat counter
                 currentRepeatCount = 0;
                 
-                if (readExampleEnabled && example && !isPaused) {
-                    // Read example after all repeats
+                // Read POS after word
+                const posToSpeak = getPosForSpeech(pos);
+                if (posToSpeak && !isPaused && isReading) {
+                    setTimeout(() => {
+                        if (!isPaused && isReading) {
+                            speakText(posToSpeak, () => {
+                                // After POS, read example if enabled
+                                if (readExampleEnabled && example && !isPaused) {
+                                    setTimeout(() => {
+                                        if (!isPaused && isReading) {
+                                            speakText(example, () => {
+                                                const delay = parseInt(document.getElementById('readerDelay').value);
+                                                readingTimeout = setTimeout(() => {
+                                                    readingIndex++;
+                                                    readCurrentWord();
+                                                }, delay);
+                                            });
+                                        }
+                                    }, 300);
+                                } else {
+                                    const delay = parseInt(document.getElementById('readerDelay').value);
+                                    readingTimeout = setTimeout(() => {
+                                        readingIndex++;
+                                        readCurrentWord();
+                                    }, delay);
+                                }
+                            });
+                        }
+                    }, 300);
+                } else if (readExampleEnabled && example && !isPaused) {
+                    // No POS, but read example
                     setTimeout(() => {
                         if (!isPaused && isReading) {
                             speakText(example, () => {
@@ -2102,6 +2131,28 @@
                     }, delay);
                 }
             });
+        }
+        
+        function getPosForSpeech(pos) {
+            if (!pos) return '';
+            
+            // Extract base POS from labels like "v (MOVE FORWARD)" -> "v"
+            let basePos = pos.toLowerCase().split(/\s*\(/)[0].trim();
+            
+            const posMap = {
+                'n': 'noun',
+                'v': 'verb',
+                'adj': 'adjective',
+                'adv': 'adverb',
+                'prep': 'preposition',
+                'conj': 'conjunction',
+                'pron': 'pronoun',
+                'interj': 'interjection',
+                'det': 'determiner',
+                'phrase': 'phrase'
+            };
+            
+            return posMap[basePos] || basePos;
         }
         
         function speakText(text, callback) {
