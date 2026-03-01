@@ -585,6 +585,12 @@
             font-size: 0.95rem;
         }
         
+        .vocab-definition-vi, .definition-vi {
+            color: var(--accent-success);
+            font-size: 0.9rem;
+            margin: 0.3rem 0 0.8rem 0;
+        }
+        
         .vocab-example {
             background: var(--bg-tertiary);
             padding: 0.8rem;
@@ -592,6 +598,13 @@
             font-style: italic;
             color: var(--text-secondary);
             border-left: 3px solid var(--accent);
+        }
+        
+        .vocab-example-vi {
+            padding: 0.5rem 0.8rem;
+            color: var(--accent-success);
+            font-size: 0.9rem;
+            font-style: normal;
         }
         
         .vocab-actions {
@@ -786,6 +799,13 @@
             font-style: italic;
             margin-top: 0.5rem;
             border-left: 3px solid var(--accent);
+        }
+        
+        .review-example-vi {
+            padding: 0.3rem 0.6rem;
+            color: var(--accent-success);
+            font-size: 0.85rem;
+            font-style: normal;
         }
         
         .review-loading {
@@ -1040,8 +1060,16 @@
                     <textarea id="editDefinition"></textarea>
                 </div>
                 <div class="form-group">
+                    <label>Dịch định nghĩa (VN)</label>
+                    <textarea id="editDefinitionVi"></textarea>
+                </div>
+                <div class="form-group">
                     <label>Ví dụ</label>
                     <textarea id="editExample"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Dịch ví dụ (VN)</label>
+                    <textarea id="editExampleVi"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Audio URL</label>
@@ -1442,7 +1470,11 @@
                     <div class="vocab-details">
                         <p><strong>Nghĩa:</strong> ${v.meaningVi || '-'}</p>
                         <p class="vocab-definition"><strong>Definition:</strong> ${v.definition || '-'}</p>
-                        ${v.example ? `<div class="vocab-example">"${v.example}"</div>` : ''}
+                        ${v.definitionVi ? `<p class="vocab-definition-vi">→ ${v.definitionVi}</p>` : ''}
+                        ${v.example ? `
+                            <div class="vocab-example">"${v.example}"</div>
+                            ${v.exampleVi ? `<div class="vocab-example-vi">→ ${v.exampleVi}</div>` : ''}
+                        ` : ''}
                         <div class="vocab-actions">
                             <button class="edit" onclick="openEditModal('${v.id}')"><i class="fas fa-edit"></i> Sửa</button>
                             <button class="delete" onclick="deleteVocabulary('${v.id}')"><i class="fas fa-trash"></i> Xóa</button>
@@ -1552,59 +1584,94 @@
             }
             
             try {
-                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                
-                if (!response.ok) throw new Error('Không tìm thấy từ này');
-                
-                const data = await response.json();
                 reviewData = [];
                 
-                for (const entry of data) {
-                    const phonetic = entry.phonetic || entry.phonetics?.find(p => p.text)?.text || '';
-                    const audio = entry.phonetics?.find(p => p.audio)?.audio || '';
-                    
-                    for (const meaning of entry.meanings) {
-                        const pos = shortenPartOfSpeech(meaning.partOfSpeech);
-                        
-                        let bestDef = null;
-                        let bestExample = '';
-                        
-                        for (const def of meaning.definitions) {
-                            if (def.example) {
-                                bestDef = def.definition;
-                                bestExample = def.example;
-                                break;
-                            }
-                        }
-                        
-                        if (!bestDef && meaning.definitions.length > 0) {
-                            bestDef = meaning.definitions[0].definition;
-                            for (const def of meaning.definitions) {
-                                if (def.example) {
-                                    bestExample = def.example;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        // Use original Vietnamese if in VI mode, otherwise translate
-                        const meaningVi = originalVietnamese || await translateToVietnamese(word, pos, bestDef);
-                        
+                // Try Cambridge first, then Dictionary API
+                let wordData = await fetchWordDataFromCambridge(word);
+                
+                if (!wordData) {
+                    // Fallback to Dictionary API
+                    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                    if (!response.ok) throw new Error('Không tìm thấy từ này');
+                    wordData = await response.json();
+                }
+                
+                // Process data from either source
+                if (wordData.fromCambridge) {
+                    // Cambridge data format
+                    for (const meaning of wordData.meanings) {
+                        const meaningVi = originalVietnamese || await translateToVietnamese(word, meaning.partOfSpeech, meaning.definition, meaning.example);
+                        const definitionVi = meaning.definition ? await translateSentenceToVietnamese(meaning.definition) : '';
+                        const exampleVi = meaning.example ? await translateSentenceToVietnamese(meaning.example) : '';
                         reviewData.push({
                             word,
-                            phonetic,
-                            audio,
-                            partOfSpeech: pos,
-                            definition: bestDef || '',
-                            example: bestExample,
+                            phonetic: wordData.phonetic || '',
+                            audio: wordData.audio || '',
+                            partOfSpeech: meaning.partOfSpeech,
+                            definition: meaning.definition || '',
+                            definitionVi,
+                            example: meaning.example || '',
+                            exampleVi,
                             meaningVi,
                             selected: true
                         });
                     }
+                } else {
+                    // Dictionary API format
+                    for (const entry of wordData) {
+                        const phonetic = entry.phonetic || entry.phonetics?.find(p => p.text)?.text || '';
+                        const audio = entry.phonetics?.find(p => p.audio)?.audio || '';
+                        
+                        for (const meaning of entry.meanings) {
+                            const pos = shortenPartOfSpeech(meaning.partOfSpeech);
+                            
+                            let bestDef = null;
+                            let bestExample = '';
+                            
+                            for (const def of meaning.definitions) {
+                                if (def.example) {
+                                    bestDef = def.definition;
+                                    bestExample = def.example;
+                                    break;
+                                }
+                            }
+                            
+                            if (!bestDef && meaning.definitions.length > 0) {
+                                bestDef = meaning.definitions[0].definition;
+                                for (const def of meaning.definitions) {
+                                    if (def.example) {
+                                        bestExample = def.example;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            const meaningVi = originalVietnamese || await translateToVietnamese(word, pos, bestDef, bestExample);
+                            const definitionVi = bestDef ? await translateSentenceToVietnamese(bestDef) : '';
+                            const exampleVi = bestExample ? await translateSentenceToVietnamese(bestExample) : '';
+                            
+                            reviewData.push({
+                                word,
+                                phonetic,
+                                audio,
+                                partOfSpeech: pos,
+                                definition: bestDef || '',
+                                definitionVi,
+                                example: bestExample,
+                                exampleVi,
+                                meaningVi,
+                                selected: true
+                            });
+                        }
+                    }
                 }
                 
+                // Remove exact duplicates (same POS and definition)
                 reviewData = reviewData.filter((item, index, self) =>
-                    index === self.findIndex(t => t.partOfSpeech === item.partOfSpeech)
+                    index === self.findIndex(t => 
+                        t.partOfSpeech === item.partOfSpeech && 
+                        t.definition === item.definition
+                    )
                 );
                 
                 if (reviewData.length === 0) throw new Error('Không tìm thấy nghĩa nào');
@@ -1660,7 +1727,11 @@
                                         style="flex: 1; padding: 0.4rem 0.6rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; color: var(--accent-success); font-size: 0.9rem;">
                                 </div>
                                 <p><strong>Definition:</strong> ${item.definition || '(không có)'}</p>
-                                ${item.example ? `<div class="review-example">"${item.example}"</div>` : '<p style="color: var(--accent-warning);"><i class="fas fa-exclamation-triangle"></i> Không tìm thấy example</p>'}
+                                ${item.definitionVi ? `<p class="definition-vi">→ ${item.definitionVi}</p>` : ''}
+                                ${item.example ? `
+                                    <div class="review-example">"${item.example}"</div>
+                                    ${item.exampleVi ? `<div class="review-example-vi">→ ${item.exampleVi}</div>` : ''}
+                                ` : '<p style="color: var(--accent-warning);"><i class="fas fa-exclamation-triangle"></i> Không tìm thấy example</p>'}
                             </div>
                         </div>
                     `).join('')}
@@ -1685,7 +1756,9 @@
                         audio: item.audio,
                         partOfSpeech: item.partOfSpeech,
                         definition: item.definition,
+                        definitionVi: item.definitionVi || '',
                         example: item.example,
+                        exampleVi: item.exampleVi || '',
                         meaningVi: item.meaningVi,
                         learned: false
                     });
@@ -1722,12 +1795,14 @@
             reviewData = [];
         }
         
-        // Translation
-        async function translateToVietnamese(word, pos, definition = '') {
+        // Translation - simple approach
+        async function translateToVietnamese(word, pos, definition = '', example = '') {
             let result = '';
+            
+            // Translate the word with POS context
             let query = word;
-            if (pos === 'v') query = `to ${word}`;
-            else if (pos === 'n') query = `a ${word}`;
+            if (pos === 'v' || pos.startsWith('v')) query = `to ${word}`;
+            else if (pos === 'n' || pos.startsWith('n')) query = `a ${word}`;
             
             try {
                 result = await googleTranslate(query);
@@ -1797,7 +1872,9 @@
             document.getElementById('editPos').value = vocab.partOfSpeech || 'n';
             document.getElementById('editMeaningVi').value = vocab.meaningVi || '';
             document.getElementById('editDefinition').value = vocab.definition || '';
+            document.getElementById('editDefinitionVi').value = vocab.definitionVi || '';
             document.getElementById('editExample').value = vocab.example || '';
+            document.getElementById('editExampleVi').value = vocab.exampleVi || '';
             document.getElementById('editAudio').value = vocab.audio || '';
             document.getElementById('editModal').classList.add('show');
         }
@@ -1814,7 +1891,9 @@
                 partOfSpeech: document.getElementById('editPos').value,
                 meaningVi: document.getElementById('editMeaningVi').value,
                 definition: document.getElementById('editDefinition').value,
+                definitionVi: document.getElementById('editDefinitionVi').value,
                 example: document.getElementById('editExample').value,
+                exampleVi: document.getElementById('editExampleVi').value,
                 audio: document.getElementById('editAudio').value
             };
             
@@ -2113,9 +2192,15 @@
             btn.classList.add('spinning');
             
             try {
-                let example = await fetchExampleFromSources(vocab.word);
+                let example = await fetchExampleFromSources(vocab.word, vocab.partOfSpeech);
                 if (example) {
-                    await database.ref(`${getVocabPath()}/${id}/example`).set(example);
+                    // Translate example to Vietnamese
+                    const exampleVi = await translateSentenceToVietnamese(example);
+                    
+                    await database.ref(`${getVocabPath()}/${id}`).update({
+                        example: example,
+                        exampleVi: exampleVi || ''
+                    });
                     showToast('Đã cập nhật example!', 'success');
                 } else {
                     showToast('Không tìm thấy example phù hợp', 'warning');
@@ -2127,12 +2212,47 @@
             btn.classList.remove('spinning');
         }
         
-        async function fetchExampleFromSources(word) {
-            // Source 1: Dictionary API
+        async function translateSentenceToVietnamese(sentence) {
+            if (!sentence) return '';
+            
+            try {
+                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(sentence)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    return data[0]?.map(x => x[0]).join('') || '';
+                }
+            } catch (e) {}
+            
+            return '';
+        }
+        
+        async function fetchExampleFromSources(word, partOfSpeech) {
+            // Source 1: Cambridge Dictionary (highest quality)
+            try {
+                const example = await fetchFromCambridge(word, partOfSpeech);
+                if (example) return example;
+            } catch (e) {}
+            
+            // Source 2: Dictionary API
             try {
                 const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
                 if (res.ok) {
                     const data = await res.json();
+                    const targetPos = expandPartOfSpeech(partOfSpeech);
+                    
+                    // First try to find example matching the POS
+                    for (const entry of data) {
+                        for (const meaning of (entry.meanings || [])) {
+                            if (targetPos && meaning.partOfSpeech !== targetPos) continue;
+                            for (const def of (meaning.definitions || [])) {
+                                if (def.example) {
+                                    return def.example;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Fallback: any example if POS not matched
                     for (const entry of data) {
                         for (const meaning of (entry.meanings || [])) {
                             for (const def of (meaning.definitions || [])) {
@@ -2145,7 +2265,7 @@
                 }
             } catch (e) {}
             
-            // Source 2: Tatoeba (sentence database)
+            // Source 3: Tatoeba (sentence database)
             try {
                 const res = await fetch(`https://tatoeba.org/en/api_v0/search?from=eng&query=${encodeURIComponent(word)}&limit=5`);
                 if (res.ok) {
@@ -2161,11 +2281,233 @@
                 }
             } catch (e) {}
             
-            // Source 3: Use AI to generate via LibreTranslate context
+            // Source 4: Use Google Translate round-trip
             try {
                 const example = await generateExampleWithAI(word);
                 if (example) return example;
             } catch (e) {}
+            
+            return null;
+        }
+        
+        function expandPartOfSpeech(shortPos) {
+            const map = {
+                'n': 'noun', 'v': 'verb', 'adj': 'adjective', 'adv': 'adverb',
+                'prep': 'preposition', 'conj': 'conjunction', 'pron': 'pronoun',
+                'interj': 'interjection', 'det': 'determiner', 'num': 'numeral'
+            };
+            return map[(shortPos || '').toLowerCase()] || shortPos;
+        }
+        
+        async function fetchFromCambridge(word, partOfSpeech) {
+            const proxyUrls = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
+                `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
+            ];
+            
+            const targetPos = expandPartOfSpeech(partOfSpeech);
+            
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const res = await fetch(proxyUrl, { 
+                        headers: { 'Accept': 'text/html' },
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    
+                    if (res.ok) {
+                        const html = await res.text();
+                        
+                        // Split by POS blocks and find matching POS
+                        const posBlocks = html.split(/(?=<div class="pr entry-body__el)/i);
+                        
+                        let fallbackExample = null;
+                        
+                        for (const block of posBlocks) {
+                            if (!block.includes('entry-body__el')) continue;
+                            
+                            // Get POS from this block
+                            const posMatch = block.match(/<span class="pos dpos"[^>]*>([^<]+)<\/span>/i);
+                            const blockPos = posMatch ? posMatch[1].trim().toLowerCase() : '';
+                            
+                            // Find examples in this block
+                            const exMatch = block.match(/<span class="eg deg"[^>]*>([\s\S]*?)<\/span>/i);
+                            if (exMatch) {
+                                const example = exMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+                                if (example && example.length > 10 && example.length < 200) {
+                                    // If POS matches, return immediately
+                                    if (targetPos && blockPos === targetPos) {
+                                        return example;
+                                    }
+                                    // Otherwise save as fallback
+                                    if (!fallbackExample) {
+                                        fallbackExample = example;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Return fallback if no exact POS match
+                        if (fallbackExample) return fallbackExample;
+                    }
+                } catch (e) {}
+            }
+            
+            return null;
+        }
+        
+        async function fetchWordDataFromCambridge(word) {
+            const proxyUrls = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
+                `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
+            ];
+            
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const res = await fetch(proxyUrl, { 
+                        headers: { 'Accept': 'text/html' },
+                        signal: AbortSignal.timeout(8000)
+                    });
+                    
+                    if (res.ok) {
+                        const html = await res.text();
+                        
+                        // Check if word exists
+                        if (html.includes('page-not-found') || !html.includes('entry-body')) {
+                            continue;
+                        }
+                        
+                        // Extract phonetic (IPA)
+                        let phonetic = '';
+                        const ipaMatch = html.match(/<span class="ipa[^"]*"[^>]*>([^<]+)<\/span>/i);
+                        if (ipaMatch && ipaMatch[1]) {
+                            phonetic = '/' + ipaMatch[1].trim() + '/';
+                        }
+                        
+                        // Extract audio URL
+                        let audio = '';
+                        const audioMatch = html.match(/data-src-mp3="([^"]+)"/i);
+                        if (audioMatch && audioMatch[1]) {
+                            audio = audioMatch[1];
+                            if (!audio.startsWith('http')) {
+                                audio = 'https://dictionary.cambridge.org' + audio;
+                            }
+                        }
+                        
+                        // Extract meanings (part of speech, definition, example)
+                        const meanings = [];
+                        
+                        // Split HTML by POS entry blocks (each starts with "pr entry-body__el")
+                        // Cambridge structure: each POS has its own entry-body__el block
+                        const posBlocks = html.split(/(?=<div class="pr entry-body__el)/i);
+                        
+                        for (const block of posBlocks) {
+                            if (!block.includes('entry-body__el')) continue;
+                            
+                            // Get part of speech from this block
+                            const posMatch = block.match(/<span class="pos dpos"[^>]*>([^<]+)<\/span>/i);
+                            if (!posMatch) continue;
+                            const pos = shortenPartOfSpeech(posMatch[1].trim());
+                            
+                            // Split by sense blocks (different meanings within same POS)
+                            // Cambridge uses "pr dsense" for each sense/meaning
+                            const senseBlocks = block.split(/(?=<div class="pr dsense)/i);
+                            
+                            let meaningIndex = 0;
+                            for (const senseBlock of senseBlocks) {
+                                // Get sense title if available (e.g., "MOVE FORWARD", "DEVELOP")
+                                let senseTitle = '';
+                                const senseTitleMatch = senseBlock.match(/<span class="dsense_h"[^>]*>([^<]+)<\/span>/i) ||
+                                                       senseBlock.match(/<h3 class="dsense_h"[^>]*>([\s\S]*?)<\/h3>/i);
+                                if (senseTitleMatch) {
+                                    senseTitle = senseTitleMatch[1].replace(/<[^>]+>/g, '').trim();
+                                }
+                                
+                                // Find def-blocks within this sense block
+                                const defBlocks = senseBlock.split(/(?=<div class="def-block)/i);
+                                
+                                for (const defBlock of defBlocks) {
+                                    if (!defBlock.includes('def-block')) continue;
+                                    
+                                    // Get definition from this def-block
+                                    const defMatch = defBlock.match(/<div class="def ddef_d db"[^>]*>([\s\S]*?)<\/div>/i);
+                                    if (!defMatch) continue;
+                                    
+                                    let definition = defMatch[1]
+                                        .replace(/<[^>]+>/g, '')
+                                        .replace(/\s+/g, ' ')
+                                        .trim()
+                                        .replace(/:$/, '');
+                                    
+                                    if (!definition) continue;
+                                    
+                                    // Get example from the SAME def-block (important!)
+                                    const exMatch = defBlock.match(/<span class="eg deg"[^>]*>([\s\S]*?)<\/span>/i);
+                                    let example = '';
+                                    if (exMatch) {
+                                        example = exMatch[1]
+                                            .replace(/<[^>]+>/g, '')
+                                            .replace(/\s+/g, ' ')
+                                            .trim();
+                                    }
+                                    
+                                    // Create unique POS label for multiple meanings
+                                    meaningIndex++;
+                                    let posLabel = pos;
+                                    if (senseTitle) {
+                                        posLabel = `${pos} (${senseTitle})`;
+                                    } else if (meaningIndex > 1) {
+                                        posLabel = `${pos} (${meaningIndex})`;
+                                    }
+                                    
+                                    // Check if this definition is already added (avoid duplicates)
+                                    const isDuplicate = meanings.some(m => 
+                                        m.definition.toLowerCase() === definition.toLowerCase()
+                                    );
+                                    
+                                    if (!isDuplicate) {
+                                        meanings.push({ 
+                                            partOfSpeech: posLabel, 
+                                            definition, 
+                                            example 
+                                        });
+                                    }
+                                    
+                                    // Limit to max 3 definitions per POS for faster processing
+                                    if (meanings.filter(m => m.partOfSpeech.startsWith(pos)).length >= 3) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Fallback: if no meanings found, try simpler parsing
+                        if (meanings.length === 0) {
+                            const posMatch = html.match(/<span class="pos dpos"[^>]*>([^<]+)<\/span>/i);
+                            const pos = posMatch ? shortenPartOfSpeech(posMatch[1].trim()) : 'n';
+                            
+                            const defMatch = html.match(/<div class="def ddef_d db"[^>]*>([\s\S]*?)<\/div>/i);
+                            let definition = defMatch ? defMatch[1].replace(/<[^>]+>/g, '').trim().replace(/:$/, '') : '';
+                            
+                            // Find example near the definition
+                            const exMatch = html.match(/<span class="eg deg"[^>]*>([\s\S]*?)<\/span>/i);
+                            let example = exMatch ? exMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+                            
+                            if (definition) {
+                                meanings.push({ partOfSpeech: pos, definition, example });
+                            }
+                        }
+                        
+                        if (meanings.length > 0) {
+                            return {
+                                fromCambridge: true,
+                                phonetic,
+                                audio,
+                                meanings
+                            };
+                        }
+                    }
+                } catch (e) {}
+            }
             
             return null;
         }
@@ -2206,6 +2548,13 @@
         }
         
         async function fetchAudioFromSources(word) {
+            // Source 1: Cambridge Dictionary (highest quality)
+            try {
+                const audio = await fetchAudioFromCambridge(word);
+                if (audio) return audio;
+            } catch (e) {}
+            
+            // Source 2: Dictionary API
             try {
                 const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
                 if (res.ok) {
@@ -2214,10 +2563,50 @@
                     if (audio) return audio;
                 }
             } catch (e) {}
+            
+            return null;
+        }
+        
+        async function fetchAudioFromCambridge(word) {
+            const proxyUrls = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
+                `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
+            ];
+            
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const res = await fetch(proxyUrl, { 
+                        headers: { 'Accept': 'text/html' },
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    
+                    if (res.ok) {
+                        const html = await res.text();
+                        
+                        // Cambridge audio URLs are in data-src-mp3 attributes
+                        const audioMatch = html.match(/data-src-mp3="([^"]+)"/i);
+                        if (audioMatch && audioMatch[1]) {
+                            let audioUrl = audioMatch[1];
+                            if (!audioUrl.startsWith('http')) {
+                                audioUrl = 'https://dictionary.cambridge.org' + audioUrl;
+                            }
+                            return audioUrl;
+                        }
+                    }
+                } catch (e) {}
+            }
+            
             return null;
         }
         
         async function fetchPhoneticFromSources(word) {
+            // Source 1: Cambridge Dictionary (highest quality IPA)
+            try {
+                const phonetic = await fetchPhoneticFromCambridge(word);
+                if (phonetic) return phonetic;
+            } catch (e) {}
+            
+            // Source 2: Dictionary API
             try {
                 const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
                 if (res.ok) {
@@ -2227,6 +2616,7 @@
                 }
             } catch (e) {}
             
+            // Source 3: Datamuse API
             try {
                 const res = await fetch(`https://api.datamuse.com/words?sp=${word}&md=r&max=1`);
                 if (res.ok) {
@@ -2237,6 +2627,39 @@
                     }
                 }
             } catch (e) {}
+            
+            return null;
+        }
+        
+        async function fetchPhoneticFromCambridge(word) {
+            const proxyUrls = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`,
+                `https://corsproxy.io/?${encodeURIComponent(`https://dictionary.cambridge.org/dictionary/english/${word}`)}`
+            ];
+            
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const res = await fetch(proxyUrl, { 
+                        headers: { 'Accept': 'text/html' },
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    
+                    if (res.ok) {
+                        const html = await res.text();
+                        
+                        // Cambridge phonetic is in <span class="ipa dipa lpr-2 lpl-1">
+                        // or <span class="pron dpron">/<span class="ipa">...</span>/</span>
+                        const ipaMatch = html.match(/<span class="ipa[^"]*"[^>]*>([^<]+)<\/span>/i);
+                        if (ipaMatch && ipaMatch[1]) {
+                            const ipa = ipaMatch[1].trim();
+                            if (ipa && !ipa.startsWith('/')) {
+                                return '/' + ipa + '/';
+                            }
+                            return ipa;
+                        }
+                    }
+                } catch (e) {}
+            }
             
             return null;
         }
