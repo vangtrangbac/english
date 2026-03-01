@@ -982,6 +982,7 @@
                         <select id="readerMode" onchange="saveReaderSettings()">
                             <option value="current">Category hiện tại</option>
                             <option value="unlearned">Chỉ chưa học</option>
+                            <option value="selected">Chỉ đã tick</option>
                             <option value="all">Tất cả</option>
                         </select>
                     </label>
@@ -2011,6 +2012,7 @@
                 const vocabs = getCurrentVocabularies();
                 Object.entries(vocabs).forEach(([id, v]) => {
                     if (mode === 'unlearned' && v.learned) return;
+                    if (mode === 'selected' && !v.learned) return;
                     readingList.push({ id, ...v });
                 });
             }
