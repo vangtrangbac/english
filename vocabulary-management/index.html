@@ -1239,14 +1239,15 @@
             const list = document.getElementById('categoryList');
             list.innerHTML = '';
             
-            // Sort: Default first, then alphabetically
-            const sortedEntries = Object.entries(parentCategories).sort((a, b) => {
-                if (a[1].name === 'Default') return -1;
-                if (b[1].name === 'Default') return 1;
-                return a[1].name.localeCompare(b[1].name);
-            });
+            // Only move Default to top, keep others in original order
+            const entries = Object.entries(parentCategories);
+            const defaultIdx = entries.findIndex(([_, p]) => p.name === 'Default');
+            if (defaultIdx > 0) {
+                const [defaultEntry] = entries.splice(defaultIdx, 1);
+                entries.unshift(defaultEntry);
+            }
             
-            sortedEntries.forEach(([parentId, parent]) => {
+            entries.forEach(([parentId, parent]) => {
                 const children = parent.children || {};
                 const childCount = Object.keys(children).length;
                 const totalVocabs = Object.values(children).reduce((sum, child) => {
