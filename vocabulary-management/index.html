@@ -1233,12 +1233,20 @@
             showToast(`Đã migrate ${Object.keys(oldCategories).length} categories vào Default!`, 'success');
         }
         
+        
         // Render 2-level categories
         function renderCategories() {
             const list = document.getElementById('categoryList');
             list.innerHTML = '';
             
-            Object.entries(parentCategories).forEach(([parentId, parent]) => {
+            // Sort: Default first, then alphabetically
+            const sortedEntries = Object.entries(parentCategories).sort((a, b) => {
+                if (a[1].name === 'Default') return -1;
+                if (b[1].name === 'Default') return 1;
+                return a[1].name.localeCompare(b[1].name);
+            });
+            
+            sortedEntries.forEach(([parentId, parent]) => {
                 const children = parent.children || {};
                 const childCount = Object.keys(children).length;
                 const totalVocabs = Object.values(children).reduce((sum, child) => {
